@@ -8,6 +8,7 @@ import Signup from './Signup'
 import ProtectedRoute from './ProtectedRoutes'
 import AdminDashboard from './Dashboards/AdminDashboard'
 import MarketplacePlatform from './Dashboards/MarketPlacePlatform'
+import ListAssetPage from './Dashboards/ListAssets'
 
 
 const App = () => {
@@ -39,8 +40,8 @@ const App = () => {
         <Route
           path="/borrower"
           element={
-            <ProtectedRoute role={role} allowedRole="borrower">
-
+            <ProtectedRoute role={role} allowedRole="BORROWER">
+              <ListAssetPage />
             </ProtectedRoute>
           }
         />

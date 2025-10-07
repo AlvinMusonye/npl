@@ -170,7 +170,7 @@ export default function SignupPage() {
         <img
           src={BACKGROUND_IMAGE_URL}
           alt="Glassmorphism Background"
-          className="object-cover w-full h-full opacity-10 0" 
+          className="object-cover w-full h-full opacity-100 " 
           onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/1920x1080/0F2A1D/ffffff?text=NPLin+Background+Fallback'; }}
         />
       </div>

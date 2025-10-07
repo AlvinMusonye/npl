@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 // === CONSTANTS ===
 const API_BASE_URL = 'http://127.0.0.1:8000'; 
 const API_LOGIN_ENDPOINT = `${API_BASE_URL}/api/accounts/login/`;
+const BACKGROUND_IMAGE_URL = '/loginimage.jpeg'; 
+
 
 // Role enum values from the backend
 const BACKEND_ROLES = {
@@ -151,6 +153,16 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#E0F2E0] via-[#C8E6C8] to-[#B0DAB0] overflow-hidden relative font-inter">
+              {/* Background Image */}
+      <div className="absolute inset-0 z-0">
+        <img
+          src={BACKGROUND_IMAGE_URL}
+          alt="Abstract background"
+          className="object-cover w-full h-full opacity-100"
+          onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/1920x1080/0F2A1D/ffffff?text=NPLin+Background'; }}
+        />
+      </div>
+
       {/* Navigation */}
       <nav className="relative z-20 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
