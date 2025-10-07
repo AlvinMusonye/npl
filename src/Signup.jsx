@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 
 // === CONSTANTS ===
-// NOTE: Replaced process.env.NEXT_PUBLIC_API_URL, which causes the 'process is not defined' error, 
-// with a direct placeholder URL. Update this to your correct API base URL.
 const API_BASE_URL = 'http://127.0.0.1:8000'; 
 const API_REGISTER_ENDPOINT = `${API_BASE_URL}/api/accounts/register/`;
 
 // Placeholder image URL for the background
-const BACKGROUND_IMAGE_URL = '/loginimage.jpeg';
+const BACKGROUND_IMAGE_URL = '/loginimage.jpeg'; 
 
-// === Glass Card Component ===
+// === Glass Card Component (UNCHANGED) ===
 const GlassCard = ({ children, className = "", ...props }) => (
   <div
-    className={`relative overflow-hidden rounded-[32px] backdrop-blur-3xl  border border-white/50 shadow-[0_25px_80px_rgba(15,42,29,0.2)] ${className}`}
+    className={`relative overflow-hidden rounded-[32px] backdrop-blur-3xl border border-white/50 shadow-[0_25px_80px_rgba(15,42,29,0.2)] ${className}`}
     style={{
       background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 100%)',
       backdropFilter: 'blur(40px) saturate(180%) brightness(120%)',
@@ -36,7 +36,9 @@ const GlassCard = ({ children, className = "", ...props }) => (
 
 // === Signup Page Component ===
 export default function SignupPage() {
-  // We cannot use Next.js's useRouter, so we'll use a success state instead.
+
+    const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -44,11 +46,18 @@ export default function SignupPage() {
     password: '',
     confirmPassword: '',
     role: 'BORROWER',
-    agreed_to_terms: false,
+    
+    // 👇 NEW STATE FIELDS FOR CONSENT
+    agreedToTerms: false,
+    consentKycVerification: false,
+    consentDataForRiskTracking: false,
+    consentDataForRecovery: false,
+    consentElectronicCommunication: false,
   });
+  
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false); // New state for success feedback
+  const [isSuccess, setIsSuccess] = useState(false); 
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -66,63 +75,105 @@ export default function SignupPage() {
     e.preventDefault();
     setError('');
     setIsSuccess(false);
-    setIsLoading(true);
 
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match.");
-      setIsLoading(false);
       return;
     }
+    
+    // Check all required consents are checked
+    if (!formData.agreedToTerms || !formData.consentKycVerification || !formData.consentElectronicCommunication) {
+        setError("Please check all required consent boxes to proceed with registration.");
+        return;
+    }
+
+    setIsLoading(true);
 
     try {
+      // 🚨 FIX: All required fields, including the new consent fields, are mapped to snake_case.
+      const payload = {
+        email: formData.email,
+        password: formData.password,
+        first_name: formData.firstName, 
+        last_name: formData.lastName,
+        role: formData.role,
+        
+        // 👇 UPDATED AND NEW CONSENT FIELDS for the API
+        agreed_to_terms: formData.agreedToTerms,
+        agreed_to_privacy_policy: formData.agreedToTerms, // Assuming privacy policy is bundled with main terms
+        consent_kyc_verification: formData.consentKycVerification,
+        consent_data_for_risk_tracking: formData.consentDataForRiskTracking,
+        consent_data_for_recovery: formData.consentDataForRecovery,
+        consent_electronic_communication: formData.consentElectronicCommunication,
+      };
+
       const response = await fetch(API_REGISTER_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          email: formData.email,
-          password: formData.password,
-          role: formData.role,
-          agreed_to_terms: formData.agreed_to_terms,
-          agreed_to_privacy_policy: formData.agreed_to_terms,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        // Handle server-side validation errors
-        const errorMessages = Object.values(data).flat().join(' ');
-        throw new Error(errorMessages || 'An error occurred during registration.');
+        let errorMessages = 'Registration failed.';
+        
+        if (data) {
+            errorMessages = Object.keys(data)
+                .map(key => {
+                    const error = data[key];
+                    const message = Array.isArray(error) ? error.join(' ') : error;
+                    return key === 'non_field_errors' ? message : `${key}: ${message}`;
+                })
+                .join(' | ');
+        }
+        
+        throw new Error(errorMessages);
       }
 
-      // Simulation of successful routing in a single file environment
       console.log("Registration successful!", data);
       setIsSuccess(true);
-      // Optionally reset form data here: setFormData(initialFormData);
+       // Redirect the user to the login page after a delay
+       setTimeout(() => { navigate('/login'); }, 2000); 
 
     } catch (err) {
-      // Handle network errors or custom server errors
       setError(err.message || 'A network error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const renderConsentCheckbox = (name, label, required = false) => (
+    <div className="flex items-start">
+      <div className="flex items-center h-5 mt-1">
+        <input
+          id={name}
+          name={name}
+          type="checkbox"
+          checked={formData[name]}
+          onChange={handleChange}
+          className="focus:ring-[#0F2A1D] h-4 w-4 text-[#0F2A1D] border-gray-300 rounded cursor-pointer"
+        />
+      </div>
+      <div className="ml-3 text-sm">
+        <label htmlFor={name} className={`font-medium text-[#0F2A1D] ${required ? 'font-bold' : ''}`}>
+          {label} {required && <span className="text-red-600">*</span>}
+        </label>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#E0F2E0] via-[#C8E6C8] to-[#B0DAB0] overflow-hidden relative font-inter">
-      {/* Background Image (using standard img tag) */}
+      {/* Background and Navigation (UNCHANGED) */}
       <div className="absolute inset-0 z-0">
         <img
           src={BACKGROUND_IMAGE_URL}
           alt="Glassmorphism Background"
-          className="object-cover w-full h-full opacity-30" // Lower opacity to match the soft aesthetic
+          className="object-cover w-full h-full opacity-10 0" 
           onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/1920x1080/0F2A1D/ffffff?text=NPLin+Background+Fallback'; }}
         />
       </div>
-
-      {/* Navigation (using a tags instead of Link) */}
       <nav className="relative z-20 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
@@ -143,92 +194,41 @@ export default function SignupPage() {
       <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-100px)] px-4 sm:px-6 lg:px-8 py-12">
         <GlassCard className="w-full max-w-lg p-6 sm:p-10">
           <div className="text-center mb-8">
-            <h1 className="text-4xl sm:text-5xl font-extrabold text-[#0F2A1D] mb-2">
-              Join NPLin
-            </h1>
-            <p className="text-[#375534] text-lg">
-              Create your account to get started
-            </p>
+            <h1 className="text-4xl sm:text-5xl font-extrabold text-[#0F2A1D] mb-2">Join NPLin</h1>
+            <p className="text-[#375534] text-lg">Create your account to get started</p>
           </div>
 
           {isSuccess && (
             <div className="mt-4 text-center text-green-700 bg-green-100 border border-green-400 rounded-lg p-4 text-md font-semibold animate-fadeIn mb-6">
-              ✅ Registration successful! Redirecting to login...
+              ✅ Registration successful! Please check your email for verification.
             </div>
           )}
 
-          {/* Error Display (placed here for better visibility) */}
           {error && (
             <div className="mt-4 text-center text-red-700 bg-red-100 border border-red-400 rounded-lg p-3 text-sm mb-6 animate-fadeIn">
-              {error}
+              **Error:** {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* NAME, EMAIL, PASSWORD FIELDS (UNCHANGED) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
-                label="First Name"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-                placeholder="John"
-                type="text"
-                required
-              />
-              <Input
-                label="Last Name"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-                placeholder="Doe"
-                type="text"
-                required
-              />
+              <Input label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="John" type="text" required />
+              <Input label="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Doe" type="text" required />
             </div>
-
-            <Input
-              label="Email Address"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="john@example.com"
-              type="email"
-              required
-            />
-
-            <Input
-              label="Password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              type="password"
-              required
-            />
-
-            <Input
-              label="Confirm Password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="••••••••"
-              type="password"
-              required
-            />
-
+            <Input label="Email Address" name="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" type="email" required />
+            <Input label="Password" name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" type="password" required />
+            <Input label="Confirm Password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" type="password" required />
+            
+            {/* ROLE SELECT (UNCHANGED) */}
             <div>
-              <label className="block text-sm font-medium text-[#0F2A1D] mb-2">
-                I am a...
-              </label>
+              <label className="block text-sm font-medium text-[#0F2A1D] mb-2">I am a...</label>
               <select
                 name="role"
                 value={formData.role}
                 onChange={handleRoleChange}
                 className="w-full px-4 py-3 bg-white/40 border-2 border-white/60 rounded-xl text-sm text-[#0F2A1D] focus:outline-none focus:ring-2 focus:ring-[#375534] focus:border-[#375534] transition-colors appearance-none cursor-pointer"
-                style={{
-                    background: 'rgba(255,255,255,0.3)',
-                    backdropFilter: 'blur(10px)',
-                }}
+                style={{ background: 'rgba(255,255,255,0.3)', backdropFilter: 'blur(10px)' }}
               >
                 <option value="BORROWER">Borrower</option>
                 <option value="LENDER">Lender</option>
@@ -236,28 +236,52 @@ export default function SignupPage() {
               </select>
             </div>
 
-            <div className="flex items-start">
-              <div className="flex items-center h-5 mt-1">
-                <input
-                  id="terms"
-                  name="agreed_to_terms"
-                  type="checkbox"
-                  checked={formData.agreed_to_terms}
-                  onChange={handleChange}
-                  className="focus:ring-[#0F2A1D] h-4 w-4 text-[#0F2A1D] border-gray-300 rounded cursor-pointer"
-                />
-              </div>
-              <div className="ml-3 text-sm">
-                <label htmlFor="terms" className="font-medium text-[#0F2A1D]">
-                  I agree to the <a href="/terms" className="text-[#0F2A1D] font-semibold hover:underline">Terms and Conditions</a>
-                </label>
-              </div>
+            {/* --- ADVANCED CONSENT SECTION --- */}
+            <div className="pt-4 border-t border-white/70 space-y-3">
+                <h3 className="text-lg font-bold text-[#0F2A1D]">Required Consents</h3>
+                
+                {/* 1. Main Terms & Conditions (REQUIRED) */}
+                {renderConsentCheckbox(
+                    "agreedToTerms", 
+                    <span>I agree to the <a href="/terms" className="text-[#0F2A1D] font-semibold hover:underline">Terms & Conditions</a> and Privacy Policy</span>, 
+                    true
+                )}
+
+                {/* 2. KYC Verification (REQUIRED) */}
+                {renderConsentCheckbox(
+                    "consentKycVerification", 
+                    "Consent to use data for KYC and identity verification purposes.", 
+                    true
+                )}
+                
+                {/* 3. Electronic Communication (REQUIRED) */}
+                {renderConsentCheckbox(
+                    "consentElectronicCommunication", 
+                    "Consent to receive electronic communications regarding my account and transactions.", 
+                    true
+                )}
+                
+                <h3 className="text-lg font-bold text-[#0F2A1D] pt-4">Data Processing Consents</h3>
+
+                {/* 4. Risk Tracking (Optional/Default True) */}
+                {renderConsentCheckbox(
+                    "consentDataForRiskTracking", 
+                    "Consent to use anonymized data for risk modeling and tracking.", 
+                    false
+                )}
+
+                {/* 5. Recovery Data (Optional/Default True) */}
+                {renderConsentCheckbox(
+                    "consentDataForRecovery", 
+                    "Consent to share limited data with registered Recovery Partners (if applicable).", 
+                    false
+                )}
             </div>
 
             <button
               type="submit"
               className="w-full px-8 py-4 bg-gradient-to-r from-[#375534] to-[#0F2A1D] text-white font-bold rounded-xl shadow-2xl hover:scale-[1.02] transition-transform duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
-              disabled={isLoading || !formData.agreed_to_terms || isSuccess}
+              disabled={isLoading || !formData.agreedToTerms || !formData.consentKycVerification || !formData.consentElectronicCommunication || isSuccess}
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
@@ -285,7 +309,7 @@ export default function SignupPage() {
   );
 }
 
-// Reusable Input Component (for cleaner JSX)
+// Reusable Input Component (for cleaner JSX - UNCHANGED)
 const Input = ({ label, name, value, onChange, placeholder, type, required }) => (
     <div>
       <label htmlFor={name} className="block text-sm font-medium text-[#0F2A1D] mb-2">

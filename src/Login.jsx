@@ -1,46 +1,31 @@
 import React, { useState } from 'react';
 
+// === CONSTANTS ===
 const API_BASE_URL = 'http://127.0.0.1:8000'; 
 const API_LOGIN_ENDPOINT = `${API_BASE_URL}/api/accounts/login/`;
 
-// Placeholder image URL for the background
-const BACKGROUND_IMAGE_URL = '/loginimage.jpeg';
-
-// Role definitions and their simulated redirect paths
-const ROLES = [
-  { value: 'admin', label: 'Admin', path: '/admin' },
-  { value: 'borrower', label: 'Borrower', path: '/borrower' },
-  { value: 'lender', label: 'Lender', path: '/lender' },
-  { value: 'recovery', label: 'Recovery Partner', path: '/recovery' },
-];
-
-
-const determineRoleAndPath = (email) => {
-    let determinedRole = '';
-    
-    if (email.includes('admin')) {
-        determinedRole = 'admin';
-    } else if (email.includes('borrower')) {
-        determinedRole = 'borrower';
-    } else if (email.includes('recovery')) {
-        determinedRole = 'recovery';
-    } else {
-        // Defaulting to lender if email doesn't match a specific keyword
-        determinedRole = 'lender';
-    }
-
-    const roleData = ROLES.find(r => r.value === determinedRole);
-    return {
-        role: determinedRole,
-        path: roleData ? roleData.path : '/', // Default to root path if role is invalid
-    };
+// Role enum values from the backend
+const BACKEND_ROLES = {
+    BORROWER: "BORROWER",
+    LENDER: "LENDER",
+    RECOVERY_PARTNER: "RECOVERY_PARTNER",
+    ADMIN: "ADMIN",
 };
 
+// Map backend role values to specific frontend dashboard paths
+// NOTE: These paths must match the routes defined in App.jsx (e.g., '/admin' instead of '/admin-dashboard')
+const DASHBOARD_PATHS = {
+    [BACKEND_ROLES.ADMIN]: "/admin",
+    [BACKEND_ROLES.BORROWER]: "/borrower",
+    [BACKEND_ROLES.LENDER]: "/lender",
+    [BACKEND_ROLES.RECOVERY_PARTNER]: "/recovery",
+    "DEFAULT": "/dashboard" // Fallback path
+};
 
 // === Glass Card Component ===
 const GlassCard = ({ children, className = "", ...props }) => (
   <div
-    className={`relative overflow-hidden rounded-[32px] backdrop-blur-3xl${className}`}
+    className={`relative overflow-hidden rounded-[32px] backdrop-blur-3xl bg-white/25 border border-white/50 shadow-[0_25px_80px_rgba(15,42,29,0.2)] ${className}`}
     style={{
       background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 100%)',
       backdropFilter: 'blur(40px) saturate(180%) brightness(120%)',
@@ -94,7 +79,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [userRole, setUserRole] = useState(''); // To display the determined role
+  const [userRole, setUserRole] = useState(''); 
 
   const handleChange = (e) => {
     setFormData({
@@ -110,7 +95,6 @@ export default function LoginPage() {
     setUserRole('');
     setIsLoading(true);
 
-    // Placeholder check for missing API URL
     if (!API_BASE_URL) {
       setError('API URL is not configured. Please check the API_BASE_URL constant.');
       setIsLoading(false);
@@ -132,26 +116,28 @@ export default function LoginPage() {
         throw new Error(data.detail || 'Invalid credentials. Please try again.');
       }
       
-      // --- START: Role Determination after successful API call ---
-      // In a real app, 'determinedRole' and 'redirectPath' would come from 'data'.
-      // Here, we simulate it based on the submitted email.
-      const { role: determinedRole, path: redirectPath } = determineRoleAndPath(formData.email);
+      // --- START: Role Determination using actual API response ---
+      // 1. Get the actual role from the API response (e.g., "ADMIN", "LENDER")
+      const determinedRole = data.user.role;
+      
+      // 2. Determine the redirect path using the actual role
+      const redirectPath = DASHBOARD_PATHS[determinedRole] || DASHBOARD_PATHS.DEFAULT;
       // --- END: Role Determination ---
 
 
       // 1. Store tokens 
-      localStorage.setItem('accessToken', data.access);
-      localStorage.setItem('refreshToken', data.refresh);
+      localStorage.setItem('accessToken', data.tokens.access);
+      localStorage.setItem('refreshToken', data.tokens.refresh);
       // 2. Store the determined role
       localStorage.setItem('userRole', determinedRole);
       
-      // 3. Update state and simulate redirection
+      // 3. Update state and initiate redirection
       setUserRole(determinedRole);
       setIsSuccess(true);
       
       console.log(`Login successful as ${determinedRole}! Redirecting to ${redirectPath}...`, data);
       
-      // Use a full page reload to simulate role-based navigation
+      // Redirect to the role-specific dashboard path
       setTimeout(() => {
           window.location.href = redirectPath;
       }, 500); 
@@ -165,16 +151,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#E0F2E0] via-[#C8E6C8] to-[#B0DAB0] overflow-hidden relative font-inter">
-      {/* Background Image */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src={BACKGROUND_IMAGE_URL}
-          alt="Glassmorphism Background"
-          className="object-cover w-full h-full opacity-30"
-          onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/1920x1080/0F2A1D/ffffff?text=NPLin+Background+Fallback'; }}
-        />
-      </div>
-
       {/* Navigation */}
       <nav className="relative z-20 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -206,7 +182,7 @@ export default function LoginPage() {
 
           {isSuccess && (
             <div className="mt-4 text-center text-green-700 bg-green-100 border border-green-400 rounded-lg p-4 text-md font-semibold animate-fadeIn mb-6">
-              ✅ Login successful as **{userRole}**! Redirecting...
+              ✅ Login successful as **{userRole.replace('_', ' ')}**! Redirecting...
             </div>
           )}
 
@@ -224,7 +200,7 @@ export default function LoginPage() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="john@example.com"
+              placeholder="npl@gmail.com"
               type="email"
               required
             />
