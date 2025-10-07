@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import { User, Mail, Phone, MapPin, CreditCard, Briefcase, DollarSign, Edit2, Save, X, Camera, Lock } from 'lucide-react';
 
 const UserProfilePage = () => {
@@ -16,6 +18,7 @@ const UserProfilePage = () => {
     monthly_income_range: 'Ksh 100,000 - 150,000',
     financial_status_net_worth: 'Ksh 1M - 5M'
   });
+  const navigate = useNavigate();
 
   const [editedData, setEditedData] = useState({ ...profileData });
 
@@ -27,6 +30,12 @@ const UserProfilePage = () => {
     setProfileData({ ...editedData });
     setIsEditing(false);
     // Here you would make the API call: PATCH /api/v1/accounts/profile/
+  };
+  const handleLogout = () => {
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    navigate('/login');
   };
 
   const handleCancel = () => {
@@ -72,13 +81,16 @@ const UserProfilePage = () => {
             <div className="flex items-center gap-12">
               <h1 className="text-3xl font-bold text-gray-800">NPLin</h1>
               <nav className="hidden md:flex gap-8">
-                <a href="#" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">Dashboard</a>
-                <a href="#" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">My Assets</a>
+              <a href="/borrower" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">Dashboard</a>
+              <a href="#" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">My Assets</a>
                 <a href="#" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">Offers</a>
-                <a href="#" className="text-gray-900 font-bold border-b-2 border-gray-800">Profile</a>
+                <a href="/profile" className="text-gray-900 font-bold border-b-2 border-gray-800">Profile</a>
               </nav>
             </div>
-            <button className="px-6 py-2.5 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl">
+            <button
+              onClick={handleLogout}
+              className="px-6 py-2.5 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl"
+            >
               Logout
             </button>
           </div>
