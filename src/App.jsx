@@ -9,6 +9,8 @@ import ProtectedRoute from './ProtectedRoutes'
 import AdminDashboard from './Dashboards/AdminDashboard'
 import MarketplacePlatform from './Dashboards/MarketPlacePlatform'
 import ListAssetPage from './Dashboards/ListAssets'
+import UserProfilePage from './Dashboards/UserProfilePage'
+
 
 
 const App = () => {
@@ -61,6 +63,15 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+                <Route
+          path="/profile"
+          element={
+            <ProtectedRoute role={role} allowedRole="BORROWER">
+              <UserProfilePage />
+            </ProtectedRoute>
+          }
+        />
+
       </Routes>
     </Router>
   )
