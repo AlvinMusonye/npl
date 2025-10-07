@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Car, Home, Maximize, Upload, DollarSign, Calendar, MapPin, FileText, CheckCircle, ArrowRight, Trash2 } from 'lucide-react';
-
+import { useNavigate } from 'react-router-dom';
+import { Car, Home, Maximize, Upload, DollarSign, Calendar, MapPin, FileText, CheckCircle, ArrowRight, Trash2, Eye, Edit, MessageSquare } from 'lucide-react';
+import OffersChatPage from './OffersChatPage';
 const ListAssetPage = () => {
+  const [view, setView] = useState('my-assets'); // 'list', 'my-assets', 'offers'
   const [step, setStep] = useState(1);
   const [assetType, setAssetType] = useState('');
   const [formData, setFormData] = useState({
@@ -15,6 +17,28 @@ const ListAssetPage = () => {
   });
   const [uploadedImages, setUploadedImages] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
+  const navigate = useNavigate();
+
+  const myAssets = [
+    { id: 1, title: 'Toyota Prado 2018', type: 'VEHICLE', status: 'Listed', relief_amount_requested_kes: 950000, market_valuation_kes: 1200000, offers: 3, image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800' },
+    { id: 2, title: '4BR House in Karen', type: 'PROPERTY', status: 'Under Review', relief_amount_requested_kes: 5000000, market_valuation_kes: 7500000, offers: 0, image: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800' },
+    { id: 3, title: 'Agricultural Land 5.5 Acres', type: 'LAND', status: 'Listed', relief_amount_requested_kes: 1500000, market_valuation_kes: 2000000, offers: 1, image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800' },
+  ];
+
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      'Listed': { color: 'bg-green-500/30 border-green-500/40 text-green-800' },
+      'Under Review': { color: 'bg-yellow-500/30 border-yellow-500/40 text-yellow-800' },
+      'Action Required': { color: 'bg-red-500/30 border-red-500/40 text-red-800' },
+    };
+    const config = statusConfig[status] || { color: 'bg-gray-500/30 border-gray-500/40 text-gray-800' };
+    return (
+      <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md border ${config.color}`}>
+        <span className="text-xs font-semibold">{status}</span>
+      </div>
+    );
+  };
+
 
   const assetTypes = [
     { value: 'VEHICLE', label: 'Vehicle', icon: Car, color: 'from-blue-400/30 to-blue-500/30' },
@@ -137,6 +161,223 @@ const ListAssetPage = () => {
         return null;
     }
   };
+  const MyAssetCard = ({ asset }) => {
+    const assetTypeDetails = {
+      VEHICLE: { icon: Car },
+      PROPERTY: { icon: Home },
+      LAND: { icon: Maximize }
+    };
+    const { icon: Icon } = assetTypeDetails[asset.type];
+
+    return (
+      <div className="group relative overflow-hidden rounded-3xl bg-white/20 backdrop-blur-xl border border-white/30 hover:bg-white/30 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl">
+        <div className="relative">
+          <div className="relative h-56 overflow-hidden rounded-t-3xl">
+            <img 
+              src={asset.image} 
+              alt={asset.title}
+              className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+            <div className="absolute top-4 right-4">
+              {getStatusBadge(asset.status)}
+            </div>
+          </div>
+
+          <div className="p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Icon className="w-5 h-5 text-gray-700" />
+              <h3 className="text-xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors">
+                {asset.title}
+              </h3>
+            </div>
+
+            <div className="space-y-3 mb-4">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-600">Relief Amount</span>
+                <span className="font-semibold text-gray-800">KSh {asset.relief_amount_requested_kes.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-600">Market Value</span>
+                <span className="font-semibold text-gray-800">KSh {asset.market_valuation_kes.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-600">Offers Received</span>
+                <span className="font-bold text-blue-700">{asset.offers}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-4 border-t border-white/30">
+              <button className="flex items-center gap-2 px-4 py-2 bg-white/40 backdrop-blur-sm rounded-lg border border-white/30 text-sm font-medium text-gray-700 hover:bg-white/60 transition-all">
+                <Eye className="w-4 h-4" />
+                View
+              </button>
+              <button className="flex items-center gap-2 px-4 py-2 bg-white/40 backdrop-blur-sm rounded-lg border border-white/30 text-sm font-medium text-gray-700 hover:bg-white/60 transition-all">
+                <Edit className="w-4 h-4" />
+                Edit
+              </button>
+              <button 
+                onClick={() => setView('offers')}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#c8d5c0]/80 to-[#b8cdb0]/80 hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Offers
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const MyAssetsView = () => (
+    <div className="space-y-8">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h2 className="text-4xl font-bold text-gray-800 mb-2">My Assets</h2>
+          <p className="text-xl text-gray-700">Manage your assets and view offers</p>
+        </div>
+        <button
+          onClick={() => setView('list')}
+          className="px-6 py-3 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-bold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2"
+        >
+          <Upload className="w-5 h-5" />
+          List New Asset
+        </button>
+      </div>
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {myAssets.map(asset => (
+          <MyAssetCard key={asset.id} asset={asset} />
+        ))}
+      </div>
+    </div>
+  );
+
+  const ListAssetForm = () => (
+    <>
+      {/* Progress Steps */}
+      <div className="mb-12">
+        <div className="flex items-center justify-center gap-4">
+          {[1, 2, 3].map((stepNum) => (
+            <React.Fragment key={stepNum}>
+              <div className={`flex items-center gap-3 px-6 py-3 rounded-full backdrop-blur-md border transition-all duration-300 ${
+                step >= stepNum 
+                  ? 'bg-white/40 border-white/60 shadow-lg' 
+                  : 'bg-white/20 border-white/30'
+              }`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-all ${
+                  step >= stepNum 
+                    ? 'bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] text-gray-800' 
+                    : 'bg-white/30 text-gray-600'
+                }`}>
+                  {step > stepNum ? <CheckCircle className="w-5 h-5" /> : stepNum}
+                </div>
+                <span className={`font-semibold ${step >= stepNum ? 'text-gray-800' : 'text-gray-600'}`}>
+                  {stepNum === 1 ? 'Asset Type' : stepNum === 2 ? 'Details' : 'Images & Submit'}
+                </span>
+              </div>
+              {stepNum < 3 && <ArrowRight className="w-6 h-6 text-gray-600" />}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
+      {/* Step 1: Select Asset Type */}
+      {step === 1 && (
+        <div className="space-y-8">
+          <div className="text-center mb-8">
+            <h2 className="text-4xl font-bold text-gray-800 mb-4">List Your Distressed Asset</h2>
+            <p className="text-xl text-gray-700">Choose the type of asset you want to list for relief financing</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {assetTypes.map(type => (
+              <AssetTypeCard key={type.value} type={type} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Step 2: Asset Details */}
+      {step === 2 && (
+        <div className="space-y-8">
+          <div className="text-center mb-8">
+            <h2 className="text-4xl font-bold text-gray-800 mb-4">Asset Details</h2>
+            <p className="text-xl text-gray-700">Provide information about your {assetTypes.find(t => t.value === assetType)?.label.toLowerCase()}</p>
+          </div>
+
+          <div className="bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-2xl">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Common Fields */}
+              <InputField icon={FileText} label="Primary Identifier" field="primary_identifier" placeholder="Unique identifier for this asset" />
+              <InputField icon={DollarSign} label="Relief Amount Requested (KES)" field="relief_amount_requested_kes" type="number" placeholder="e.g., 500000" />
+              <InputField icon={DollarSign} label="Market Valuation (KES)" field="market_valuation_kes" type="number" placeholder="e.g., 1000000" />
+              <InputField icon={Calendar} label="Valuation Date" field="valuation_date" type="date" placeholder="" />
+              {getAssetSpecificFields()}
+            </div>
+
+            <div className="flex gap-4 mt-8">
+              <button onClick={() => setStep(1)} className="flex-1 px-6 py-3 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl">
+                Back
+              </button>
+              <button onClick={() => setStep(3)} className="flex-1 px-6 py-3 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-bold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl">
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Step 3: Images & Submit */}
+      {step === 3 && (
+        <div className="space-y-8">
+          <div className="text-center mb-8">
+            <h2 className="text-4xl font-bold text-gray-800 mb-4">Upload Images</h2>
+            <p className="text-xl text-gray-700">Add photos of your asset to increase credibility</p>
+          </div>
+
+          <div className="bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-2xl">
+            <div className="mb-8">
+              <label className="block cursor-pointer">
+                <div className="border-2 border-dashed border-white/40 rounded-2xl p-12 bg-white/10 hover:bg-white/20 transition-all duration-300 text-center">
+                  <Upload className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+                  <p className="text-lg font-semibold text-gray-800 mb-2">Click to upload images</p>
+                  <p className="text-sm text-gray-600">PNG, JPG up to 10MB each</p>
+                </div>
+                <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
+              </label>
+            </div>
+
+            {uploadedImages.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Uploaded Images ({uploadedImages.length})</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {uploadedImages.map((img, index) => (
+                    <div key={index} className="relative group">
+                      <img src={img} alt={`Upload ${index + 1}`} className="w-full h-32 object-cover rounded-xl border border-white/40" />
+                      <button onClick={() => removeImage(index)} className="absolute top-2 right-2 p-2 bg-red-500/80 hover:bg-red-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-4">
+              <button onClick={() => setStep(2)} className="flex-1 px-6 py-3 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl">
+                Back
+              </button>
+              <button onClick={handleSubmit} className="flex-1 px-6 py-3 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-bold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                <CheckCircle className="w-5 h-5" />
+                Submit Asset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#d4e4d0] via-[#c8d5c0] to-[#b8cdb0]">
@@ -147,13 +388,16 @@ const ListAssetPage = () => {
             <div className="flex items-center gap-12">
               <h1 className="text-3xl font-bold text-gray-800">NPLin</h1>
               <nav className="hidden md:flex gap-8">
-                <a href="#" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">Dashboard</a>
-                <a href="#" className="text-gray-900 font-bold border-b-2 border-gray-800">List Asset</a>
-                <a href="#" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">My Assets</a>
-                <a href="#" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">Offers</a>
+              <button onClick={() => setView('my-assets')} className={`font-medium transition-colors ${view === 'my-assets' ? 'text-gray-900 font-bold border-b-2 border-gray-800' : 'text-gray-700 hover:text-gray-900'}`}>Dashboard</button>
+                <button onClick={() => setView('list')} className={`font-medium transition-colors ${view === 'list' ? 'text-gray-900 font-bold border-b-2 border-gray-800' : 'text-gray-700 hover:text-gray-900'}`}>List Asset</button>
+                <button onClick={() => setView('my-assets')} className={`font-medium transition-colors ${view === 'my-assets' ? 'text-gray-900 font-bold border-b-2 border-gray-800' : 'text-gray-700 hover:text-gray-900'}`}>My Assets</button>
+                <button onClick={() => setView('offers')} className={`font-medium transition-colors ${view === 'offers' ? 'text-gray-900 font-bold border-b-2 border-gray-800' : 'text-gray-700 hover:text-gray-900'}`}>Offers</button>
+
               </nav>
             </div>
-            <button className="px-6 py-2.5 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl">
+            <button 
+              onClick={() => navigate('/profile')}
+              className="px-6 py-2.5 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl">
               Profile
             </button>
           </div>
@@ -161,179 +405,10 @@ const ListAssetPage = () => {
       </header>
 
       <div className="max-w-6xl mx-auto px-6 py-12">
-        {/* Progress Steps */}
-        <div className="mb-12">
-          <div className="flex items-center justify-center gap-4">
-            {[1, 2, 3].map((stepNum) => (
-              <React.Fragment key={stepNum}>
-                <div className={`flex items-center gap-3 px-6 py-3 rounded-full backdrop-blur-md border transition-all duration-300 ${
-                  step >= stepNum 
-                    ? 'bg-white/40 border-white/60 shadow-lg' 
-                    : 'bg-white/20 border-white/30'
-                }`}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-all ${
-                    step >= stepNum 
-                      ? 'bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] text-gray-800' 
-                      : 'bg-white/30 text-gray-600'
-                  }`}>
-                    {step > stepNum ? <CheckCircle className="w-5 h-5" /> : stepNum}
-                  </div>
-                  <span className={`font-semibold ${step >= stepNum ? 'text-gray-800' : 'text-gray-600'}`}>
-                    {stepNum === 1 ? 'Asset Type' : stepNum === 2 ? 'Details' : 'Images & Submit'}
-                  </span>
-                </div>
-                {stepNum < 3 && <ArrowRight className="w-6 h-6 text-gray-600" />}
-              </React.Fragment>
-            ))}
-          </div>
-        </div>
+        {view === 'list' && <ListAssetForm />}
+        {view === 'my-assets' && <MyAssetsView />}
+        {view === 'offers' && <OffersChatPage setView={setView} />}
 
-        {/* Step 1: Select Asset Type */}
-        {step === 1 && (
-          <div className="space-y-8">
-            <div className="text-center mb-8">
-              <h2 className="text-4xl font-bold text-gray-800 mb-4">List Your Distressed Asset</h2>
-              <p className="text-xl text-gray-700">Choose the type of asset you want to list for relief financing</p>
-            </div>
-            <div className="grid md:grid-cols-3 gap-6">
-              {assetTypes.map(type => (
-                <AssetTypeCard key={type.value} type={type} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Step 2: Asset Details */}
-        {step === 2 && (
-          <div className="space-y-8">
-            <div className="text-center mb-8">
-              <h2 className="text-4xl font-bold text-gray-800 mb-4">Asset Details</h2>
-              <p className="text-xl text-gray-700">Provide information about your {assetTypes.find(t => t.value === assetType)?.label.toLowerCase()}</p>
-            </div>
-
-            <div className="bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-2xl">
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Common Fields */}
-                <InputField 
-                  icon={FileText} 
-                  label="Primary Identifier" 
-                  field="primary_identifier" 
-                  placeholder="Unique identifier for this asset" 
-                />
-                <InputField 
-                  icon={DollarSign} 
-                  label="Relief Amount Requested (KES)" 
-                  field="relief_amount_requested_kes" 
-                  type="number"
-                  placeholder="e.g., 500000" 
-                />
-                <InputField 
-                  icon={DollarSign} 
-                  label="Market Valuation (KES)" 
-                  field="market_valuation_kes" 
-                  type="number"
-                  placeholder="e.g., 1000000" 
-                />
-                <InputField 
-                  icon={Calendar} 
-                  label="Valuation Date" 
-                  field="valuation_date" 
-                  type="date"
-                  placeholder="" 
-                />
-
-                {/* Asset-Specific Fields */}
-                {getAssetSpecificFields()}
-              </div>
-
-              <div className="flex gap-4 mt-8">
-                <button
-                  onClick={() => setStep(1)}
-                  className="flex-1 px-6 py-3 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={() => setStep(3)}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-bold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl"
-                >
-                  Continue
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Images & Submit */}
-        {step === 3 && (
-          <div className="space-y-8">
-            <div className="text-center mb-8">
-              <h2 className="text-4xl font-bold text-gray-800 mb-4">Upload Images</h2>
-              <p className="text-xl text-gray-700">Add photos of your asset to increase credibility</p>
-            </div>
-
-            <div className="bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-2xl">
-              {/* Upload Area */}
-              <div className="mb-8">
-                <label className="block cursor-pointer">
-                  <div className="border-2 border-dashed border-white/40 rounded-2xl p-12 bg-white/10 hover:bg-white/20 transition-all duration-300 text-center">
-                    <Upload className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-                    <p className="text-lg font-semibold text-gray-800 mb-2">Click to upload images</p>
-                    <p className="text-sm text-gray-600">PNG, JPG up to 10MB each</p>
-                  </div>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-
-              {/* Uploaded Images Grid */}
-              {uploadedImages.length > 0 && (
-                <div className="mb-8">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Uploaded Images ({uploadedImages.length})</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {uploadedImages.map((img, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={img}
-                          alt={`Upload ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-xl border border-white/40"
-                        />
-                        <button
-                          onClick={() => removeImage(index)}
-                          className="absolute top-2 right-2 p-2 bg-red-500/80 hover:bg-red-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex gap-4">
-                <button
-                  onClick={() => setStep(2)}
-                  className="flex-1 px-6 py-3 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-bold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-                >
-                  <CheckCircle className="w-5 h-5" />
-                  Submit Asset
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Success Modal */}
