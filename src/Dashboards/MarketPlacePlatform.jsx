@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import { Heart, MapPin, Maximize, Bed, Bath, Car, DollarSign, TrendingUp, Filter, Search, ChevronRight, X, Phone, Mail, User, MessageSquare } from 'lucide-react';
 
 const MarketplacePlatform = () => {
@@ -8,6 +10,7 @@ const MarketplacePlatform = () => {
   const [selectedCondition, setSelectedCondition] = useState('all');
   const [selectedListing, setSelectedListing] = useState(null);
   const [showContactModal, setShowContactModal] = useState(false);
+  const navigate = useNavigate();
 
   const listings = [
     {
@@ -142,6 +145,12 @@ const MarketplacePlatform = () => {
     if (selectedCondition === 'all') return true;
     return listing.condition.toLowerCase() === selectedCondition;
   });
+  const handleLogout = () => {
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    navigate('/login');
+  };
 
   const CategoryBadge = ({ icon: Icon, label, value, active }) => (
     <button
@@ -290,9 +299,13 @@ const MarketplacePlatform = () => {
                 <a href="#" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">Contact</a>
               </nav>
             </div>
-            <button className="px-6 py-2.5 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl">
-              Get Started
+            <button
+              onClick={handleLogout}
+              className="px-6 py-2.5 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl"
+            >
+              Logout
             </button>
+
           </div>
         </div>
       </header>
