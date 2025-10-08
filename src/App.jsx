@@ -37,16 +37,16 @@ const App = () => {
           path="/admin"
           element={
             <ProtectedRoute role={role} allowedRole="ADMIN">
-                <AdminDashboard />
-            </ProtectedRoute>
+                <AdminDashboard setRole={setRole} />
+                </ProtectedRoute>
           }
         />
                 <Route
           path="/financier"
           element={
             <ProtectedRoute role={role} allowedRole="FINANCIER">
-              <FinancierDashboard />
-            </ProtectedRoute>
+              <FinancierDashboard setRole={setRole} />
+              </ProtectedRoute>
           }
         />
 
@@ -54,16 +54,16 @@ const App = () => {
           path="/borrower"
           element={
             <ProtectedRoute role={role} allowedRole="BORROWER">
-              <ListAssetPage />
-            </ProtectedRoute>
+              <ListAssetPage setRole={setRole} />
+              </ProtectedRoute>
           }
         />
         <Route
           path="/lender"
           element={
             <ProtectedRoute role={role} allowedRole="LENDER">
-              <MarketplacePlatform />
-            </ProtectedRoute>
+              <MarketplacePlatform setRole={setRole} />
+              </ProtectedRoute>
           }
         />
         <Route
@@ -77,9 +77,9 @@ const App = () => {
                 <Route
           path="/profile"
           element={
-            <ProtectedRoute role={role} allowedRole="BORROWER">
-              <UserProfilePage />
-            </ProtectedRoute>
+            <ProtectedRoute role={role}>
+              <UserProfilePage setRole={setRole} />
+              </ProtectedRoute>
           }
         />
 

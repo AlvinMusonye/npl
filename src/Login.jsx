@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 
 // === CONSTANTS ===
 const API_BASE_URL = 'http://127.0.0.1:8000'; 
@@ -10,6 +12,8 @@ const BACKGROUND_IMAGE_URL = '/loginimage.jpeg';
 const BACKEND_ROLES = {
     BORROWER: "BORROWER",
     LENDER: "LENDER",
+    FINANCIER: "FINANCIER",
+
     RECOVERY_PARTNER: "RECOVERY_PARTNER",
     ADMIN: "ADMIN",
 };
@@ -20,6 +24,8 @@ const DASHBOARD_PATHS = {
     [BACKEND_ROLES.ADMIN]: "/admin",
     [BACKEND_ROLES.BORROWER]: "/borrower",
     [BACKEND_ROLES.LENDER]: "/lender",
+    [BACKEND_ROLES.FINANCIER]: "/financier",
+
     [BACKEND_ROLES.RECOVERY_PARTNER]: "/recovery",
     "DEFAULT": "/dashboard" // Fallback path
 };
@@ -73,8 +79,9 @@ const Input = ({ label, name, value, onChange, placeholder, type, required }) =>
 
 
 // === Login Page Component ===
-export default function LoginPage() {
-  const [formData, setFormData] = useState({
+export default function LoginPage({ setRole }) {
+    const navigate = useNavigate();
+    const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
@@ -119,8 +126,9 @@ export default function LoginPage() {
       }
       
       // --- START: Role Determination using actual API response ---
-      // 1. Get the actual role from the API response (e.g., "ADMIN", "LENDER")
-      const determinedRole = data.user.role;
+      // 1. Get role from API response and NORMALIZE to uppercase to prevent case-sensitivity issues.
+      const determinedRole = data.user.role.toUpperCase();
+
       
       // 2. Determine the redirect path using the actual role
       const redirectPath = DASHBOARD_PATHS[determinedRole] || DASHBOARD_PATHS.DEFAULT;
@@ -131,18 +139,23 @@ export default function LoginPage() {
       localStorage.setItem('accessToken', data.tokens.access);
       localStorage.setItem('refreshToken', data.tokens.refresh);
       // 2. Store the determined role
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      localStorage.setItem('user', JSON.stringify(data.user));
+
       localStorage.setItem('userRole', determinedRole);
       
       // 3. Update state and initiate redirection
+      setRole(determinedRole); // Update role in App.jsx
+
       setUserRole(determinedRole);
       setIsSuccess(true);
       
       console.log(`Login successful as ${determinedRole}! Redirecting to ${redirectPath}...`, data);
-      
-      // Redirect to the role-specific dashboard path
-      setTimeout(() => {
-          window.location.href = redirectPath;
-      }, 500); 
+      // Redirect to the role-specific dashboard path using React Router
+      navigate(redirectPath);
+
+
 
     } catch (err) {
       setError(err.message || 'A network error occurred. Please try again.');

@@ -1,13 +1,15 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     Car, Home, Maximize, Upload, DollarSign, Calendar, MapPin, FileText, CheckCircle, ArrowRight, Trash2, Eye, Edit, MessageSquare, 
-    LayoutDashboard, User, CreditCard, Clock, Check, AlertTriangle , Store 
+    LayoutDashboard, User, CreditCard, Clock, Check, AlertTriangle, Store, X, ArrowLeftRight, LogOut
 } from 'lucide-react';
+
 
 // =========================================================================
 // 1. REUSABLE UI COMPONENTS (Placeholder for separation)
 // =========================================================================
+const API_BASE_URL = 'http://127.0.0.1:8000';
 
 // Card component with glassmorphism style
 const GlassCard = ({ children, className = "", ...props }) => (
@@ -24,7 +26,7 @@ const GlassCard = ({ children, className = "", ...props }) => (
 );
 
 // Input Field Component
-const InputField = ({ icon: Icon, label, field, type = "text", placeholder, value, onChange, detailField = false }) => (
+const InputField = ({ icon: Icon, label, field, type = "text", placeholder, value, onChange, disabled = false }) => (
     <div className="space-y-2">
       <label className="block text-sm font-semibold text-gray-700">{label}</label>
       <div className="relative">
@@ -34,7 +36,8 @@ const InputField = ({ icon: Icon, label, field, type = "text", placeholder, valu
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          className="w-full pl-11 pr-4 py-3 bg-white/40 backdrop-blur-md rounded-xl border border-white/40 text-gray-800 placeholder-gray-600 outline-none focus:border-white/60 transition-all"
+          disabled={disabled}
+          className="w-full pl-11 pr-4 py-3 bg-white/40 backdrop-blur-md rounded-xl border border-white/40 text-gray-800 placeholder-gray-600 outline-none focus:border-white/60 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
         />
       </div>
     </div>
@@ -63,30 +66,7 @@ const getStatusBadge = (status) => {
 // 2. DATA & STATE (Consolidated data for demo)
 // =========================================================================
 
-const initialAssets = [
-    { id: 1, title: 'Toyota Prado 2018', type: 'VEHICLE', status: 'Listed', relief_amount_requested_kes: 950000, market_valuation_kes: 1200000, offers: 3, image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800' },
-    { id: 2, title: '4BR House in Karen', type: 'PROPERTY', status: 'Under Review', relief_amount_requested_kes: 5000000, market_valuation_kes: 7500000, offers: 0, image: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800' },
-    { id: 3, title: 'Agricultural Land 5.5 Acres', type: 'LAND', status: 'Verified', relief_amount_requested_kes: 1500000, market_valuation_kes: 2000000, offers: 1, image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800' },
-    { id: 4, title: 'VW Polo 2015', type: 'VEHICLE', status: 'Action Required', relief_amount_requested_kes: 400000, market_valuation_kes: 550000, offers: 0, image: 'https://images.unsplash.com/photo-1596707328606-d71e98d89e52?w=800' },
-];
 
-const simulatedOffers = [
-    { id: 101, assetId: 1, financier: 'Financier A', amount: 900000, rate: '12%', status: 'Pending', date: '2023-10-01' },
-    { id: 102, assetId: 3, financier: 'Financier B', amount: 1450000, rate: '10%', status: 'Countered', date: '2023-09-28' },
-    { id: 103, assetId: 1, financier: 'Financier C', amount: 950000, rate: '11%', status: 'Pending', date: '2023-10-03' },
-    { id: 104, assetId: 2, financier: 'Financier D', amount: 4800000, rate: '13%', status: 'Rejected', date: '2023-10-05' },
-];
-
-const simulatedLoan = {
-    principalBalance: 3200000,
-    financier: 'Financier X',
-    nextPaymentDue: '2023-11-15',
-    interestRate: '10.5%',
-    paymentHistory: [
-        { date: '2023-09-15', amount: 150000, principal: 130000, interest: 20000 },
-        { date: '2023-08-15', amount: 150000, principal: 125000, interest: 25000 },
-    ]
-};
 
 const assetTypes = [
     { value: 'VEHICLE', label: 'Vehicle', icon: Car, color: 'from-blue-400/30 to-blue-500/30' },
@@ -98,38 +78,29 @@ const assetTypes = [
 // 3. PAGE LOGIC AND COMPONENTS (Borrower-Specific Views)
 // =========================================================================
 
-// Placeholder for OffersChatPage (for navigation)
-const OffersChatPage = ({ setView }) => (
-    <div className="h-[70vh] flex items-center justify-center">
-        <GlassCard className="p-10 text-center">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Offers Negotiation View</h2>
-            <p className="text-gray-600 mb-6">
-                **API: GET /api/assets/my_offers/{'{offer_id}'}/ | chat_url**
-                <br />
-                This is the private chat and negotiation interface for a specific offer.
-            </p>
-            <button 
-                onClick={() => setView('offers-review')}
-                className="mt-4 px-6 py-3 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all duration-300"
-            >
-                Back to Offers List
-            </button>
-        </GlassCard>
-    </div>
-);
 
 
 // Borrower Dashboard Component (The new 5-page structure)
 
 // --- 1. Borrower Landing Dashboard 🏠 ---
 const BorrowerLandingDashboard = ({ myAssets, myOffers, setCurrentPage }) => {
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+            setUser(JSON.parse(userData));
+        }
+    }, []);
+
     const summary = useMemo(() => ({
         activeListings: myAssets.filter(a => a.status === 'Listed' || a.status === 'Verified').length,
         pendingVerification: myAssets.filter(a => a.status === 'Under Review' || a.status === 'Action Required').length,
         totalRequested: myAssets.reduce((sum, a) => sum + a.relief_amount_requested_kes, 0),
-        newOffers: myOffers.filter(o => o.status === 'Pending').length, // Simple filter for new/pending
-        nextPayment: simulatedLoan.nextPaymentDue,
-        outstandingBalance: simulatedLoan.principalBalance,
+        newOffers: myOffers.filter(o => o.status === 'PENDING').length,
+        nextPayment: 'N/A', // To be replaced with loan data
+        outstandingBalance: 0, // To be replaced with loan data
+
     }), [myAssets, myOffers]);
 
     const MetricCard = ({ title, value, Icon, color, action }) => (
@@ -153,8 +124,8 @@ const BorrowerLandingDashboard = ({ myAssets, myOffers, setCurrentPage }) => {
     return (
         <div className="space-y-10">
             <div className="p-8 bg-white/40 backdrop-blur-xl rounded-3xl border border-white/40 shadow-2xl">
-                <h2 className="text-4xl font-bold text-gray-900 mb-2">Welcome Back, Betty!</h2>
-                <div className="flex items-center gap-3 text-lg text-gray-700">
+            <h2 className="text-4xl font-bold text-gray-900 mb-2">Welcome Back, {user ? user.first_name : 'User'}!</h2>
+            <div className="flex items-center gap-3 text-lg text-gray-700">
                     <CheckCircle className="w-5 h-5 text-green-600" />
                     <span>Account Status: <span className="font-semibold text-green-700">Verified</span></span>
                 </div>
@@ -259,12 +230,15 @@ const AssetFormSection = ({ step, setStep, formData, setFormData, uploadedImages
         }));
     };
     const handleImageUpload = (e) => {
-        const files = Array.from(e.target.files);
-        const imageUrls = files.map(file => URL.createObjectURL(file));
-        setUploadedImages(prev => [...prev, ...imageUrls]);
+        const newFiles = Array.from(e.target.files).map(file => ({
+            file: file,
+            preview: URL.createObjectURL(file)
+        }));
+        setUploadedImages(prev => [...prev, ...newFiles]);
+
     };
     const removeImage = (index) => {
-        setUploadedImages(uploadedImages.filter((_, i) => i !== index));
+        setUploadedImages(prev => prev.filter((_, i) => i !== index));
     };
 
     const getAssetSpecificFields = () => {
@@ -279,6 +253,8 @@ const AssetFormSection = ({ step, setStep, formData, setFormData, uploadedImages
                 <InputField icon={Car} label="Model" field="model" placeholder="e.g., Corolla" value={valueGetter('model')} onChange={(e) => onChangeHandler('model', e)} />
                 <InputField icon={Calendar} label="Year" field="year" type="number" placeholder="e.g., 2018" value={valueGetter('year')} onChange={(e) => onChangeHandler('year', e)} />
                 <InputField icon={FileText} label="Registration Number" field="registration_number" placeholder="e.g., KAA 123A" value={valueGetter('registration_number')} onChange={(e) => onChangeHandler('registration_number', e)} />
+                <InputField icon={FileText} label="Chassis Number" field="chassis_number" placeholder="e.g., JM6KE..." value={valueGetter('chassis_number')} onChange={(e) => onChangeHandler('chassis_number', e)} />
+
                 <InputField icon={FileText} label="Mileage (km)" field="mileage" type="number" placeholder="e.g., 50000" value={valueGetter('mileage')} onChange={(e) => onChangeHandler('mileage', e)} />
               </>
             );
@@ -405,11 +381,11 @@ const AssetFormSection = ({ step, setStep, formData, setFormData, uploadedImages
                     <div className="mb-8">
                         <h3 className="text-lg font-semibold text-gray-800 mb-4">Uploaded Files ({uploadedImages.length})</h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {uploadedImages.map((img, index) => (
+                        {uploadedImages.map((imageObj, index) => (
                             <div key={index} className="relative group">
-                            {img.includes('pdf') 
+                            {imageObj.file.type.includes('pdf') 
                                 ? <FileText className="w-full h-32 object-cover rounded-xl border border-white/40 p-8 text-gray-600 bg-white/40" />
-                                : <img src={img} alt={`Upload ${index + 1}`} className="w-full h-32 object-cover rounded-xl border border-white/40" />
+                                : <img src={imageObj.preview} alt={`Upload ${index + 1}`} className="w-full h-32 object-cover rounded-xl border border-white/40" />
                             }
                             <button onClick={() => removeImage(index)} className="absolute top-2 right-2 p-2 bg-red-500/80 hover:bg-red-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                 <Trash2 className="w-4 h-4" />
@@ -424,7 +400,7 @@ const AssetFormSection = ({ step, setStep, formData, setFormData, uploadedImages
                     <button onClick={() => setStep(2)} className="flex-1 px-6 py-3 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl">
                         Back
                     </button>
-                    <button onClick={() => handleSubmit(setShowSuccess)} className="flex-1 px-6 py-3 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-bold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                    <button onClick={handleSubmit} className="flex-1 px-6 py-3 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-bold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
                         <CheckCircle className="w-5 h-5" />
                         Submit Asset
                     </button>
@@ -531,63 +507,68 @@ const AssetManagementView = ({ myAssets, setCurrentPage, setFormData, setAssetTy
 
 
 // --- 3. Offer Review & Negotiation Dashboard 💰 ---
-const OffersReviewDashboard = ({ myOffers, setCurrentPage }) => {
+const OffersReviewDashboard = ({ myOffers, loading, error, onAccept, onDecline, onCounter }) => {
 
     const OfferCard = ({ offer }) => {
         const statusConfig = {
-            'Pending': { color: 'text-yellow-600', button: 'bg-yellow-500/80 hover:bg-yellow-600', text: 'Negotiate' },
-            'Countered': { color: 'text-blue-600', button: 'bg-blue-500/80 hover:bg-blue-600', text: 'Review Counter' },
-            'Accepted': { color: 'text-green-600', button: 'bg-green-500/80 hover:bg-green-600', text: 'View Loan' },
-            'Rejected': { color: 'text-red-600', button: 'bg-gray-400', text: 'Rejected' },
+            'PENDING': { color: 'text-yellow-600' },
+            'COUNTERED': { color: 'text-blue-600' },
+            'ACCEPTED': { color: 'text-green-600' },
+            'DECLINED': { color: 'text-red-600' },
+
         };
         const config = statusConfig[offer.status];
-        const asset = initialAssets.find(a => a.id === offer.assetId);
 
         return (
             <GlassCard className="p-6">
                 <div className="flex justify-between items-start mb-4 border-b border-white/40 pb-3">
-                    <h3 className="text-xl font-bold text-gray-800">Offer on: {asset.title}</h3>
-                    <span className={`font-semibold ${config.color}`}>{offer.status}</span>
+                <h3 className="text-xl font-bold text-gray-800">Offer on: {offer.asset_title || 'N/A'}</h3>
+                <span className={`font-semibold ${config.color}`}>{offer.status}</span>
                 </div>
                 
                 <div className="space-y-3 mb-4">
                     <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Financier</span>
-                        <span className="font-semibold text-gray-800">{offer.financier}</span>
+                        <span className="font-semibold text-gray-800">{offer.financier_name}</span>
                     </div>
                     <div className="flex justify-between text-lg font-bold">
                         <span className="text-gray-600">Offer Amount</span>
-                        <span className="text-green-700">KSh {offer.amount.toLocaleString()}</span>
+                        <span className="text-green-700">KSh {Number(offer.offer_amount_kes).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Proposed Rate</span>
-                        <span className="font-semibold text-gray-800">{offer.rate}</span>
+                        <span className="font-semibold text-gray-800">{offer.proposed_interest_rate}%</span>
                     </div>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-white/40 flex justify-between gap-3">
-                    <button 
-                        onClick={() => setCurrentPage('offers-chat')} // Navigates to the chat view
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-white font-semibold rounded-xl transition-all shadow-md"
-                        style={{ backgroundColor: config.button }}
-                        disabled={offer.status === 'Rejected'}
-                    >
-                        <MessageSquare className="w-4 h-4" />
-                        {config.text}
-                    </button>
-                    {offer.status === 'Pending' && (
+                {offer.status === 'PENDING' && (
+                    <div className="mt-4 pt-4 border-t border-white/40 flex flex-col sm:flex-row gap-3">
+
                         <button 
-                            className="flex-1 px-4 py-2 bg-green-600/80 hover:bg-green-700 text-white font-semibold rounded-xl transition-all shadow-md"
-                            onClick={() => console.log('Accept Offer:', offer.id)}
+                            onClick={() => onAccept(offer.id)}
+                            className="flex-1 px-4 py-2 bg-green-600/80 hover:bg-green-700 text-white font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+
                         >
                             <Check className="w-4 h-4 mr-1" />
                             Accept
                         </button>
-                    )}
-                </div>
-                <p className="text-xs text-gray-500 mt-2">
-                    **API: POST /api/offers/{'{offer_id}'}/accept/ or PATCH /api/offers/{'{offer_id}'}/counter/**
-                </p>
+                        <button 
+                            onClick={() => onCounter(offer)}
+                            className="flex-1 px-4 py-2 bg-blue-600/80 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+                        >
+                            <ArrowLeftRight className="w-4 h-4 mr-1" />
+                            Counter
+                        </button>
+                        <button 
+                            onClick={() => onDecline(offer.id)}
+                            className="flex-1 px-4 py-2 bg-red-600/80 hover:bg-red-700 text-white font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+                        >
+                            <X className="w-4 h-4 mr-1" />
+                            Decline
+                        </button>
+                    </div>
+                )}
+
             </GlassCard>
         );
     };
@@ -595,19 +576,69 @@ const OffersReviewDashboard = ({ myOffers, setCurrentPage }) => {
     return (
         <div className="space-y-8">
             <h2 className="text-4xl font-bold text-gray-800 mb-4">Offer Review & Negotiation</h2>
-            <p className="text-lg text-gray-700">
-                A consolidated list of all financing proposals received across your assets.
-                <span className="block mt-2 font-semibold">API: GET /api/assets/my_offers/</span>
-            </p>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {myOffers.map(offer => (
-                    <OfferCard key={offer.id} offer={offer} />
-                ))}
-            </div>
+            {loading && <p className="text-center text-lg text-gray-700">Loading your offers...</p>}
+            {error && <p className="text-center text-lg text-red-600 bg-red-100 p-4 rounded-xl">Error: {error}</p>}
+            {!loading && !error && (
+                <>
+                    <p className="text-lg text-gray-700">
+                        A consolidated list of all financing proposals received across your assets.
+                        <span className="block mt-2 font-semibold">API: GET /api/assets/my_offers/</span>
+                    </p>
+                    {myOffers.length > 0 ? (
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {myOffers.map(offer => (
+                                <OfferCard key={offer.id} offer={offer} />
+                            ))}
+                        </div>
+                    ) : (
+                        <GlassCard className="p-10 text-center">
+                            <h3 className="text-2xl font-bold text-gray-800">No Offers Yet</h3>
+                            <p className="text-gray-600 mt-2">You have not received any offers on your assets.</p>
+                        </GlassCard>
+                    )}
+                </>
+            )}
+
         </div>
     );
 };
 
+// Counter Offer Modal
+const CounterOfferModal = ({ offer, onClose, onSubmit }) => {
+    const [counterData, setCounterData] = useState({
+        offer_amount_kes: '',
+        proposed_interest_rate: '',
+        borrower_comment: ''
+    });
+
+    const handleChange = (e) => {
+        setCounterData({ ...counterData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSubmit(offer.id, counterData);
+    };
+
+    if (!offer) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <GlassCard className="w-full max-w-md p-8">
+                <h3 className="text-2xl font-bold text-gray-800 mb-6">Make Counter Offer</h3>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <InputField icon={DollarSign} label="Counter Amount (KES)" name="offer_amount_kes" type="number" value={counterData.offer_amount_kes} onChange={handleChange} />
+                    <InputField icon={TrendingUp} label="Proposed Interest Rate (%)" name="proposed_interest_rate" type="number" step="0.1" value={counterData.proposed_interest_rate} onChange={handleChange} />
+                    <InputField icon={MessageSquare} label="Your Comment" name="borrower_comment" type="text" value={counterData.borrower_comment} onChange={handleChange} />
+                    <div className="flex gap-3 pt-4">
+                        <button type="button" onClick={onClose} className="flex-1 py-3 bg-white/40 hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40">Cancel</button>
+                        <button type="submit" className="flex-1 py-3 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] text-gray-800 font-bold rounded-xl">Submit Counter</button>
+                    </div>
+                </form>
+            </GlassCard>
+        </div>
+    );
+};
 
 // --- 4. Loan Servicing & Repayment Portal 💳 ---
 const LoanServicingPortal = () => {
@@ -651,21 +682,23 @@ const LoanServicingPortal = () => {
                 <div className="grid md:grid-cols-2 gap-4">
                     <div className="p-4 bg-white/40 rounded-xl">
                         <p className="text-sm text-gray-600">Principal Balance</p>
-                        <p className="text-3xl font-extrabold text-red-600">KSh {simulatedLoan.principalBalance.toLocaleString()}</p>
+                        <p className="text-3xl font-extrabold text-red-600">KSh 0</p>
                     </div>
                     <div className="p-4 bg-white/40 rounded-xl">
                         <p className="text-sm text-gray-600">Next Payment Due</p>
-                        <p className="text-2xl font-bold text-gray-800">{simulatedLoan.nextPaymentDue}</p>
+                        <p className="text-2xl font-bold text-gray-800">N/A</p>
                     </div>
-                    <div className="p-4 bg-white/40 rounded-xl">
+                    {/* <div className="p-4 bg-white/40 rounded-xl">
+
                         <p className="text-sm text-gray-600">Interest Rate</p>
                         <p className="text-2xl font-bold text-gray-800">{simulatedLoan.interestRate}</p>
                     </div>
                     <div className="p-4 bg-white/40 rounded-xl">
                         <p className="text-sm text-gray-600">Financier</p>
                         <p className="text-2xl font-bold text-gray-800">{simulatedLoan.financier}</p>
-                    </div>
+                                 </div> */}
                 </div>
+
             </GlassCard>
 
             <GlassCard className="p-8">
@@ -690,7 +723,7 @@ const LoanServicingPortal = () => {
 
             <GlassCard className="p-8">
                 <h3 className="text-2xl font-bold text-gray-800 mb-6">Repayment History</h3>
-                <PaymentHistoryTable history={simulatedLoan.paymentHistory} />
+                <PaymentHistoryTable history={[]} />
             </GlassCard>
         </div>
     );
@@ -700,13 +733,98 @@ const LoanServicingPortal = () => {
 // --- 5. Profile & Settings ⚙️ ---
 const ProfileAndSettings = () => {
     
-    // Placeholder data for profile fields
-    const [profile, setProfile] = useState({
-        name: 'Betty Achieng',
-        email: 'betty.a@example.com',
-        phone: '0712 345 678',
-        income: 'Self-Employed',
-    });
+    const [isEditing, setIsEditing] = useState(false);
+    const [profileData, setProfileData] = useState(null);
+    const [editedData, setEditedData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const accessToken = localStorage.getItem('accessToken');
+                if (!accessToken) throw new Error('Authentication token not found.');
+
+                const response = await fetch(`${API_BASE_URL}/api/accounts/me/`, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` },
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to fetch profile.');
+                }
+
+                const data = await response.json();
+                
+                const formattedData = {
+                    name: `${data.first_name || ''} ${data.last_name || ''}`.trim(),
+                    email: data.email || '',
+                    phone: data.mobile_phone_number || '',
+                    income: data.profile?.source_of_income || 'Not Set',
+                };
+
+                setProfileData(formattedData);
+                setEditedData(formattedData);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProfile();
+    }, []);
+
+    const handleInputChange = (field, value) => {
+        setEditedData({ ...editedData, [field]: value });
+    };
+
+    const handleSave = async () => {
+        try {
+            const accessToken = localStorage.getItem('accessToken');
+            if (!accessToken) throw new Error('Authentication token not found.');
+
+            const [firstName, ...lastNameParts] = editedData.name.split(' ');
+            const lastName = lastNameParts.join(' ');
+
+            const payload = {
+                first_name: firstName,
+                last_name: lastName,
+                email: editedData.email,
+                mobile_phone_number: editedData.phone,
+                profile: {
+                    source_of_income: editedData.income,
+                }
+            };
+
+            const response = await fetch(`${API_BASE_URL}/api/accounts/me/`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) throw new Error('Failed to update profile.');
+
+            setProfileData(editedData);
+            setIsEditing(false);
+            alert('Profile updated successfully!');
+        } catch (err) {
+            alert(`Error: ${err.message}`);
+        }
+    };
+    
+    const handleCancel = () => {
+        setEditedData(profileData);
+        setIsEditing(false);
+    };
+
+    if (loading) return <div className="text-center p-8 text-gray-700">Loading Profile...</div>;
+    if (error) return <div className="text-center p-8 text-red-600">Error: {error}</div>;
+    if (!profileData) return <div className="text-center p-8 text-gray-700">Could not load profile data.</div>;
+
+
 
     return (
         <div className="space-y-8">
@@ -720,17 +838,36 @@ const ProfileAndSettings = () => {
                     <User className="w-6 h-6 text-[#6B9071]" /> My Profile & Contact Details
                 </h3>
                 <div className="grid md:grid-cols-2 gap-6">
-                    <InputField icon={User} label="Full Name" field="name" value={profile.name} onChange={(e) => setProfile({...profile, name: e.target.value})} />
-                    <InputField icon={MessageSquare} label="Email Address" field="email" type="email" value={profile.email} onChange={(e) => setProfile({...profile, email: e.target.value})} />
-                    <InputField icon={FileText} label="Phone Number" field="phone" value={profile.phone} onChange={(e) => setProfile({...profile, phone: e.target.value})} />
-                    <InputField icon={DollarSign} label="Income Profile" field="income" value={profile.income} onChange={(e) => setProfile({...profile, income: e.target.value})} />
+                <InputField icon={User} label="Full Name" field="name" value={editedData.name} onChange={(e) => handleInputChange('name', e.target.value)} disabled={!isEditing} />
+                    <InputField icon={MessageSquare} label="Email Address" field="email" type="email" value={editedData.email} onChange={(e) => handleInputChange('email', e.target.value)} disabled={!isEditing} />
+                    <InputField icon={FileText} label="Phone Number" field="phone" value={editedData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} disabled={!isEditing} />
+                    <InputField icon={DollarSign} label="Income Profile" field="income" value={editedData.income} onChange={(e) => handleInputChange('income', e.target.value)} disabled={!isEditing} />
                 </div>
-                <button 
-                    className="mt-8 px-6 py-3 bg-gradient-to-r from-[#b8cdb0] to-[#a8bd9f] hover:from-[#a8bd9f] hover:to-[#99af8d] text-gray-800 font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
-                    onClick={() => console.log('Update Profile')}
-                >
-                    Save Changes
-                </button>
+                
+                {!isEditing ? (
+                    <button 
+                        className="mt-8 px-6 py-3 bg-gradient-to-r from-[#b8cdb0] to-[#a8bd9f] hover:from-[#a8bd9f] hover:to-[#99af8d] text-gray-800 font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                        onClick={() => setIsEditing(true)}
+                    >
+                        Edit Profile
+                    </button>
+                ) : (
+                    <div className="flex gap-4 mt-8">
+                        <button 
+                            className="px-6 py-3 bg-green-600/80 hover:bg-green-700 text-white font-semibold rounded-xl transition-all shadow-md"
+                            onClick={handleSave}
+                        >
+                            Save Changes
+                        </button>
+                        <button 
+                            className="px-6 py-3 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all"
+                            onClick={handleCancel}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                )}
+
                 <p className="text-xs text-gray-500 mt-2">
                     **API: GET /api/accounts/me/ and PATCH /api/accounts/me/**
                 </p>
@@ -764,8 +901,12 @@ const ProfileAndSettings = () => {
 // 4. MAIN BORROWER DASHBOARD COMPONENT (The Single File Export)
 // =========================================================================
 
-export default function BorrowerDashboard() {
-  const [currentPage, setCurrentPage] = useState('landing'); // 'landing', 'asset-management', 'asset-registration', 'offers-review', 'offers-chat', 'loan-servicing', 'profile'
+export default function BorrowerDashboard({ setRole }) {
+    const [currentPage, setCurrentPage] = useState('landing');
+  const [myOffers, setMyOffers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedOffer, setSelectedOffer] = useState(null);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     collateral_type: '',
@@ -778,9 +919,19 @@ export default function BorrowerDashboard() {
   });
   const [uploadedImages, setUploadedImages] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
-  const navigate = useNavigate();
+  const [showCounterModal, setShowCounterModal] = useState(false);
 
-  // Renamed views for clarity and mapping
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    setRole(null);
+
+    navigate('/login');
+  };
+
   const menuMap = {
       'landing': 'Dashboard',
       'asset-management': 'My Assets',
@@ -791,50 +942,195 @@ export default function BorrowerDashboard() {
   };
 
   // Function to handle asset submission success
-  const handleSubmit = (setShowSuccess) => {
-    console.log('Submitting asset:', formData);
-    // Simulate API call success
-    setShowSuccess(true);
-    setTimeout(() => {
-      setShowSuccess(false);
-      setCurrentPage('asset-management');
-      setStep(1);
-      setFormData({
-        collateral_type: '',
-        primary_identifier: '',
-        relief_amount_requested_kes: '',
-        market_valuation_kes: '',
-        valuation_date: '',
-        details: {},
-        images: []
-      });
-      setUploadedImages([]);
-    }, 3000);
+  useEffect(() => {
+    if (currentPage === 'offers-review') {
+        const fetchOffers = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const accessToken = localStorage.getItem('accessToken');
+                if (!accessToken) throw new Error('Authentication token not found.');
+
+                const response = await fetch(`${API_BASE_URL}/api/assets/my_offers/`, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` },
+                });
+
+                if (!response.ok) throw new Error('Failed to fetch offers.');
+                
+                const data = await response.json();
+                setMyOffers(data);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchOffers();
+    }
+  }, [currentPage]);
+
+  const updateOfferStatus = (offerId, newStatus) => {
+    setMyOffers(myOffers.map(o => o.id === offerId ? { ...o, status: newStatus } : o));
+  };
+
+  const handleOfferAction = async (offerId, action) => {
+    try {
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) throw new Error('Authentication token not found.');
+
+        const response = await fetch(`${API_BASE_URL}/api/offers/${offerId}/${action}/`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${accessToken}` },
+        });
+
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.detail || `Failed to ${action} offer.`);
+        }
+        
+        updateOfferStatus(offerId, action === 'accept' ? 'ACCEPTED' : 'DECLINED');
+        alert(`Offer ${action}ed successfully!`);
+    } catch (err) {
+        alert(`Error: ${err.message}`);
+    }
+  };
+
+  const handleAcceptOffer = (offerId) => handleOfferAction(offerId, 'accept');
+  const handleDeclineOffer = (offerId) => handleOfferAction(offerId, 'decline');
+
+  const handleOpenCounterModal = (offer) => {
+    setSelectedOffer(offer);
+    setShowCounterModal(true);
+  };
+
+  const handleCounterOfferSubmit = async (offerId, counterData) => {
+    console.log('Submitting counter for', offerId, counterData);
+    // Implement PATCH /api/offers/{offerId}/counter/
+    // On success:
+    // updateOfferStatus(offerId, 'COUNTERED');
+    // setShowCounterModal(false);
+    // alert('Counter offer submitted!');
+    alert('Counter offer functionality to be implemented.');
+    setShowCounterModal(false);
+  };
+
+
+  const handleSubmit = async () => {
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken) {
+        alert('Authentication error. Please log in again.');
+        return;
+    }
+
+    try {
+        // Step 1: Upload all images and get their storage paths
+        const imagePaths = await Promise.all(
+            uploadedImages.map(async (imageObj) => {
+                // 1a: Get presigned URL
+                const presignedUrlResponse = await fetch(`${API_BASE_URL}/api/documents/generate-presigned-url/`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ file_name: imageObj.file.name, file_type: imageObj.file.type }),
+                });
+                if (!presignedUrlResponse.ok) throw new Error('Failed to get presigned URL.');
+                const { url, storage_path } = await presignedUrlResponse.json();
+
+                // 1b: Upload file to S3
+                const uploadResponse = await fetch(url, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': imageObj.file.type },
+                    body: imageObj.file,
+                });
+                if (!uploadResponse.ok) throw new Error(`Failed to upload ${imageObj.file.name}.`);
+
+                // 1c: Create document record
+                const createRecordResponse = await fetch(`${API_BASE_URL}/api/documents/create-record/`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ storage_path: storage_path, document_type: 'ASSET_IMAGE' }),
+                });
+                if (!createRecordResponse.ok) throw new Error('Failed to create document record.');
+
+                return storage_path;
+            })
+        );
+
+        // Step 2: Construct and submit the asset registration payload
+        const assetPayload = {
+            collateral_type: formData.collateral_type,
+            primary_identifier: formData.primary_identifier,
+            valuation_kes: formData.market_valuation_kes, // Mapping form field to API field
+            valuation_date: formData.valuation_date,
+            details: {
+                ...formData.details,
+                // Map form field 'year' to API's 'year_of_manufacture' if it exists
+                ...(formData.details.year && { year_of_manufacture: parseInt(formData.details.year, 10) }),
+            },
+            images: imagePaths,
+        };
+        // Remove the old 'year' field if it exists to avoid sending it
+        if (assetPayload.details.year) {
+            delete assetPayload.details.year;
+        }
+
+        const registerResponse = await fetch(`${API_BASE_URL}/api/assets/register/`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(assetPayload),
+        });
+
+        if (!registerResponse.ok) {
+            const errorData = await registerResponse.json();
+            throw new Error(JSON.stringify(errorData) || 'Failed to register asset.');
+        }
+
+        // Step 3: Handle success
+        setShowSuccess(true);
+        setTimeout(() => {
+            setShowSuccess(false);
+            setCurrentPage('asset-management');
+            // Reset form state
+            setStep(1);
+            setFormData({
+                collateral_type: '', primary_identifier: '', relief_amount_requested_kes: '',
+                market_valuation_kes: '', valuation_date: '', details: {}, images: []
+            });
+            setUploadedImages([]);
+        }, 3000);
+
+    } catch (error) {
+        console.error('Asset registration failed:', error);
+        alert(`Error: ${error.message}`);
+    }
   };
   
   // RENDER LOGIC
   const renderPage = () => {
     switch (currentPage) {
       case 'landing':
-        return <BorrowerLandingDashboard myAssets={initialAssets} myOffers={simulatedOffers} setCurrentPage={setCurrentPage} />;
+        return <BorrowerLandingDashboard myAssets={[]} myOffers={myOffers} setCurrentPage={setCurrentPage} />;
       
       case 'asset-management':
-        return <AssetManagementView myAssets={initialAssets} setCurrentPage={setCurrentPage} setFormData={setFormData} setAssetType={(val) => setFormData(prev => ({...prev, collateral_type: val}))} setStep={setStep} />;
+        return <AssetManagementView myAssets={[]} setCurrentPage={setCurrentPage} setFormData={setFormData} setAssetType={(val) => setFormData(prev => ({...prev, collateral_type: val}))} setStep={setStep} />;
       
       case 'asset-registration':
         return <AssetFormSection 
                     step={step} setStep={setStep} 
                     formData={formData} setFormData={setFormData} 
                     uploadedImages={uploadedImages} setUploadedImages={setUploadedImages} 
-                    assetType={formData.collateral_type} handleSubmit={handleSubmit} setShowSuccess={setShowSuccess} 
+                    assetType={formData.collateral_type} handleSubmit={handleSubmit} 
                 />;
       
       case 'offers-review':
-        return <OffersReviewDashboard myOffers={simulatedOffers} setCurrentPage={setCurrentPage} />;
-        
-      case 'offers-chat':
-        return <OffersChatPage setView={setCurrentPage} />; // Placeholder chat view
-        
+        return <OffersReviewDashboard 
+        myOffers={myOffers} 
+        loading={loading}
+        error={error}
+        onAccept={handleAcceptOffer}
+        onDecline={handleDeclineOffer}
+        onCounter={handleOpenCounterModal}
+    />;
+
       case 'loan-servicing':
         return <LoanServicingPortal />;
         
@@ -842,7 +1138,7 @@ export default function BorrowerDashboard() {
         return <ProfileAndSettings />;
         
       default:
-        return <BorrowerLandingDashboard myAssets={initialAssets} myOffers={simulatedOffers} setCurrentPage={setCurrentPage} />;
+        return <BorrowerLandingDashboard myAssets={[]} myOffers={myOffers} setCurrentPage={setCurrentPage} />;
     }
   };
 
@@ -867,10 +1163,11 @@ export default function BorrowerDashboard() {
               ))}
               </nav>
             </div>
-            <button 
-              onClick={() => setCurrentPage('profile')}
-              className="px-6 py-2.5 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl">
-              <User className="w-5 h-5 mr-1 inline-block" /> Profile
+            <button
+              onClick={handleLogout}
+              className="px-6 py-2.5 bg-red-500/20 backdrop-blur-md hover:bg-red-500/30 text-red-800 font-semibold rounded-xl border border-red-500/30 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2">
+              <LogOut className="w-5 h-5" /> Logout
+
             </button>
           </div>
         </div>
@@ -900,6 +1197,15 @@ export default function BorrowerDashboard() {
           </GlassCard>
         </div>
       )}
+            {/* Counter Offer Modal */}
+            {showCounterModal && (
+          <CounterOfferModal 
+            offer={selectedOffer}
+            onClose={() => setShowCounterModal(false)}
+            onSubmit={handleCounterOfferSubmit}
+          />
+      )}
+
     </div>
   );
 }
