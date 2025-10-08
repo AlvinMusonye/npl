@@ -1,5 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Building, TrendingUp, Handshake, Bot, Zap, Lock, Store, Check, X, ArrowUp, ArrowDown, Minus, Menu, XCircle, FileText, Shield, Gavel, Wallet, CreditCard, LayoutDashboard, Users, Settings, List } from 'lucide-react';
+import { 
+    LayoutDashboard, Users, Gavel, FileText, Wallet, Settings, List, XCircle, Menu,
+    Building, TrendingUp, Handshake, Bot, Zap, Lock, Store, Check, X, ArrowUp, ArrowDown, Minus, 
+    ArrowRight, CreditCard, Search 
+} from 'lucide-react';
 
 // =========================================================================
 // 1. REUSABLE UI COMPONENTS (Glassmorphism & Layout)
@@ -30,305 +34,284 @@ const DashboardHeader = ({ title, subtitle }) => (
   </header>
 );
 
-// =========================================================================
-// 2. DASHBOARD PAGE COMPONENTS
-// =========================================================================
-
-const queueIcons = {
-  'KYC Verification': FileText,
-  'Valuation Review': Gavel,
-  'Dispute Cases': X,
-  'TUNU Handoffs': Bot,
-  'Payout Approvals': Wallet,
-  'Asset Moderation': Store,
-};
-
-const QueueCard = ({ name, count, priority, link, color, icon }) => {
-  const Icon = queueIcons[name] || FileText;
-  return (
+// Operational Metric Card for Overview
+const OperationalCard = ({ title, count, link, Icon, apiAction, linkText }) => (
     <a href={link} onClick={(e) => e.preventDefault()} className="block hover:scale-105 transition-all duration-300 ease-out">
-      <GlassCard className="p-6 hover:shadow-2xl">
-        <div className="flex justify-between items-start">
-          <div className='flex items-center space-x-3'>
-            <div className={`p-3 rounded-2xl ${color.bg} bg-opacity-20`}>
-              <Icon className={`w-6 h-6 ${color.text}`} />
+        <GlassCard className="p-6 h-full flex flex-col justify-between">
+            <div className="flex items-start justify-between">
+                <Icon className="w-8 h-8 text-[#6B9071]" />
+                <span className="text-xs text-[#4a6850] px-2 py-1 bg-[#C8E6C8]/50 rounded-full">{apiAction}</span>
             </div>
-            <div>
-              <div className="text-sm font-medium text-[#4a6850]">{name}</div>
-              <div className="mt-1 text-3xl font-bold text-[#1a3d2e]">{count}</div>
+            <div className="mt-4">
+                <div className="text-4xl font-extrabold text-red-600">{count}</div>
+                <div className="text-lg font-medium text-[#1a3d2e] mt-1">{title}</div>
             </div>
-          </div>
-          <span className={`px-3 py-1 text-xs font-semibold rounded-full ${color.bg} text-white shadow-md`}>
-            {priority}
-          </span>
-        </div>
-        <div className="mt-4 flex items-center text-sm font-medium text-[#6B9071] hover:text-[#4a6850] transition-colors">
-          Review Queue <ArrowUp className="w-4 h-4 ml-1 rotate-45" />
-        </div>
-      </GlassCard>
+            <div className="mt-4 text-sm flex items-center text-[#6B9071] hover:text-[#4a6850]">
+                {linkText} <ArrowRight className="w-4 h-4 ml-1" />
+            </div>
+        </GlassCard>
     </a>
-  );
+);
+
+
+// =========================================================================
+// 2. DASHBOARD PAGE COMPONENTS (MIMICKING pages/ directory)
+// =========================================================================
+
+// 1. Main Admin Dashboard (Landing Page) 🏠
+const OverviewPage = ({ data, setCurrentPage }) => {
+    const { pendingUsers, pendingAssets, pendingDocuments } = data.systemSummary;
+  
+    return (
+      <>
+        <DashboardHeader 
+          title="Executive Dashboard: Mission Control" 
+          subtitle="Highest priority actions for account activation, listing approval, and compliance document processing." 
+        />
+  
+        <section className="mt-8">
+          <h2 className="text-2xl font-semibold text-[#1a3d2e] mb-6">System Summary & Priority Queues 🔥</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <OperationalCard
+              title="Pending Users for Approval"
+              count={pendingUsers}
+              link="#"
+              Icon={Users}
+              apiAction="GET /api/accounts/dashboard/"
+              linkText="Manage Accounts"
+              onClick={() => setCurrentPage('users')}
+            />
+            <OperationalCard
+              title="Pending Assets for Verification"
+              count={pendingAssets}
+              link="#"
+              Icon={Gavel}
+              apiAction="GET /api/admin/assets/"
+              linkText="Review Listings"
+              onClick={() => setCurrentPage('assets')}
+            />
+            <OperationalCard
+              title="Pending Documents for Review"
+              count={pendingDocuments}
+              link="#"
+              Icon={FileText}
+              apiAction="GET /api/admin/documents/"
+              linkText="Process Documents"
+              onClick={() => setCurrentPage('documents')}
+            />
+          </div>
+        </section>
+        
+        <section className="mt-10">
+           <h2 className="text-2xl font-semibold text-[#1a3d2e] mb-6">Marketplace KPIs (Simulated)</h2>
+           <GlassCard className="p-8 h-64 flex items-center justify-center text-[#4a6850]">
+              [KPI Charts for Active Listings, GMV, and STR would be displayed here]
+           </GlassCard>
+        </section>
+      </>
+    );
 };
 
-const CriticalQueues = ({ queues }) => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-    {queues.map((queue) => (
-      <QueueCard key={queue.name} {...queue} />
-    ))}
-  </div>
-);
-
-const trendIcons = { up: ArrowUp, down: ArrowDown, flat: Minus };
-const trendClasses = { up: 'text-green-600', down: 'text-red-600', flat: 'text-gray-500' };
-
-const MetricCard = ({ title, value, change, trend, icon: Icon }) => {
-  const TrendIcon = trendIcons[trend] || Minus;
-  const TrendColor = trendClasses[trend] || trendClasses.flat;
-
-  return (
-    <GlassCard className="p-6 hover:scale-105 transition-all duration-300">
-      <div className="flex items-center justify-between">
-        <div className="text-sm font-medium text-[#4a6850]">{title}</div>
-        <div className="p-3 rounded-2xl bg-[#C8E6C8]/50">
-          <Icon className='w-6 h-6 text-[#6B9071]' />
-        </div>
-      </div>
-      <div className="mt-3 text-4xl font-extrabold text-[#1a3d2e]">{value}</div>
-      {change && (
-        <div className={`mt-3 flex items-center text-sm font-medium ${TrendColor}`}>
-          <TrendIcon className="w-4 h-4 mr-1" />
-          {change}
-        </div>
-      )}
-    </GlassCard>
-  );
-};
-
-const MarketplaceHealth = ({ metrics }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <MetricCard
-      title="Active Listings"
-      value={metrics.activeListings.value}
-      change={`vs. last month: ${metrics.activeListings.change}`}
-      trend={metrics.activeListings.trend}
-      icon={Store}
-    />
-    <MetricCard
-      title="Total GMV Listed (30 Days)"
-      value={metrics.totalGMV.value}
-      change={`vs. last month: ${metrics.totalGMV.change}`}
-      trend={metrics.totalGMV.trend}
-      icon={CreditCard}
-    />
-    <MetricCard
-      title="Avg Time-to-Sale"
-      value={metrics.avgTimeSale.value}
-      change={`vs. last month: ${metrics.avgTimeSale.change}`}
-      trend={metrics.avgTimeSale.trend}
-      icon={TrendingUp}
-    />
-    <MetricCard
-      title="Sell-Through Rate (STR)"
-      value={metrics.sellThroughRate.value}
-      change={`Target: 80%`}
-      trend={metrics.sellThroughRate.value.includes('78%') ? 'flat' : 'up'} 
-      icon={TrendingUp}
-    />
-  </div>
-);
-
-const ComplianceItem = ({ icon: Icon, title, value, isUrgent = false }) => (
-  <div className="flex items-center justify-between py-4 border-b border-[#C8E6C8]/50 last:border-b-0 hover:bg-white/30 transition-colors px-2 rounded-lg">
-    <div className="flex items-center">
-      <div className={`p-2 rounded-xl ${isUrgent ? 'bg-red-100' : 'bg-[#C8E6C8]/50'}`}>
-        <Icon className={`w-5 h-5 ${isUrgent ? 'text-red-500' : 'text-[#6B9071]'}`} />
-      </div>
-      <span className="text-sm text-[#4a6850] ml-3 font-medium">{title}</span>
-    </div>
-    <span className={`text-lg font-bold ${isUrgent ? 'text-red-600' : 'text-[#1a3d2e]'}`}>{value}</span>
-  </div>
-);
-
-const ComplianceWatch = ({ data }) => (
-  <GlassCard className="p-6 h-full">
-    <h3 className="text-xl font-bold text-[#1a3d2e] mb-6">Risk & Compliance</h3>
-    <ComplianceItem 
-      icon={Shield} 
-      title="SARs Flagged (Review)" 
-      value={data.sarsFlagged} 
-      isUrgent={data.sarsFlagged > 0} 
-    />
-    <ComplianceItem 
-      icon={Wallet} 
-      title="Pending Escrow Value" 
-      value={data.pendingEscrow} 
-    />
-    <ComplianceItem 
-      icon={FileText} 
-      title="Doc Inconsistencies" 
-      value={data.docInconsistencies} 
-      isUrgent={data.docInconsistencies > 5} 
-    />
-    <ComplianceItem 
-      icon={Lock} 
-      title="Lien Discrepancies" 
-      value={data.lienDiscrepancies} 
-      isUrgent={data.lienDiscrepancies > 0} 
-    />
-  </GlassCard>
-);
-
-const TunuStatCard = ({ title, value, colorClass, icon: Icon }) => (
-  <GlassCard className="p-6 text-center hover:scale-105 transition-all duration-300">
-    <div className={`mx-auto mb-4 w-16 h-16 rounded-2xl ${colorClass} bg-opacity-20 flex items-center justify-center`}>
-      <Icon className={`w-8 h-8 ${colorClass}`} />
-    </div>
-    <div className="text-3xl font-bold text-[#1a3d2e]">{value}</div>
-    <div className="text-sm text-[#4a6850] mt-2">{title}</div>
-  </GlassCard>
-);
-
-const TunnuPerformance = ({ data }) => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    <TunuStatCard
-      title="Containment Rate"
-      value={data.containmentRate}
-      colorClass="text-green-600"
-      icon={Check}
-    />
-    <TunuStatCard
-      title="User Satisfaction"
-      value={data.satisfaction}
-      colorClass="text-yellow-500"
-      icon={Handshake}
-    />
-    <TunuStatCard
-      title="High Distress Flags (24h)"
-      value={data.distressFlags}
-      colorClass="text-red-600"
-      icon={Zap}
-    />
-    <TunuStatCard
-      title="Listings Started via TUNU"
-      value={data.conversionActions}
-      colorClass="text-[#4a6850]"
-      icon={Building}
-    />
-  </div>
-);
-
-const OverviewPage = ({ data }) => (
-  <>
-    <DashboardHeader 
-      title="Executive Dashboard Overview" 
-      subtitle="Real-time monitoring of critical queues, marketplace health, and compliance risks." 
-    />
-
-    <section className="mt-8">
-      <h2 className="text-2xl font-semibold text-[#1a3d2e] mb-6 flex items-center">
-        <span className="text-2xl mr-2">🔥</span> Critical Action Required (SLA Priority)
-      </h2>
-      <CriticalQueues queues={data.queues} />
-    </section>
-    
-    <div className="mt-10 lg:grid lg:grid-cols-3 lg:gap-8">
-      <div className="lg:col-span-2">
-        <section>
-          <h2 className="text-2xl font-semibold text-[#1a3d2e] mb-6 flex items-center">
-            <span className="text-2xl mr-2">📈</span> Marketplace Health & Liquidity KPIs
-          </h2>
-          <MarketplaceHealth metrics={data.metrics} />
-        </section>
-      </div>
-      
-      <div className="lg:col-span-1 mt-8 lg:mt-0">
-        <section>
-          <h2 className="text-2xl font-semibold text-[#1a3d2e] mb-6 lg:opacity-0">Placeholder</h2>
-          <ComplianceWatch data={data.compliance} />
-        </section>
-      </div>
-    </div>
-
-    <section className="mt-10">
-      <h2 className="text-2xl font-semibold text-[#1a3d2e] mb-6 flex items-center">
-        <span className="text-2xl mr-2">🤖</span> TUNU Counsellor Performance
-      </h2>
-      <TunnuPerformance data={data.tunnu} />
-    </section>
-  </>
-);
-
-const QueuesPage = () => (
-  <>
-    <DashboardHeader 
-      title="All Operational Queues" 
-      subtitle="Detailed view of KYC, Valuation, Disputes, and Payout flows. Prioritize based on age and severity." 
-    />
-    <GlassCard className="p-8">
-        <h3 className="text-xl font-bold text-[#1a3d2e] mb-4">Dispute Queue (3 Cases)</h3>
-        <p className="text-[#4a6850] mb-4">The dispute resolution process requires human mediation. Click on the dispute ID to view evidence and mediation history.</p>
-        <div className="h-64 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
-            [Data Table for Dispute Cases with SLA Status]
-        </div>
-    </GlassCard>
-    <GlassCard className="p-8 mt-8">
-        <h3 className="text-xl font-bold text-[#1a3d2e] mb-4">TUNU Handoffs (7 Urgent)</h3>
-        <p className="text-[#4a6850] mb-4">Review all chatbot escalations, especially those flagged for high emotional distress or explicit legal requests.</p>
-        <div className="h-64 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
-            [Data Table for TUNU Transcripts and Urgency Flags]
-        </div>
-    </GlassCard>
-  </>
-);
-
+// 2. User & Account Management Dashboard (KYC/KYB) 👥
 const UsersPage = () => (
     <>
       <DashboardHeader 
-        title="Users & KYC Management" 
-        subtitle="Manage user accounts, verify KYC documentation, and monitor AML/Sanctions lists." 
+        title="Users & Account Management (KYC/KYB)" 
+        subtitle="Oversight of user base. Manage verification, roles, and status (ACTIVE, PENDING, BLOCKED)." 
       />
-      <GlassCard className="p-8">
-          <h3 className="text-xl font-bold text-[#1a3d2e] mb-4">Pending KYC Verification (45 Users)</h3>
-          <p className="text-[#4a6850] mb-4">Verify documents (ID, proof of address) to activate bidding/listing privileges.</p>
-          <div className="h-96 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
-              [Data Table for KYC Queue - Borrower/Buyer Profiles]
-          </div>
-      </GlassCard>
+      
+      <section className="mb-8">
+        <GlassCard className="p-8">
+            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
+                <Users className="w-5 h-5 mr-2 text-[#6B9071]" /> User List View
+            </h3>
+            <p className="text-[#4a6850] mb-4 text-sm">
+                **API: GET /api/accounts/admin/users/** - Sortable list filtering by Role and Status.
+            </p>
+            <div className="h-64 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
+                [Data Table: User ID, Role, Status, Creation Date, Action (View/Approve/Reject)]
+            </div>
+        </GlassCard>
+      </section>
+
+      <section>
+        <GlassCard className="p-8">
+            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4">Approval Actions</h3>
+            <p className="text-[#4a6850] mb-4 text-sm">
+                **API: PATCH /api/admin/accounts/{user_id}/approve/** or **/reject/** - Full KYC/KYB inspection before approval.
+            </p>
+            <div className="h-32 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
+                [Placeholder for Detailed Profile View and Action Buttons]
+            </div>
+        </GlassCard>
+      </section>
     </>
   );
 
-const AuctionsPage = () => (
+// 3. Asset & Listing Verification Dashboard 🏡
+const AssetsPage = () => (
     <>
       <DashboardHeader 
-        title="Auction & Listing Manager" 
-        subtitle="Monitor active, scheduled, and completed auctions. Manage reserve prices and settlement timelines." 
+        title="Asset & Listing Verification" 
+        subtitle="Review new assets submitted by Borrowers/Lenders, valuation reports, and monitor active offers." 
       />
-      <GlassCard className="p-8">
-          <h3 className="text-xl font-bold text-[#1a3d2e] mb-4">Active Auctions (15)</h3>
-          <p className="text-[#4a6850] mb-4">Monitor real-time bidding for anti-sniping protection and bid integrity.</p>
-          <div className="h-96 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
-              [Live Auction Monitoring Table with Real-time Bids]
-          </div>
-      </GlassCard>
+      
+      <section className="mb-8">
+        <GlassCard className="p-8">
+            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
+                <Gavel className="w-5 h-5 mr-2 text-[#6B9071]" /> Asset Review Queue
+            </h3>
+            <p className="text-[#4a6850] mb-4 text-sm">
+                **API: POST/PATCH /api/admin/asset-listings/{asset_id}/approve/** - Vetting asset quality and title.
+            </p>
+            <div className="h-64 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
+                [Data Table: Asset ID, Type, Status (Pending, Approved), Borrower/Lender, Approval Actions]
+            </div>
+        </GlassCard>
+      </section>
+
+      <section>
+        <GlassCard className="p-8">
+            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
+                <Store className="w-5 h-5 mr-2 text-[#6B9071]" /> Asset Offer Monitoring
+            </h3>
+            <p className="text-[#4a6850] mb-4 text-sm">
+                **API: GET /api/admin/assets/offers/** - Ensures fair bidding and prevents manipulation during matching.
+            </p>
+            <div className="h-32 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
+                [Table: Offer ID, Asset ID, Financier, Amount, Status]
+            </div>
+        </GlassCard>
+      </section>
     </>
   );
 
-const CompliancePage = () => (
+// 4. Document Management Dashboard (Compliance) 📜
+const DocumentsPage = () => (
     <>
       <DashboardHeader 
-        title="Advanced Compliance & Audit" 
-        subtitle="Review security logs, audit trails, AML flags, and generate regulatory reports." 
+        title="Document Management (Compliance)" 
+        subtitle="Focus on uploaded documents (IDs, titles, bank statements) and their verification workflow." 
       />
-      <GlassCard className="p-8">
-          <h3 className="text-xl font-bold text-[#1a3d2e] mb-4">Audit Log & Security Events</h3>
-          <p className="text-[#4a6850] mb-4">Review every critical event (bid, fund transfer, document verification) for audit trail purposes.</p>
-          <div className="h-96 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
-              [Detailed Audit Log Table and SARs Management]
-          </div>
-      </GlassCard>
+      
+      <section className="mb-8">
+        <GlassCard className="p-8">
+            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
+                <FileText className="w-5 h-5 mr-2 text-[#6B9071]" /> Pending Documents List
+            </h3>
+            <p className="text-[#4a6850] mb-4 text-sm">
+                **API: GET /api/admin/documents/** - Filterable list by Document Type and Workflow Status.
+            </p>
+            <div className="h-64 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
+                [Data Table: Document ID, User ID, Doc Type, Status, Verification Actions]
+            </div>
+        </GlassCard>
+      </section>
+      
+      <section>
+        <GlassCard className="p-8">
+            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
+                <Check className="w-5 h-5 mr-2 text-[#6B9071]" /> Document Details & Verification
+            </h3>
+            <p className="text-[#4a6850] mb-4 text-sm">
+                **API: POST/PATCH /api/admin/documents/{doc_id}/verify/** - Mark as Verified or Request New Upload.
+            </p>
+            <div className="h-32 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
+                [Viewer for Actual File and Manual Verification Buttons]
+            </div>
+        </GlassCard>
+      </section>
     </>
   );
 
+// 5. Transaction & Settlement Monitoring Dashboard 💰
+const TransactionsPage = () => (
+    <>
+      <DashboardHeader 
+        title="Transaction & Settlement Monitoring" 
+        subtitle="Auditing active escrow accounts, monitoring fund security, and managing final payouts." 
+      />
+      
+      <section className="mb-8">
+        <GlassCard className="p-8">
+            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
+                <CreditCard className="w-5 h-5 mr-2 text-[#6B9071]" /> Active Loan/Escrow View
+            </h3>
+            <p className="text-[#4a6850] mb-4 text-sm">
+                Monitoring fund security, escrow balances, and next repayment dates (Debt Servicing Health).
+            </p>
+            <div className="h-48 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
+                [Data Table: Loan ID, Asset ID, Escrow Balance, Next Due Date]
+            </div>
+        </GlassCard>
+      </section>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <GlassCard className="p-8">
+            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
+                <Wallet className="w-5 h-5 mr-2 text-[#6B9071]" /> Settlement Queue
+            </h3>
+            <p className="text-[#4a6850] mb-4 text-sm">
+                Completed transactions ready for final payout and title release.
+            </p>
+            <div className="h-48 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
+                [Data Table: Transaction ID, Payout Amount, Final Audit Status]
+            </div>
+        </GlassCard>
+        <GlassCard className="p-8">
+            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
+                <XCircle className="w-5 h-5 mr-2 text-red-600" /> Dispute Resolution Log
+            </h3>
+            <p className="text-[#4a6850] mb-4 text-sm">
+                Tracking any active payment disputes or exceptions requiring mediation.
+            </p>
+            <div className="h-48 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
+                [Dispute Table: Case ID, Transaction ID, Status (Open/Closed)]
+            </div>
+        </GlassCard>
+      </div>
+    </>
+  );
+
+// 6. Communication Audit Dashboard 💬
+const AuditPage = () => (
+    <>
+      <DashboardHeader 
+        title="Communication Audit & Compliance Log" 
+        subtitle="Read-only access to conversation history for compliance and dispute resolution purposes (view upon need)." 
+      />
+      
+      <section className="mb-8">
+        <GlassCard className="p-8">
+            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
+                <Search className="w-5 h-5 mr-2 text-[#6B9071]" /> Conversation Search
+            </h3>
+            <p className="text-[#4a6850] mb-4 text-sm">
+                **API: GET /api/chat/** - Search conversations by User ID, Asset ID, or date range.
+            </p>
+            <div className="h-32 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
+                [Search Form & List of Conversation IDs]
+            </div>
+        </GlassCard>
+      </section>
+
+      <section>
+        <GlassCard className="p-8">
+            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
+                <List className="w-5 h-5 mr-2 text-[#6B9071]" /> Chat Log Viewer (Read-Only)
+            </h3>
+            <p className="text-[#4a6850] mb-4 text-sm">
+                Detailed, read-only view of message history between parties.
+            </p>
+            <div className="h-64 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
+                [Display of Selected Chat Transcript]
+            </div>
+        </GlassCard>
+      </section>
+    </>
+  );
+
+// Standard Settings Page
 const SettingsPage = () => (
     <>
       <DashboardHeader 
@@ -336,27 +319,30 @@ const SettingsPage = () => (
         subtitle="Configure system parameters, fee structures, SLA targets, and user roles." 
       />
       <GlassCard className="p-8">
-          <h3 className="text-xl font-bold text-[#1a3d2e] mb-4">System Configuration</h3>
-          <p className="text-[#4a6850] mb-4">Update reserve fee percentage, anti-sniping duration (X minutes), and KYC requirements.</p>
+          <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
+            <Settings className="w-5 h-5 mr-2 text-[#6B9071]" /> System Configuration
+          </h3>
+          <p className="text-[#4a6850] mb-4 text-sm">Update reserve fee percentage, anti-sniping duration, and KYC requirements.</p>
           <div className="h-96 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
               [Configuration Forms for System Parameters]
           </div>
       </GlassCard>
     </>
-  );
+);
 
 // =========================================================================
-// 3. SIDEBAR & MAIN COMPONENT LOGIC
+// 3. SIDEBAR COMPONENT
 // =========================================================================
 
 const Sidebar = ({ isMenuOpen, setIsMenuOpen, currentPage, setCurrentPage }) => {
   const menuItems = [
-    { key: 'overview', name: 'Overview', icon: LayoutDashboard, href: '#' },
-    { key: 'queues', name: 'All Queues', icon: List, href: '/admin/queues' },
-    { key: 'users', name: 'Users / KYC', icon: Users, href: '/admin/users' },
-    { key: 'auctions', name: 'Auctions', icon: Gavel, href: '/admin/auctions' },
-    { key: 'compliance', name: 'Compliance', icon: Shield, href: '/admin/compliance' },
-    { key: 'settings', name: 'Settings', icon: Settings, href: '/admin/settings' },
+    { key: 'overview', name: 'Dashboard', icon: LayoutDashboard },
+    { key: 'users', name: 'Users / KYC', icon: Users },
+    { key: 'assets', name: 'Assets / Listings', icon: Gavel },
+    { key: 'documents', name: 'Document Mgmt', icon: FileText },
+    { key: 'transactions', name: 'Transactions', icon: Wallet },
+    { key: 'audit', name: 'Comms Audit', icon: List },
+    { key: 'settings', name: 'Settings', icon: Settings },
   ];
 
   const handleNavClick = (key) => {
@@ -422,52 +408,46 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen, currentPage, setCurrentPage }) => 
   );
 };
 
-// --- SIMULATED DATA ---
-const simulatedQueues = [
-    { name: 'KYC Verification', count: 45, priority: 'High', link: '/admin/kyc-queue', color: { bg: 'bg-yellow-500', text: 'text-yellow-600' } },
-    { name: 'Valuation Review', count: 18, priority: 'High', link: '/admin/valuation-queue', color: { bg: 'bg-yellow-400', text: 'text-yellow-500' } },
-    { name: 'Dispute Cases', count: 3, priority: 'Urgent', link: '/admin/disputes-queue', color: { bg: 'bg-red-600', text: 'text-red-700' } },
-    { name: 'TUNU Handoffs', count: 7, priority: 'Urgent', link: '/admin/counsellor-handoffs', color: { bg: 'bg-red-500', text: 'text-red-600' } },
-    { name: 'Payout Approvals', count: 12, priority: 'Medium', link: '/admin/settlement-queue', color: { bg: 'bg-green-500', text: 'text-green-600' } },
-];
-const simulatedMetrics = { 
-  activeListings: { value: '1,452', change: '+4%', trend: 'up' }, 
-  totalGMV: { value: '$1.8M', change: '+12%', trend: 'up' }, 
-  avgTimeSale: { value: '24 days', change: '-5%', trend: 'down' }, 
-  sellThroughRate: { value: '78%', trend: 'flat' } 
-};
-const simulatedCompliance = { sarsFlagged: 3, pendingEscrow: '$310,000', docInconsistencies: 9, lienDiscrepancies: 2 };
-const simulatedTunnu = { containmentRate: '85%', satisfaction: '4.6/5', distressFlags: 7, conversionActions: 52 };
 
-// --- RENDER LOGIC ---
+// =========================================================================
+// 4. MAIN DASHBOARD LOGIC
+// =========================================================================
+
+// --- SIMULATED DATA ---
+const simulatedDashboardData = {
+    systemSummary: {
+        pendingUsers: 45,
+        pendingAssets: 18,
+        pendingDocuments: 32,
+    },
+};
 
 export default function AdminDashboard() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState('overview');
 
   const dashboardData = useMemo(() => ({
-    queues: simulatedQueues.filter((q, index) => index < 5),
-    metrics: simulatedMetrics,
-    compliance: simulatedCompliance,
-    tunnu: simulatedTunnu,
+    ...simulatedDashboardData
   }), []);
 
   const renderPage = () => {
     switch (currentPage) {
       case 'overview':
-        return <OverviewPage data={dashboardData} />;
-      case 'queues':
-        return <QueuesPage />;
+        return <OverviewPage data={dashboardData} setCurrentPage={setCurrentPage} />;
       case 'users':
         return <UsersPage />;
-      case 'auctions':
-        return <AuctionsPage />;
-      case 'compliance':
-        return <CompliancePage />;
+      case 'assets':
+        return <AssetsPage />;
+      case 'documents':
+        return <DocumentsPage />;
+      case 'transactions':
+        return <TransactionsPage />;
+      case 'audit':
+        return <AuditPage />;
       case 'settings':
         return <SettingsPage />;
       default:
-        return <OverviewPage data={dashboardData} />;
+        return <OverviewPage data={dashboardData} setCurrentPage={setCurrentPage} />;
     }
   };
 
