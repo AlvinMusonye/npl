@@ -10,8 +10,17 @@ export default function NPLinLanding() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [message, setMessage] = useState('');
+  const [messages, setMessages] = useState([
+    { sender: 'bot', text: 'Hello! I am Tunu, your virtual assistant. How can I help you today?' }
+  ]);
+  const [isTyping, setIsTyping] = useState(false);
+
+
+
   const [isHopping, setIsHopping] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
+  const chatContainerRef = useRef(null);
+
 
   // --- Utility Hooks & Logic ---
   // Intersection Observer
@@ -39,6 +48,12 @@ export default function NPLinLanding() {
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
     };
   }, []);
+  // Auto-scroll chat
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages, isTyping]);
 
   // Function to handle sending the message to the chatbot API
  // Function to handle sending the message to the chatbot API
@@ -46,41 +61,41 @@ export default function NPLinLanding() {
 const sendMessage = async () => {
   if (message.trim() === '') return;
 
-  // FIX: Hardcode the BASE_URL since process.env is causing an error in the browser.
   const baseUrl = import.meta.env.VITE_BASE_URL || 'http://127.0.0.1:8000';
   const apiEndpoint = `${baseUrl}/api/chat/tunu/`;
 
-  try {
-      const response = await fetch(apiEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: message })
-      });
+  // Add the user message to the chat first
+  setMessages(prev => [...prev, { sender: 'user', text: message }]);
+  const userMessage = message; // Save current input before clearing
+  setMessage('');
+  setIsTyping(true);
 
-      // Ensure we handle non-200 responses
-      if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log("Chatbot response:", data);
-      
-      setMessage(''); 
+
+  try {
+    const response = await fetch(apiEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: userMessage }),
+    });
+
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    const data = await response.json();
+    console.log('Chatbot response:', data);
+
+    // Append chatbot response to messages
+    setMessages(prev => [...prev, { sender: 'bot', text: data.response }]);
   } catch (error) {
-      console.error("Error sending message:", error);
-      // You might want to update the chat to show an error message to the user
+    console.error('Error sending message:', error);
+    setMessages(prev => [
+      ...prev,
+      { sender: 'bot', text: 'Sorry, something went wrong. Please try again.' },
+    ]);
+  } finally {
+    setIsTyping(false);
+
   }
 };
-  // Hop animation
-  useEffect(() => {
-    const hopInterval = setInterval(() => {
-      setIsHopping(true);
-      setTimeout(() => setIsHopping(false), 600);
-    }, 5000);
-    return () => clearInterval(hopInterval);
-  }, []);
-
-  // --- Component Definitions (Moved inside or defined here for simplicity) ---
 
   const modalData = {
     // ... (modalData content remains the same)
@@ -626,52 +641,52 @@ const sendMessage = async () => {
       <div className="fixed bottom-6 right-6 z-50">
         {/* Chat Widget */}
         {isChatOpen && (
-          <div className="mb-4 w-80 h-96 bg-white/25 backdrop-blur-3xl rounded-2xl border border-white/50 shadow-[0_25px_80px_rgba(15,42,29,0.2)] overflow-hidden"
-            style={{
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 100%)',
-              backdropFilter: 'blur(10px) saturate(180%) brightness(120%) contrast(110%)',
-              WebkitBackdropFilter: 'blur(10px) saturate(180%) brightness(120%) contrast(110%)',
-            }}
-          >
-            {/* Chat content here */}
-            <div className="p-4 bg-white/80 border-b border-white/80 flex justify-between items-center">
-              <h3 className="font-bold text-[#0F2A1D] font-[var(--font-secondary)]">Tunu AI</h3>
-              <button 
-                onClick={() => setIsChatOpen(false)} 
-                className="text-[#375534] hover:text-[#0F2A1D] transition-colors p-2"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-4 text-[#375534] text-sm overflow-y-auto h-full pb-16">
-              <p className="mb-2">Hello! I'm Tunu, your NPLin assistant.</p>
-              <p className="mb-4">How can I help you find opportunities in distressed debt today?</p>
-              
-              {/* Message Input with State and Send Function */}
-              <div className="absolute bottom-0 left-0 right-0 p-4">
-                <div className='flex items-center'>
-                    <input
-                        type="text"
-                        placeholder="Ask a question..."
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                        className="flex-grow p-3 rounded-l-xl border border-r-0 border-[#375534]/30 bg-white/70 backdrop-blur-md text-[#0F2A1D] focus:ring-[#375534] focus:border-[#375534] focus:outline-none"
-                    />
-                    <button
-                        onClick={sendMessage}
-                        className="p-3 bg-gradient-to-r from-[#375534] to-[#0F2A1D] text-white rounded-r-xl hover:opacity-90 transition-opacity flex-shrink-0"
-                    >
-                        <IoSend className='w-5 h-5'/>
-                    </button>
-                </div>
-              </div>
-            </div>
+  <div className="fixed bottom-20 right-6 w-80 bg-white rounded-2xl shadow-xl flex flex-col">
+    <div className="p-4 border-b font-bold text-[#0F2A1D]">NPLin Chatbot</div>
+
+    <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 h-64">
+      {messages.map((msg, index) => (
+        <div
+          key={index}
+          className={`p-2 rounded-xl text-sm ${
+            msg.sender === 'user'
+              ? 'bg-[#375534] text-white self-end text-right'
+              : 'bg-gray-100 text-[#0F2A1D] self-start text-left'
+          }`}
+        >
+          {msg.text}
+        </div>
+      ))}
+            {isTyping && (
+        <div className="p-2 rounded-xl text-sm bg-gray-100 text-[#0F2A1D] self-start text-left">
+          <div className="flex items-center space-x-1">
+            <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+            <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
+            <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.6s' }}></span>
           </div>
-        )}
-        
+        </div>
+      )}
+
+    </div>
+
+    <div className="flex border-t p-2">
+      <input
+        type="text"
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="Type your message..."
+        className="flex-1 px-2 outline-none text-[#0F2A1D]"
+      />
+      <button
+        onClick={sendMessage}
+        className="p-2 text-[#0F2A1D] hover:text-[#375534]"
+      >
+        <IoSend />
+      </button>
+    </div>
+  </div>
+)}
+
         {/* Chat Button */}
         <button
           onClick={() => setIsChatOpen(!isChatOpen)}
