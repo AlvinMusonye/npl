@@ -1,40 +1,118 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { User, Mail, Phone, MapPin, CreditCard, Briefcase, DollarSign, Edit2, Save, X, Camera, Lock } from 'lucide-react';
 
-const UserProfilePage = () => {
+
+const API_BASE_URL = 'http://127.0.0.1:8000';
+
+const UserProfilePage = ({ setRole }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState({
-    full_name: 'John Mwangi',
-    email: 'john.mwangi@email.com',
-    phone_number: '+254 712 345 678',
-    residential_address: '123 Ngong Road, Nairobi, Kenya',
-    gov_id_type: 'National ID',
-    gov_id_number: '34567890',
-    pin_number: 'A012345678Z',
-    source_of_income: 'Employment',
-    employment_status: 'Permanent',
-    monthly_income_range: 'Ksh 100,000 - 150,000',
-    financial_status_net_worth: 'Ksh 1M - 5M'
-  });
+  const [profileData, setProfileData] = useState(null);
+  const [editedData, setEditedData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const navigate = useNavigate();
 
-  const [editedData, setEditedData] = useState({ ...profileData });
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) throw new Error('Authentication token not found.');
+
+        const response = await fetch(`${API_BASE_URL}/api/accounts/me/`, {
+          headers: { 'Authorization': `Bearer ${accessToken}` },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || 'Failed to fetch profile.');
+        }
+
+        const data = await response.json();
+        const profile = data.profile || {};
+
+        const formattedData = {
+          full_name: `${data.first_name || ''} ${data.last_name || ''}`.trim(),
+          email: data.email || '',
+          phone_number: data.mobile_phone_number || '',
+          residential_address: profile.residential_address || '',
+          gov_id_type: profile.gov_id_type || 'National ID',
+          gov_id_number: profile.gov_id_number || '',
+          pin_number: profile.pin_number || '',
+          source_of_income: profile.source_of_income || 'Employment',
+          employment_status: profile.employment_status || 'Permanent',
+          monthly_income_range: profile.monthly_income_range || 'Ksh 100,000 - 150,000',
+          financial_status_net_worth: profile.financial_status_net_worth || 'Ksh 1M - 5M'
+        };
+
+        setProfileData(formattedData);
+        setEditedData(formattedData);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const handleInputChange = (field, value) => {
     setEditedData({ ...editedData, [field]: value });
   };
 
-  const handleSave = () => {
-    setProfileData({ ...editedData });
-    setIsEditing(false);
-    // Here you would make the API call: PATCH /api/v1/accounts/profile/
+  const handleSave = async () => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      if (!accessToken) throw new Error('Authentication token not found.');
+
+      const [firstName, ...lastNameParts] = editedData.full_name.split(' ');
+      const lastName = lastNameParts.join(' ');
+
+      const payload = {
+        first_name: firstName,
+        last_name: lastName,
+        mobile_phone_number: editedData.phone_number,
+        profile: {
+          residential_address: editedData.residential_address,
+          gov_id_type: editedData.gov_id_type,
+          gov_id_number: editedData.gov_id_number,
+          pin_number: editedData.pin_number,
+          source_of_income: editedData.source_of_income,
+          employment_status: editedData.employment_status,
+          monthly_income_range: editedData.monthly_income_range,
+          financial_status_net_worth: editedData.financial_status_net_worth,
+        }
+      };
+
+      const response = await fetch(`${API_BASE_URL}/api/accounts/me/`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) throw new Error('Failed to update profile.');
+
+      setProfileData(editedData);
+      setIsEditing(false);
+      alert('Profile updated successfully!');
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
+
   };
   const handleLogout = () => {
     localStorage.removeItem('userRole');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    setRole(null);
+
+
     navigate('/login');
   };
 
@@ -42,6 +120,9 @@ const UserProfilePage = () => {
     setEditedData({ ...profileData });
     setIsEditing(false);
   };
+  if (loading) return <div className="min-h-screen bg-gradient-to-br from-[#d4e4d0] via-[#c8d5c0] to-[#b8cdb0] flex items-center justify-center text-gray-800">Loading Profile...</div>;
+  if (error) return <div className="min-h-screen bg-gradient-to-br from-[#d4e4d0] via-[#c8d5c0] to-[#b8cdb0] flex items-center justify-center text-red-600">Error: {error}</div>;
+  if (!profileData) return <div className="min-h-screen bg-gradient-to-br from-[#d4e4d0] via-[#c8d5c0] to-[#b8cdb0] flex items-center justify-center text-gray-800">Could not load profile data.</div>;
 
   const InputField = ({ icon: Icon, label, field, type = "text", options = null }) => (
     <div className="space-y-2">

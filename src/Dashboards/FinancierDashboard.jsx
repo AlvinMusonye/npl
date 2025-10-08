@@ -1,9 +1,11 @@
-import React, { useState, useMemo } from 'react';
-import { Menu, Search, Briefcase, User, TrendingUp, DollarSign, Clock, CheckCircle, XCircle, ArrowRight } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Menu, Search, Briefcase, User, TrendingUp, DollarSign, Clock, CheckCircle, XCircle, ArrowRight, LogOut } from 'lucide-react';
+
 
 // --- DUMMY DATA ---
 const dummyData = {
-  welcomeName: "Frank",
+
   accountStatus: "Active", // "Pending Approval" | "Active"
   portfolio: {
     deployed: 12500000,
@@ -112,8 +114,18 @@ const StatusBadge = ({ status, isIconOnly = false }) => {
 
 // 1. Financier Landing Dashboard 🚀
 const DashboardView = ({ setView }) => {
-  const { portfolio, insights, welcomeName, accountStatus } = dummyData;
+    const [user, setUser] = useState(null);
 
+    useEffect(() => {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+          setUser(JSON.parse(userData));
+      }
+    }, []);
+  
+    const { portfolio, insights, accountStatus } = dummyData;
+  
+  
   const StatusComponent = () => (
     <div className={`flex items-center p-4 rounded-xl border border-[${COLORS.ACCENT_GREEN}] bg-[${COLORS.CARD_WHITE}] shadow-md mb-8`}>
       <StatusBadge status={accountStatus} />
@@ -127,7 +139,7 @@ const DashboardView = ({ setView }) => {
 
   return (
     <div className="space-y-8">
-      <h1 className={`text-4xl font-extrabold text-[${COLORS.TEXT_DARK}]`}>Welcome back, {welcomeName}!</h1>
+      <h1 className={`text-4xl font-extrabold text-[${COLORS.TEXT_DARK}]`}>Welcome back, {user ? user.first_name : 'Financier'}!</h1>
       <StatusComponent />
 
       {/* Portfolio Summary */}
@@ -641,9 +653,19 @@ const ProfileView = () => {
 
 // --- MAIN APPLICATION ---
 
-export default function App() {
-  const [view, setView] = useState('Dashboard');
+export default function FinancierDashboard({ setRole }) {
+    const [view, setView] = useState('Dashboard');
   const [isNavOpen, setIsNavOpen] = useState(false); // For mobile menu
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    setRole(null);
+    navigate('/login');
+  };
 
   const renderView = () => {
     switch (view) {
@@ -714,6 +736,16 @@ export default function App() {
                 label={item.label}
               />
             ))}
+                        {/* Logout Button */}
+                        <button
+              onClick={handleLogout}
+              className={`flex items-center w-full py-3 px-6 rounded-lg transition duration-200 text-left text-sm font-medium 
+              text-red-600 hover:bg-red-100/50 mt-6 border-t pt-4 border-dashed border-gray-300`}
+            >
+              <LogOut size={20} className="mr-3" />
+              Logout
+            </button>
+
             {/* Export Button */}
              <a
                 href="#"

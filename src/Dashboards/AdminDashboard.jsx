@@ -1,9 +1,17 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import { 
     LayoutDashboard, Users, Gavel, FileText, Wallet, Settings, List, XCircle, Menu,
     Building, TrendingUp, Handshake, Bot, Zap, Lock, Store, Check, X, ArrowUp, ArrowDown, Minus, 
     ArrowRight, CreditCard, Search 
 } from 'lucide-react';
+
+// =========================================================================
+// 1. CONSTANTS & CONFIG
+// =========================================================================
+
+const API_BASE_URL = 'http://127.0.0.1:8000';
 
 // =========================================================================
 // 1. REUSABLE UI COMPONENTS (Glassmorphism & Layout)
@@ -52,6 +60,21 @@ const OperationalCard = ({ title, count, link, Icon, apiAction, linkText }) => (
         </GlassCard>
     </a>
 );
+
+// Status Badge Component for User Status
+const UserStatusBadge = ({ status }) => {
+    const statusStyles = {
+        PENDING: 'bg-yellow-100 text-yellow-800 border border-yellow-300',
+        ACTIVE: 'bg-green-100 text-green-800 border border-green-300',
+        BLOCKED: 'bg-red-100 text-red-800 border border-red-300',
+        SUBMITTED: 'bg-blue-100 text-blue-800 border border-blue-300',
+    };
+    return (
+        <span className={`px-2.5 py-1 text-xs font-semibold rounded-full inline-block ${statusStyles[status] || 'bg-gray-100 text-gray-800'}`}>
+            {status}
+        </span>
+    );
+};
 
 
 // =========================================================================
@@ -112,41 +135,236 @@ const OverviewPage = ({ data, setCurrentPage }) => {
     );
 };
 
-// 2. User & Account Management Dashboard (KYC/KYB) 👥
-const UsersPage = () => (
-    <>
-      <DashboardHeader 
-        title="Users & Account Management (KYC/KYB)" 
-        subtitle="Oversight of user base. Manage verification, roles, and status (ACTIVE, PENDING, BLOCKED)." 
-      />
-      
-      <section className="mb-8">
-        <GlassCard className="p-8">
-            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
-                <Users className="w-5 h-5 mr-2 text-[#6B9071]" /> User List View
-            </h3>
-            <p className="text-[#4a6850] mb-4 text-sm">
-                **API: GET /api/accounts/admin/users/** - Sortable list filtering by Role and Status.
-            </p>
-            <div className="h-64 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
-                [Data Table: User ID, Role, Status, Creation Date, Action (View/Approve/Reject)]
-            </div>
-        </GlassCard>
-      </section>
+// User Detail Modal Component
+const UserDetailModal = ({ user, onClose, onApprove, onReject }) => {
+    if (!user) return null;
 
-      <section>
-        <GlassCard className="p-8">
-            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4">Approval Actions</h3>
-            <p className="text-[#4a6850] mb-4 text-sm">
-                **API: PATCH /api/admin/accounts/{user_id}/approve/** or **/reject/** - Full KYC/KYB inspection before approval.
-            </p>
-            <div className="h-32 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
-                [Placeholder for Detailed Profile View and Action Buttons]
-            </div>
-        </GlassCard>
-      </section>
-    </>
-  );
+    // Defensive check for profile and documents which might not exist on all user objects
+    const profile = user.profile || { phone_number: 'N/A', address: 'N/A' };
+    const documents = user.documents || [];
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity duration-300">
+            <GlassCard className="w-full max-w-3xl max-h-[90vh] overflow-y-auto p-8">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <h3 className="text-2xl font-bold text-[#1a3d2e]">{user.first_name} {user.last_name}</h3>
+                        <p className="text-sm text-[#4a6850] mt-1">{user.email} | <span className="font-semibold">{user.role}</span></p>
+                        <div className="mt-2"><UserStatusBadge status={user.status} /></div>
+                    </div>
+                    <button onClick={onClose} className="p-2 rounded-full hover:bg-white/50 transition-colors">
+                        <X className="w-6 h-6 text-[#4a6850]" />
+                    </button>
+                </div>
+
+                <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-[#6B9071]/30 pt-6">
+                    <div>
+                        <h4 className="font-semibold text-[#1a3d2e] mb-2">User Profile</h4>
+                        <p className="text-sm text-[#4a6850]"><span className="font-medium">Phone:</span> {profile.phone_number}</p>
+                        <p className="text-sm text-[#4a6850]"><span className="font-medium">Address:</span> {profile.address}</p>
+                        <p className="text-sm text-[#4a6850]"><span className="font-medium">Joined:</span> {new Date(user.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold text-[#1a3d2e] mb-2">Submitted Documents</h4>
+                        {documents.length > 0 ? (
+                            <ul className="space-y-2">
+                                {documents.map(doc => (
+                                    <li key={doc.id} className="flex justify-between items-center text-sm p-2 bg-white/30 rounded-lg">
+                                        <span>{doc.type}</span>
+                                        <UserStatusBadge status={doc.status} />
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-sm text-[#4a6850]">No documents submitted.</p>
+                        )}
+                    </div>
+                </div>
+
+                <div className="mt-8 border-t border-[#6B9071]/30 pt-6">
+                    <p className="text-sm text-[#4a6850] mb-4">
+                        **API Actions:** `PATCH /api/accounts/admin/users/{user.id}/approve/` or `/reject/`.
+                    </p>
+                    <div className="flex gap-4">
+                        <button 
+                            onClick={() => onApprove(user.id)} 
+                            className="flex-1 py-3 px-4 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors shadow-lg flex items-center justify-center gap-2">
+                            <Check className="w-5 h-5" /> Approve User
+                        </button>
+                        <button 
+                            onClick={() => onReject(user.id)} 
+                            className="flex-1 py-3 px-4 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors shadow-lg flex items-center justify-center gap-2">
+                            <X className="w-5 h-5" /> Reject User
+                        </button>
+                    </div>
+                </div>
+            </GlassCard>
+        </div>
+    );
+};
+
+// 2. User & Account Management Dashboard (KYC/KYB) 👥
+const UsersPage = () => {
+    const [users, setUsers] = useState([]);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Fetch all users from GET /api/accounts/admin/users/
+    useEffect(() => {
+        const fetchUsers = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const accessToken = localStorage.getItem('accessToken');
+                if (!accessToken) {
+                    throw new Error('Authentication token not found. Please log in.');
+                }
+
+                const response = await fetch(`${API_BASE_URL}/api/accounts/admin/users/`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to fetch users.');
+                }
+
+                const data = await response.json();
+                setUsers(data);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUsers();
+    }, []);
+
+    // Fetch single user details from GET /api/accounts/admin/users/{userId}/
+    const handleViewUser = async (userId) => {
+        console.log(`Fetching details for user: ${userId}`);
+        try {
+            const accessToken = localStorage.getItem('accessToken');
+            if (!accessToken) throw new Error('Authentication token not found.');
+
+            const response = await fetch(`${API_BASE_URL}/api/accounts/admin/users/${userId}/`, {
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch user details.');
+            }
+            
+            const userDetails = await response.json();
+            setSelectedUser(userDetails);
+        } catch (err) {
+            setError(err.message);
+            console.error(err.message);
+        }
+    };
+
+    const handleCloseModal = () => setSelectedUser(null);
+
+    const updateUserStatus = async (userId, action) => {
+        try {
+            const accessToken = localStorage.getItem('accessToken');
+            if (!accessToken) throw new Error('Authentication token not found.');
+
+            const response = await fetch(`${API_BASE_URL}/api/accounts/admin/users/${userId}/${action}/`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || `Failed to ${action} user.`);
+            }
+
+            const newStatus = action === 'approve' ? 'ACTIVE' : 'BLOCKED';
+            setUsers(users.map(u => u.id === userId ? { ...u, status: newStatus } : u));
+            handleCloseModal();
+
+        } catch (err) {
+            console.error(err.message);
+            alert(`Error: ${err.message}`); // Simple alert for action failure
+        }
+    };
+
+    const handleApprove = (userId) => {
+        updateUserStatus(userId, 'approve');
+    };
+
+    const handleReject = (userId) => {
+        updateUserStatus(userId, 'reject');
+    };
+
+    return (
+        <>
+            <DashboardHeader 
+                title="Users & Account Management (KYC/KYB)" 
+                subtitle="Oversight of user base. Manage verification, roles, and status (ACTIVE, PENDING, BLOCKED)." 
+            />
+            
+            <section>
+                <GlassCard className="p-6">
+                    <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
+                        <Users className="w-5 h-5 mr-2 text-[#6B9071]" /> User List View
+                    </h3>
+                    <div className="overflow-x-auto">
+                        {loading && <div className="text-center p-8 text-[#4a6850]">Loading users...</div>}
+                        {error && <div className="text-center p-8 text-red-600">{error}</div>}
+                        {!loading && !error && (
+                            <table className="min-w-full text-sm text-left">
+                                <thead className="border-b border-[#6B9071]/30 text-[#1a3d2e]">
+                                    <tr>
+                                        <th className="p-4">Name</th>
+                                        <th className="p-4">Role</th>
+                                        <th className="p-4">Status</th>
+                                        <th className="p-4">Joined On</th>
+                                        <th className="p-4">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {users.map(user => (
+                                        <tr key={user.id} className="border-b border-white/60 hover:bg-white/40">
+                                            <td className="p-4 font-medium text-[#1a3d2e]">{user.first_name} {user.last_name}</td>
+                                            <td className="p-4 text-[#4a6850]">{user.role}</td>
+                                            <td className="p-4"><UserStatusBadge status={user.status} /></td>
+                                            <td className="p-4 text-[#4a6850]">{new Date(user.created_at).toLocaleDateString()}</td>
+                                            <td className="p-4">
+                                                <button 
+                                                    onClick={() => handleViewUser(user.id)}
+                                                    className="px-3 py-1.5 bg-[#6B9071]/80 text-white text-xs font-semibold rounded-lg hover:bg-[#6B9071]">
+                                                    View Details
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                </GlassCard>
+            </section>
+
+            <UserDetailModal 
+                user={selectedUser} 
+                onClose={handleCloseModal}
+                onApprove={handleApprove}
+                onReject={handleReject}
+            />
+        </>
+    );
+};
+
 
 // 3. Asset & Listing Verification Dashboard 🏡
 const AssetsPage = () => (
@@ -334,8 +552,8 @@ const SettingsPage = () => (
 // 3. SIDEBAR COMPONENT
 // =========================================================================
 
-const Sidebar = ({ isMenuOpen, setIsMenuOpen, currentPage, setCurrentPage }) => {
-  const menuItems = [
+const Sidebar = ({ isMenuOpen, setIsMenuOpen, currentPage, setCurrentPage, handleLogout }) => {
+    const menuItems = [
     { key: 'overview', name: 'Dashboard', icon: LayoutDashboard },
     { key: 'users', name: 'Users / KYC', icon: Users },
     { key: 'assets', name: 'Assets / Listings', icon: Gavel },
@@ -398,7 +616,10 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen, currentPage, setCurrentPage }) => 
 
             {/* Sign Out Button */}
             <div className="mt-auto pt-6 border-t border-[#C8E6C8]/50">
-              <button className="w-full py-3 text-sm text-red-600 hover:text-red-800 hover:bg-red-50/50 rounded-xl transition-all duration-200 font-medium">
+            <button 
+                onClick={handleLogout}
+                className="w-full py-3 text-sm text-red-600 hover:text-red-800 hover:bg-red-50/50 rounded-xl transition-all duration-200 font-medium"
+              >
                 Sign Out
               </button>
             </div>
@@ -422,9 +643,11 @@ const simulatedDashboardData = {
     },
 };
 
-export default function AdminDashboard() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+export default function AdminDashboard({ setRole }) {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState('overview');
+  const navigate = useNavigate();
+
 
   const dashboardData = useMemo(() => ({
     ...simulatedDashboardData
@@ -450,7 +673,15 @@ export default function AdminDashboard() {
         return <OverviewPage data={dashboardData} setCurrentPage={setCurrentPage} />;
     }
   };
+  const handleLogout = () => {
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    setRole(null);
 
+    navigate('/login');
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#E0F2E0] via-[#C8E6C8] to-[#B0DAB0]">
       
@@ -462,6 +693,8 @@ export default function AdminDashboard() {
             setIsMenuOpen={setIsMenuOpen} 
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
+            handleLogout={handleLogout}
+
         />
 
         {/* Main Content Area */}
@@ -483,7 +716,7 @@ export default function AdminDashboard() {
           </GlassCard>
 
           <footer className="text-center text-sm text-[#4a6850] mt-6">
-              <p>&copy; 2024 NPLin Marketplace. All data real-time (simulated).</p>
+              <p>&copy; 2025 NPLin Marketplace. All data real-time (simulated).</p>
           </footer>
         </main>
       </div>
