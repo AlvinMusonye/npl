@@ -10,6 +10,8 @@ import AdminDashboard from './Dashboards/AdminDashboard'
 import MarketplacePlatform from './Dashboards/MarketPlacePlatform'
 import ListAssetPage from './Dashboards/ListAssets'
 import UserProfilePage from './Dashboards/UserProfilePage'
+import FinancierDashboard from './Dashboards/FinancierDashboard'
+
 
 
 
@@ -39,6 +41,15 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+                <Route
+          path="/financier"
+          element={
+            <ProtectedRoute role={role} allowedRole="FINANCIER">
+              <FinancierDashboard />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/borrower"
           element={

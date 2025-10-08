@@ -232,6 +232,7 @@ export default function SignupPage() {
               >
                 <option value="BORROWER">Borrower</option>
                 <option value="LENDER">Lender</option>
+                <option value="FINANCIER">Financier</option>
                 <option value="RECOVERY_PARTNER">Recovery Partner</option>
               </select>
             </div>
