@@ -2,9 +2,9 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { 
-    LayoutDashboard, Users, Gavel, FileText, Wallet, Settings, List, XCircle, Menu,
-    Building, TrendingUp, Handshake, Bot, Zap, Lock, Store, Check, X, ArrowUp, ArrowDown, Minus, 
-    ArrowRight, CreditCard, Search 
+    LayoutDashboard, Users, Gavel, FileText, Wallet, Settings, List, XCircle, Menu, Building, TrendingUp, Handshake, 
+    Bot, Zap, Lock, Store, Check, X, ArrowRight, CreditCard, Search, ShieldOff, Eye
+
 } from 'lucide-react';
 
 // =========================================================================
@@ -43,8 +43,9 @@ const DashboardHeader = ({ title, subtitle }) => (
 );
 
 // Operational Metric Card for Overview
-const OperationalCard = ({ title, count, link, Icon, apiAction, linkText }) => (
-    <a href={link} onClick={(e) => e.preventDefault()} className="block hover:scale-105 transition-all duration-300 ease-out">
+const OperationalCard = ({ title, count, link, Icon, apiAction, linkText, onClick }) => (
+    <a href={link} onClick={(e) => { e.preventDefault(); onClick && onClick(); }} className="block hover:scale-105 transition-all duration-300 ease-out cursor-pointer">
+
         <GlassCard className="p-6 h-full flex flex-col justify-between">
             <div className="flex items-start justify-between">
                 <Icon className="w-8 h-8 text-[#6B9071]" />
@@ -68,6 +69,8 @@ const UserStatusBadge = ({ status }) => {
         ACTIVE: 'bg-green-100 text-green-800 border border-green-300',
         BLOCKED: 'bg-red-100 text-red-800 border border-red-300',
         SUBMITTED: 'bg-blue-100 text-blue-800 border border-blue-300',
+        SUSPENDED: 'bg-orange-100 text-orange-800 border border-orange-300',
+
     };
     return (
         <span className={`px-2.5 py-1 text-xs font-semibold rounded-full inline-block ${statusStyles[status] || 'bg-gray-100 text-gray-800'}`}>
@@ -83,7 +86,17 @@ const UserStatusBadge = ({ status }) => {
 
 // 1. Main Admin Dashboard (Landing Page) 🏠
 const OverviewPage = ({ data, setCurrentPage }) => {
-    const { pendingUsers, pendingAssets, pendingDocuments } = data.systemSummary;
+    if (!data || !data.system_summary) {
+        return (
+            <GlassCard className="p-8 h-64 flex items-center justify-center text-red-600">
+                Could not load dashboard summary data.
+            </GlassCard>
+        );
+    }
+
+    const { pending_users, pending_assets, pending_documents } = data.system_summary;
+    const { manage_accounts_url, review_assets_url, review_documents_url } = data;
+  
   
     return (
       <>
@@ -97,28 +110,28 @@ const OverviewPage = ({ data, setCurrentPage }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <OperationalCard
               title="Pending Users for Approval"
-              count={pendingUsers}
+              count={pending_users}
               link="#"
               Icon={Users}
-              apiAction="GET /api/accounts/dashboard/"
+              apiAction={`GET ${manage_accounts_url}`}
               linkText="Manage Accounts"
               onClick={() => setCurrentPage('users')}
             />
             <OperationalCard
               title="Pending Assets for Verification"
-              count={pendingAssets}
+              count={pending_assets}
               link="#"
               Icon={Gavel}
-              apiAction="GET /api/admin/assets/"
+              apiAction={`GET ${review_assets_url}`}
               linkText="Review Listings"
               onClick={() => setCurrentPage('assets')}
             />
             <OperationalCard
               title="Pending Documents for Review"
-              count={pendingDocuments}
+              count={pending_documents}
               link="#"
               Icon={FileText}
-              apiAction="GET /api/admin/documents/"
+              apiAction={`GET ${review_documents_url}`}
               linkText="Process Documents"
               onClick={() => setCurrentPage('documents')}
             />
@@ -136,7 +149,7 @@ const OverviewPage = ({ data, setCurrentPage }) => {
 };
 
 // User Detail Modal Component
-const UserDetailModal = ({ user, onClose, onApprove, onReject }) => {
+const UserDetailModal = ({ user, onClose, onApprove, onReject, onSuspend }) => {
     if (!user) return null;
 
     // Defensive check for profile and documents which might not exist on all user objects
@@ -183,7 +196,7 @@ const UserDetailModal = ({ user, onClose, onApprove, onReject }) => {
 
                 <div className="mt-8 border-t border-[#6B9071]/30 pt-6">
                     <p className="text-sm text-[#4a6850] mb-4">
-                        **API Actions:** `PATCH /api/accounts/admin/users/{user.id}/approve/` or `/reject/`.
+                    **API Actions:** `PATCH /api/admin/users/{user.id}/[approve|reject]/` or `PATCH /api/admin/accounts/{user.id}/suspend/`
                     </p>
                     <div className="flex gap-4">
                         <button 
@@ -191,6 +204,12 @@ const UserDetailModal = ({ user, onClose, onApprove, onReject }) => {
                             className="flex-1 py-3 px-4 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors shadow-lg flex items-center justify-center gap-2">
                             <Check className="w-5 h-5" /> Approve User
                         </button>
+                        <button 
+                            onClick={() => onSuspend(user.id)} 
+                            className="flex-1 py-3 px-4 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-colors shadow-lg flex items-center justify-center gap-2">
+                            <ShieldOff className="w-5 h-5" /> Suspend User
+                        </button>
+
                         <button 
                             onClick={() => onReject(user.id)} 
                             className="flex-1 py-3 px-4 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors shadow-lg flex items-center justify-center gap-2">
@@ -205,7 +224,10 @@ const UserDetailModal = ({ user, onClose, onApprove, onReject }) => {
 
 // 2. User & Account Management Dashboard (KYC/KYB) 👥
 const UsersPage = () => {
+
     const [users, setUsers] = useState([]);
+    const [filterStatus, setFilterStatus] = useState('PENDING');
+
     const [selectedUser, setSelectedUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -221,7 +243,11 @@ const UsersPage = () => {
                     throw new Error('Authentication token not found. Please log in.');
                 }
 
-                const response = await fetch(`${API_BASE_URL}/api/accounts/admin/users/`, {
+                const url = filterStatus === 'ALL' 
+                    ? `${API_BASE_URL}/api/admin/users/`
+                    : `${API_BASE_URL}/api/admin/users/?status=${filterStatus}`;
+
+                const response = await fetch(url, {
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
                         'Content-Type': 'application/json',
@@ -243,7 +269,7 @@ const UsersPage = () => {
         };
 
         fetchUsers();
-    }, []);
+    }, [filterStatus]);
 
     // Fetch single user details from GET /api/accounts/admin/users/{userId}/
     const handleViewUser = async (userId) => {
@@ -252,7 +278,7 @@ const UsersPage = () => {
             const accessToken = localStorage.getItem('accessToken');
             if (!accessToken) throw new Error('Authentication token not found.');
 
-            const response = await fetch(`${API_BASE_URL}/api/accounts/admin/users/${userId}/`, {
+            const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/`, {
                 headers: { 'Authorization': `Bearer ${accessToken}` },
             });
 
@@ -275,7 +301,7 @@ const UsersPage = () => {
             const accessToken = localStorage.getItem('accessToken');
             if (!accessToken) throw new Error('Authentication token not found.');
 
-            const response = await fetch(`${API_BASE_URL}/api/accounts/admin/users/${userId}/${action}/`, {
+            const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/${action}/`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
@@ -305,6 +331,31 @@ const UsersPage = () => {
     const handleReject = (userId) => {
         updateUserStatus(userId, 'reject');
     };
+    const handleSuspend = async (userId) => {
+        try {
+            const accessToken = localStorage.getItem('accessToken');
+            if (!accessToken) throw new Error('Authentication token not found.');
+
+            const response = await fetch(`${API_BASE_URL}/api/admin/accounts/${userId}/suspend/`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || `Failed to suspend user.`);
+            }
+
+            setUsers(users.map(u => u.id === userId ? { ...u, status: 'SUSPENDED' } : u));
+            handleCloseModal();
+        } catch (err) {
+            alert(`Error: ${err.message}`);
+        }
+    };
+
 
     return (
         <>
@@ -318,6 +369,23 @@ const UsersPage = () => {
                     <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
                         <Users className="w-5 h-5 mr-2 text-[#6B9071]" /> User List View
                     </h3>
+
+                    <div className="flex space-x-2 mb-4 border-b border-[#6B9071]/30 pb-4">
+                        {['PENDING', 'ACTIVE', 'BLOCKED', 'SUSPENDED', 'ALL'].map(status => (
+                            <button 
+                                key={status} 
+                                onClick={() => setFilterStatus(status)}
+                                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
+                                    filterStatus === status 
+                                    ? 'bg-[#6B9071] text-white shadow-md' 
+                                    : 'bg-white/50 text-[#4a6850] hover:bg-white/80'
+                                }`}
+                            >
+                                {status}
+                            </button>
+                        ))}
+                    </div>
+
                     <div className="overflow-x-auto">
                         {loading && <div className="text-center p-8 text-[#4a6850]">Loading users...</div>}
                         {error && <div className="text-center p-8 text-red-600">{error}</div>}
@@ -360,6 +428,8 @@ const UsersPage = () => {
                 onClose={handleCloseModal}
                 onApprove={handleApprove}
                 onReject={handleReject}
+                onSuspend={handleSuspend}
+
             />
         </>
     );
@@ -380,7 +450,7 @@ const AssetsPage = () => (
                 <Gavel className="w-5 h-5 mr-2 text-[#6B9071]" /> Asset Review Queue
             </h3>
             <p className="text-[#4a6850] mb-4 text-sm">
-                **API: POST/PATCH /api/admin/asset-listings/{asset_id}/approve/** - Vetting asset quality and title.
+            {'**API: POST/PATCH /api/admin/asset-listings/{asset_id}/approve/** - Vetting asset quality and title.'}
             </p>
             <div className="h-64 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
                 [Data Table: Asset ID, Type, Status (Pending, Approved), Borrower/Lender, Approval Actions]
@@ -405,91 +475,186 @@ const AssetsPage = () => (
   );
 
 // 4. Document Management Dashboard (Compliance) 📜
-const DocumentsPage = () => (
-    <>
-      <DashboardHeader 
-        title="Document Management (Compliance)" 
-        subtitle="Focus on uploaded documents (IDs, titles, bank statements) and their verification workflow." 
-      />
-      
-      <section className="mb-8">
-        <GlassCard className="p-8">
-            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
-                <FileText className="w-5 h-5 mr-2 text-[#6B9071]" /> Pending Documents List
-            </h3>
-            <p className="text-[#4a6850] mb-4 text-sm">
-                **API: GET /api/admin/documents/** - Filterable list by Document Type and Workflow Status.
-            </p>
-            <div className="h-64 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
-                [Data Table: Document ID, User ID, Doc Type, Status, Verification Actions]
-            </div>
-        </GlassCard>
-      </section>
-      
-      <section>
-        <GlassCard className="p-8">
-            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
-                <Check className="w-5 h-5 mr-2 text-[#6B9071]" /> Document Details & Verification
-            </h3>
-            <p className="text-[#4a6850] mb-4 text-sm">
-                **API: POST/PATCH /api/admin/documents/{doc_id}/verify/** - Mark as Verified or Request New Upload.
-            </p>
-            <div className="h-32 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
-                [Viewer for Actual File and Manual Verification Buttons]
-            </div>
-        </GlassCard>
-      </section>
-    </>
-  );
+const DocumentsPage = () => {
+    const [documents, setDocuments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchDocuments = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const accessToken = localStorage.getItem('accessToken');
+                if (!accessToken) throw new Error('Authentication token not found.');
+
+                const response = await fetch(`${API_BASE_URL}/api/admin/documents/?status=PENDING_REVIEW`, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` },
+                });
+                if (!response.ok) throw new Error('Failed to fetch pending documents.');
+                
+                const data = await response.json();
+                setDocuments(data);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchDocuments();
+    }, []);
+
+    const handleApprove = async (docId) => {
+        try {
+            const accessToken = localStorage.getItem('accessToken');
+            if (!accessToken) throw new Error('Authentication token not found.');
+
+            await fetch(`${API_BASE_URL}/api/admin/documents/${docId}/approve/`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+            });
+            setDocuments(documents.filter(doc => doc.id !== docId));
+            alert('Document approved successfully!');
+        } catch (err) {
+            alert(`Error: ${err.message}`);
+        }
+    };
+
+    const handleView = async (docId) => {
+        try {
+            const accessToken = localStorage.getItem('accessToken');
+            if (!accessToken) throw new Error('Authentication token not found.');
+
+            const response = await fetch(`${API_BASE_URL}/api/admin/documents/${docId}/view/`, {
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+            });
+            if (!response.ok) throw new Error('Failed to get viewable URL for document.');
+
+            const data = await response.json();
+            if (data.url) {
+                window.open(data.url, '_blank');
+            } else {
+                throw new Error('No viewable URL returned from API.');
+            }
+        } catch (err) {
+            alert(`Error: ${err.message}`);
+        }
+    };
+
+    return (
+        <>
+            <DashboardHeader 
+                title="Document Management (Compliance)" 
+                subtitle="Review and approve documents awaiting verification." 
+            />
+            <GlassCard className="p-6">
+                <h3 className="text-xl font-bold text-[#1a3d2e] mb-4">Documents Awaiting Review</h3>
+                <div className="overflow-x-auto">
+                    {loading && <div className="text-center p-8 text-[#4a6850]">Loading documents...</div>}
+                    {error && <div className="text-center p-8 text-red-600">{error}</div>}
+                    {!loading && !error && (
+                        <table className="min-w-full text-sm text-left">
+                            <thead className="border-b border-[#6B9071]/30 text-[#1a3d2e]">
+                                <tr>
+                                    <th className="p-4">Document ID</th>
+                                    <th className="p-4">User</th>
+                                    <th className="p-4">Type</th>
+                                    <th className="p-4">Uploaded On</th>
+                                    <th className="p-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {documents.map(doc => (
+                                    <tr key={doc.id} className="border-b border-white/60 hover:bg-white/40">
+                                        <td className="p-4 font-mono text-xs text-[#4a6850]">{doc.id}</td>
+                                        <td className="p-4 text-[#4a6850]">{doc.user_email}</td>
+                                        <td className="p-4 font-medium text-[#1a3d2e]">{doc.document_type}</td>
+                                        <td className="p-4 text-[#4a6850]">{new Date(doc.created_at).toLocaleDateString()}</td>
+                                        <td className="p-4 flex gap-2">
+                                            <button onClick={() => handleView(doc.id)} className="px-3 py-1.5 bg-blue-500/80 text-white text-xs font-semibold rounded-lg hover:bg-blue-600 flex items-center gap-1"><Eye size={14}/> View</button>
+                                            <button onClick={() => handleApprove(doc.id)} className="px-3 py-1.5 bg-green-600/80 text-white text-xs font-semibold rounded-lg hover:bg-green-700 flex items-center gap-1"><Check size={14}/> Approve</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            </GlassCard>
+        </>
+    );
+};
 
 // 5. Transaction & Settlement Monitoring Dashboard 💰
-const TransactionsPage = () => (
-    <>
-      <DashboardHeader 
-        title="Transaction & Settlement Monitoring" 
-        subtitle="Auditing active escrow accounts, monitoring fund security, and managing final payouts." 
-      />
-      
-      <section className="mb-8">
-        <GlassCard className="p-8">
-            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
-                <CreditCard className="w-5 h-5 mr-2 text-[#6B9071]" /> Active Loan/Escrow View
-            </h3>
-            <p className="text-[#4a6850] mb-4 text-sm">
-                Monitoring fund security, escrow balances, and next repayment dates (Debt Servicing Health).
-            </p>
-            <div className="h-48 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
-                [Data Table: Loan ID, Asset ID, Escrow Balance, Next Due Date]
-            </div>
-        </GlassCard>
-      </section>
+const TransactionsPage = () => {
+    const [transactions, setTransactions] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <GlassCard className="p-8">
-            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
-                <Wallet className="w-5 h-5 mr-2 text-[#6B9071]" /> Settlement Queue
-            </h3>
-            <p className="text-[#4a6850] mb-4 text-sm">
-                Completed transactions ready for final payout and title release.
-            </p>
-            <div className="h-48 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
-                [Data Table: Transaction ID, Payout Amount, Final Audit Status]
-            </div>
-        </GlassCard>
-        <GlassCard className="p-8">
-            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
-                <XCircle className="w-5 h-5 mr-2 text-red-600" /> Dispute Resolution Log
-            </h3>
-            <p className="text-[#4a6850] mb-4 text-sm">
-                Tracking any active payment disputes or exceptions requiring mediation.
-            </p>
-            <div className="h-48 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
-                [Dispute Table: Case ID, Transaction ID, Status (Open/Closed)]
-            </div>
-        </GlassCard>
-      </div>
-    </>
-  );
+    useEffect(() => {
+        const fetchTransactions = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const accessToken = localStorage.getItem('accessToken');
+                if (!accessToken) throw new Error('Authentication token not found.');
+
+                const response = await fetch(`${API_BASE_URL}/api/admin/transactions/`, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` },
+                });
+                if (!response.ok) throw new Error('Failed to fetch transactions.');
+                
+                const data = await response.json();
+                setTransactions(data);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTransactions();
+    }, []);
+
+    return (
+        <>
+            <DashboardHeader 
+                title="Transaction & Settlement Monitoring" 
+                subtitle="Auditing all platform transactions, from offer funding to final settlement." 
+            />
+            <GlassCard className="p-6">
+                <h3 className="text-xl font-bold text-[#1a3d2e] mb-4">Platform Transactions</h3>
+                <div className="overflow-x-auto">
+                    {loading && <div className="text-center p-8 text-[#4a6850]">Loading transactions...</div>}
+                    {error && <div className="text-center p-8 text-red-600">{error}</div>}
+                    {!loading && !error && (
+                        <table className="min-w-full text-sm text-left">
+                            <thead className="border-b border-[#6B9071]/30 text-[#1a3d2e]">
+                                <tr>
+                                    <th className="p-4">Transaction ID</th>
+                                    <th className="p-4">Amount (KES)</th>
+                                    <th className="p-4">Type</th>
+                                    <th className="p-4">Status</th>
+                                    <th className="p-4">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {transactions.map(tx => (
+                                    <tr key={tx.id} className="border-b border-white/60 hover:bg-white/40">
+                                        <td className="p-4 font-mono text-xs text-[#4a6850]">{tx.id}</td>
+                                        <td className="p-4 font-semibold text-[#1a3d2e]">{Number(tx.amount_kes).toLocaleString()}</td>
+                                        <td className="p-4 text-[#4a6850]">{tx.transaction_type}</td>
+                                        <td className="p-4"><UserStatusBadge status={tx.status} /></td>
+                                        <td className="p-4 text-[#4a6850]">{new Date(tx.created_at).toLocaleString()}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            </GlassCard>
+        </>
+    );
+};
 
 // 6. Communication Audit Dashboard 💬
 const AuditPage = () => (
@@ -634,30 +799,67 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen, currentPage, setCurrentPage, handl
 // 4. MAIN DASHBOARD LOGIC
 // =========================================================================
 
-// --- SIMULATED DATA ---
-const simulatedDashboardData = {
-    systemSummary: {
-        pendingUsers: 45,
-        pendingAssets: 18,
-        pendingDocuments: 32,
-    },
-};
+
 
 export default function AdminDashboard({ setRole }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState('overview');
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loadingOverview, setLoadingOverview] = useState(true);
+  const [errorOverview, setErrorOverview] = useState(null);
+
   const navigate = useNavigate();
 
 
-  const dashboardData = useMemo(() => ({
-    ...simulatedDashboardData
-  }), []);
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+        setLoadingOverview(true);
+        setErrorOverview(null);
+        try {
+            const accessToken = localStorage.getItem('accessToken');
+            if (!accessToken) {
+                throw new Error('Authentication token not found. Please log in.');
+            }
+
+            const response = await fetch(`${API_BASE_URL}/api/dashboard/`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Failed to fetch dashboard data.');
+            }
+
+            const data = await response.json();
+            setDashboardData(data);
+        } catch (err) {
+            setErrorOverview(err.message);
+        } finally {
+            setLoadingOverview(false);
+        }
+    };
+
+    // Only fetch data if we are on the overview page
+    if (currentPage === 'overview') {
+        fetchDashboardData();
+    }
+}, [currentPage]);
+
+
 
   const renderPage = () => {
     switch (currentPage) {
       case 'overview':
-        return <OverviewPage data={dashboardData} setCurrentPage={setCurrentPage} />;
-      case 'users':
+        if (loadingOverview) {
+            return <div className="flex items-center justify-center h-64 text-lg text-[#4a6850]">Loading Dashboard Data...</div>;
+        }
+        if (errorOverview) {
+            return <div className="flex items-center justify-center h-64 bg-red-100/50 rounded-2xl text-lg text-red-600 p-4">Error: {errorOverview}</div>;
+        }
+        return <OverviewPage data={dashboardData} setCurrentPage={setCurrentPage} />;      case 'users':
         return <UsersPage />;
       case 'assets':
         return <AssetsPage />;
