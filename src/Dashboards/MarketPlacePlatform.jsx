@@ -2,8 +2,9 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     Car, Home, Maximize, Upload, DollarSign, Calendar, MapPin, FileText, CheckCircle, ArrowRight, Trash2, Eye, Edit, MessageSquare, 
-    LayoutDashboard, User, CreditCard, Clock, Check, AlertTriangle, Store, X
+    LayoutDashboard, User, CreditCard, Clock, Check, AlertTriangle, Store, X, LogOut
 } from 'lucide-react';
+
 
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
@@ -185,7 +186,7 @@ const AssetCard = ({ asset, onMakeOffer }) => {
 // 4. MAIN BORROWER DASHBOARD COMPONENT (The Single File Export)
 // =========================================================================
 
-export default function LenderMarketplace() {
+export default function LenderMarketplace({ setRole }) {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -269,6 +270,17 @@ export default function LenderMarketplace() {
     
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    if (setRole) {
+      setRole(null);
+    }
+    navigate('/login');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#d4e4d0] via-[#c8d5c0] to-[#b8cdb0]">
       
@@ -278,11 +290,19 @@ export default function LenderMarketplace() {
           <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-800">NPLin Marketplace</h1>
 
-            <button 
-              onClick={() => navigate('/profile')}
-              className="px-6 py-2.5 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl">
-              <User className="w-5 h-5 mr-1 inline-block" /> Profile
-            </button>
+          <div className="flex items-center gap-4">
+              <button 
+                onClick={() => navigate('/profile')}
+                className="flex items-center gap-2 px-6 py-2.5 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl">
+                <User className="w-5 h-5" /> Profile
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-6 py-2.5 bg-red-500/20 backdrop-blur-md hover:bg-red-500/30 text-red-800 font-semibold rounded-xl border border-red-500/30 transition-all duration-300 shadow-lg hover:shadow-xl">
+                <LogOut className="w-5 h-5" /> Logout
+              </button>
+            </div>
+
           </div>
         </div>
       </header>

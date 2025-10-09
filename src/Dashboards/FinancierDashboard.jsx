@@ -82,27 +82,27 @@ const StatusBadge = ({ status, isIconOnly = false }) => {
     case 'Active':
     case 'Accepted':
     case 'Approved':
-      colorClass = `bg-[${COLORS.DATA_HIGHLIGHT}] text-white`;
-      Icon = CheckCircle;
+        colorClass = `bg-green-100 text-green-800 border border-green-300`;
+        Icon = CheckCircle;
       text = 'Active';
       break;
     case 'Pending Approval':
     case 'Pending Review':
-      colorClass = `bg-yellow-500 text-white`;
-      Icon = Clock;
+        colorClass = `bg-yellow-100 text-yellow-800 border border-yellow-300`;
+        Icon = Clock;
       text = 'Pending';
       break;
     case 'Rejected':
-      colorClass = `bg-red-500 text-white`;
-      Icon = XCircle;
+        colorClass = `bg-red-100 text-red-800 border border-red-300`;
+        Icon = XCircle;
       text = 'Rejected';
       break;
     default:
-      colorClass = `bg-gray-400 text-white`;
-      text = status;
+        colorClass = `bg-gray-100 text-gray-800 border border-gray-300`;
+        text = status;
   }
   return (
-    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${colorClass}`}>
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${colorClass}`}>
       <Icon size={14} className={isIconOnly ? "" : "mr-1"} />
       {!isIconOnly && text}
     </span>
@@ -223,7 +223,7 @@ const MarketplaceView = () => {
   }, [filters]);
 
   const RiskBadge = ({ risk }) => (
-    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${risk === 'A' ? 'bg-green-100 text-green-700' : risk === 'B' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
+    <span className={`px-2 py-1 rounded-full text-xs font-semibold border ${risk === 'A' ? 'bg-green-100 text-green-800 border-green-300' : risk === 'B' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'bg-red-100 text-red-800 border-red-300'}`}>
       {risk}
     </span>
   );
@@ -251,7 +251,7 @@ const MarketplaceView = () => {
     };
 
     return (
-      <form onSubmit={handleSubmit} className="mt-6 p-4 border border-gray-200 rounded-lg">
+        <form onSubmit={handleSubmit} className="mt-6 p-4 border border-[${COLORS.ACCENT_GREEN}]/50 rounded-lg bg-white/50">
         <h3 className={`text-xl font-bold text-[${COLORS.TEXT_DARK}] mb-4`}>Offer Submission</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
@@ -290,11 +290,11 @@ const MarketplaceView = () => {
   };
 
   const AssetDetailModal = ({ asset, onClose }) => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-[${COLORS.TEXT_DARK}]/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className={`bg-[${COLORS.CARD_WHITE}] rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl`}>
         <div className="flex justify-between items-start border-b pb-4 mb-4">
           <h2 className={`text-3xl font-bold text-[${COLORS.TEXT_DARK}]`}>Asset Listing: {asset.id}</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-red-500 transition"><XCircle size={28} /></button>
+          <button onClick={onClose} className="text-gray-400 hover:text-red-600 transition"><XCircle size={28} /></button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -528,7 +528,7 @@ const MyOffersView = () => {
 
       {/* Funding Portal Callout */}
       {activeTab === 'Pending Offers' && dummyData.offers.some(o => o.status === 'Accepted') && (
-        <div className={`p-6 mt-8 rounded-xl bg-green-50 border border-[${COLORS.DATA_HIGHLIGHT}] flex justify-between items-center shadow-md`}>
+        <div className={`p-6 mt-8 rounded-xl bg-[${COLORS.ACCENT_GREEN}]/30 border border-[${COLORS.DATA_HIGHLIGHT}] flex justify-between items-center shadow-md`}>
           <div>
             <h3 className={`text-xl font-bold text-[${COLORS.TEXT_DARK}]`}>Funding Portal Access</h3>
             <p className="text-gray-600">You have accepted offers awaiting disbursement. Initiate fund transfer to escrow now.</p>
@@ -599,10 +599,11 @@ const ProfileView = () => {
       <form onSubmit={handleSubmit} className={`p-6 bg-[${COLORS.CARD_WHITE}] rounded-xl shadow-lg border border-[${COLORS.ACCENT_GREEN}]`}>
         <h2 className={`text-2xl font-semibold text-[${COLORS.TEXT_DARK}] mb-4 border-b pb-2`}>Personal & Financier Details</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input type="text" name="firstName" placeholder="First Name" value={profile.firstName} onChange={handleChange} required className={`p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[${COLORS.CTA_GREEN}]`} />
-          <input type="text" name="lastName" placeholder="Last Name" value={profile.lastName} onChange={handleChange} required className={`p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[${COLORS.CTA_GREEN}]`} />
-          <input type="tel" name="mobile" placeholder="Mobile Phone Number" value={profile.mobile} onChange={handleChange} required className={`p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[${COLORS.CTA_GREEN}]`} />
-          <select name="investorType" value={profile.investorType} onChange={handleChange} className={`p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[${COLORS.CTA_GREEN}] bg-white`}>
+        <input type="text" name="firstName" placeholder="First Name" value={profile.firstName} onChange={handleChange} required className={`p-3 border border-[${COLORS.ACCENT_GREEN}] rounded-lg focus:ring-2 focus:ring-[${COLORS.CTA_GREEN}] bg-white/50`} />
+          <input type="text" name="lastName" placeholder="Last Name" value={profile.lastName} onChange={handleChange} required className={`p-3 border border-[${COLORS.ACCENT_GREEN}] rounded-lg focus:ring-2 focus:ring-[${COLORS.CTA_GREEN}] bg-white/50`} />
+          <input type="tel" name="mobile" placeholder="Mobile Phone Number" value={profile.mobile} onChange={handleChange} required className={`p-3 border border-[${COLORS.ACCENT_GREEN}] rounded-lg focus:ring-2 focus:ring-[${COLORS.CTA_GREEN}] bg-white/50`} />
+          <select name="investorType" value={profile.investorType} onChange={handleChange} className={`p-3 border border-[${COLORS.ACCENT_GREEN}] rounded-lg focus:ring-2 focus:ring-[${COLORS.CTA_GREEN}] bg-white`}>
+
             <option value="Institutional">Institutional Investor</option>
             <option value="HNW">High Net Worth Individual</option>
           </select>
@@ -610,8 +611,9 @@ const ProfileView = () => {
 
         <h2 className={`text-2xl font-semibold text-[${COLORS.TEXT_DARK}] mt-8 mb-4 border-b pb-2`}>Bank & Payout Details</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input type="text" name="bankName" placeholder="Bank Name" value={profile.bankName} onChange={handleChange} required className={`p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[${COLORS.CTA_GREEN}]`} />
-          <input type="text" name="account" placeholder="Account Number" value={profile.account} onChange={handleChange} required className={`p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[${COLORS.CTA_GREEN}]`} />
+        <input type="text" name="bankName" placeholder="Bank Name" value={profile.bankName} onChange={handleChange} required className={`p-3 border border-[${COLORS.ACCENT_GREEN}] rounded-lg focus:ring-2 focus:ring-[${COLORS.CTA_GREEN}] bg-white/50`} />
+          <input type="text" name="account" placeholder="Account Number" value={profile.account} onChange={handleChange} required className={`p-3 border border-[${COLORS.ACCENT_GREEN}] rounded-lg focus:ring-2 focus:ring-[${COLORS.CTA_GREEN}] bg-white/50`} />
+
         </div>
         <div className="mt-4 flex items-center justify-between">
           <p className="text-gray-600">Payout Account Status:</p>
@@ -723,8 +725,9 @@ export default function FinancierDashboard({ setRole }) {
         {/* Sidebar Navigation */}
         <aside
           className={`fixed inset-y-0 left-0 transform ${isNavOpen ? 'translate-x-0' : '-translate-x-full'} 
-            md:relative md:translate-x-0 transition-transform duration-300 ease-in-out 
-            w-64 bg-[${COLORS.CARD_WHITE}] p-6 border-r border-[${COLORS.ACCENT_GREEN}] z-30 md:z-auto md:shadow-none shadow-xl`}
+            md:sticky md:top-20 md:translate-x-0 transition-transform duration-300 ease-in-out 
+            w-64 bg-[${COLORS.CARD_WHITE}] p-6 border-r border-[${COLORS.ACCENT_GREEN}] z-30 md:z-auto md:shadow-none shadow-xl md:self-start`}
+
         >
           <div className="space-y-3 pt-4">
             {navItems.map((item) => (
@@ -736,15 +739,7 @@ export default function FinancierDashboard({ setRole }) {
                 label={item.label}
               />
             ))}
-                        {/* Logout Button */}
-                        <button
-              onClick={handleLogout}
-              className={`flex items-center w-full py-3 px-6 rounded-lg transition duration-200 text-left text-sm font-medium 
-              text-red-600 hover:bg-red-100/50 mt-6 border-t pt-4 border-dashed border-gray-300`}
-            >
-              <LogOut size={20} className="mr-3" />
-              Logout
-            </button>
+         
 
             {/* Export Button */}
              <a
@@ -755,6 +750,16 @@ export default function FinancierDashboard({ setRole }) {
                 <DollarSign size={20} className="mr-3" />
                 Export to Sheets (Simulated)
               </a>
+                          {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className={`flex items-center w-full py-3 px-6 rounded-lg transition duration-200 text-left text-sm font-medium 
+              text-red-600 hover:bg-red-100/50 mt-2`}
+            >
+              <LogOut size={20} className="mr-3" />
+              Logout
+            </button>
+
           </div>
         </aside>
 
@@ -774,3 +779,4 @@ export default function FinancierDashboard({ setRole }) {
     </div>
   );
 }
+
