@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
+
 
 
 // === CONSTANTS ===
@@ -55,25 +57,37 @@ const GlassCard = ({ children, className = "", ...props }) => (
 );
 
 // Reusable Input Component
-const Input = ({ label, name, value, onChange, placeholder, type, required }) => (
+const Input = ({ label, name, value, onChange, placeholder, type, required, icon: Icon, onIconClick }) => (
     <div>
       <label htmlFor={name} className="block text-sm font-medium text-[#0F2A1D] mb-2">
         {label}
       </label>
-      <input
-        id={name}
-        type={type}
-        name={name}
-        value={value}
-        onChange={onChange}
-        className="w-full px-4 py-3 bg-white/40 border-2 border-white/60 rounded-xl text-sm text-[#0F2A1D] placeholder-[#375534]/70 focus:outline-none focus:ring-2 focus:ring-[#375534] focus:border-[#375534] backdrop-blur-sm transition-colors"
-        style={{
-          background: 'rgba(255,255,255,0.3)',
-          backdropFilter: 'blur(10px)',
-        }}
-        placeholder={placeholder}
-        required={required}
-      />
+      <div className="relative">
+        <input
+          id={name}
+          type={type}
+          name={name}
+          value={value}
+          onChange={onChange}
+          className={`w-full px-4 py-3 bg-white/40 border-2 border-white/60 rounded-xl text-sm text-[#0F2A1D] placeholder-[#375534]/70 focus:outline-none focus:ring-2 focus:ring-[#375534] focus:border-[#375534] backdrop-blur-sm transition-colors ${Icon ? 'pr-12' : ''}`}
+          style={{
+            background: 'rgba(255,255,255,0.3)',
+            backdropFilter: 'blur(10px)',
+          }}
+          placeholder={placeholder}
+          required={required}
+        />
+        {Icon && (
+          <button
+            type="button"
+            onClick={onIconClick}
+            className="absolute inset-y-0 right-0 flex items-center pr-4 text-[#0F2A1D]/70 hover:text-[#0F2A1D] focus:outline-none"
+          >
+            <Icon size={20} />
+          </button>
+        )}
+      </div>
+
     </div>
 );
 
@@ -88,7 +102,8 @@ export default function LoginPage({ setRole }) {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [userRole, setUserRole] = useState(''); 
+  const [userRole, setUserRole] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -225,7 +240,7 @@ export default function LoginPage({ setRole }) {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="npl@gmail.com"
+              placeholder="email@gmail.com"
               type="email"
               required
             />
@@ -235,9 +250,12 @@ export default function LoginPage({ setRole }) {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="••••••••"
-              type="password"
+              placeholder="password"
+              type={showPassword ? 'text' : 'password'}
               required
+              icon={showPassword ? EyeOff : Eye}
+              onIconClick={() => setShowPassword(!showPassword)}
+
             />
 
             <div className="flex items-center justify-between">
