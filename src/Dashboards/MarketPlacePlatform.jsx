@@ -128,7 +128,10 @@ const AssetCard = ({ asset, onMakeOffer }) => {
     const assetTypeDetails = { VEHICLE: { icon: Car }, PROPERTY: { icon: Home }, LAND: { icon: Maximize } };
     const { icon: Icon } = assetTypeDetails[asset.collateral_type] || { icon: Store };
 
-    const imageUrl = asset.images && asset.images.length > 0 ? asset.images[0].image : 'https://images.unsplash.com/photo-1526726538640-74c178414213?w=800';
+    // Construct the full image URL from the storage_path
+    const imageUrl = asset.images && asset.images.length > 0 
+      ? `${API_BASE_URL}${asset.images[0].storage_path}` 
+      : 'https://images.unsplash.com/photo-1526726538640-74c178414213?w=800';
 
     return (
       <GlassCard className="group relative overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl">
