@@ -1,11 +1,15 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import ModernSidebar from '../components/Sidebar'; // Import the new sidebar
+import UserManagement from '../Admin/UserManagement';
+import DocumentManagement from '../Admin/DocumentManagement'; // Import the new DocumentManagement component
+import AssetManagement from '../Admin/AssetManagement'; // Import the new AssetManagement component
+import OffersOverview from '../Admin/OffersOverview'; // Import the new OffersOverview component
+import AdminProfile from '../Admin/AdminProfile'; // Import the new AdminProfile component
 
 import { 
     LayoutDashboard, Users, Gavel, FileText, Wallet, XCircle, Menu, Building, TrendingUp, Handshake,
     Bot, Zap, Lock, Store, Check, X, ArrowRight, CreditCard, ShieldOff, Eye
-
-
 } from 'lucide-react';
 
 // =========================================================================
@@ -92,7 +96,7 @@ const UserStatusBadge = ({ status }) => {
 // =========================================================================
 
 // 1. Main Admin Dashboard (Landing Page) 🏠
-const OverviewPage = ({ data, setCurrentPage }) => {
+const OverviewPage = ({ data }) => {
     if (!data || !data.system_summary) {
         return (
             <GlassCard className="p-8 h-64 flex items-center justify-center text-red-600">
@@ -103,6 +107,7 @@ const OverviewPage = ({ data, setCurrentPage }) => {
 
     const { pending_users, pending_assets, pending_documents } = data.system_summary;
     const { manage_accounts_url, review_assets_url, review_documents_url } = data;
+    const navigate = useNavigate();
   
   
     return (
@@ -122,7 +127,7 @@ const OverviewPage = ({ data, setCurrentPage }) => {
               Icon={Users}
               apiAction={`GET ${manage_accounts_url}`}
               linkText="Manage Accounts"
-              onClick={() => setCurrentPage('users')}
+              onClick={() => navigate('/admin/users')}
             />
             <OperationalCard
               title="Pending Assets for Verification"
@@ -131,7 +136,7 @@ const OverviewPage = ({ data, setCurrentPage }) => {
               Icon={Gavel}
               apiAction={`GET ${review_assets_url}`}
               linkText="Review Listings"
-              onClick={() => setCurrentPage('assets')}
+              onClick={() => navigate('/admin/assets')}
             />
             <OperationalCard
               title="Pending Documents for Review"
@@ -140,572 +145,13 @@ const OverviewPage = ({ data, setCurrentPage }) => {
               Icon={FileText}
               apiAction={`GET ${review_documents_url}`}
               linkText="Process Documents"
-              onClick={() => setCurrentPage('documents')}
+              onClick={() => navigate('/admin/documents')}
             />
           </div>
         </section>
         
 
       </>
-    );
-};
-
-// User Detail Modal Component
-const UserDetailModal = ({ user, onClose, onApprove, onReject, onSuspend }) => {
-    if (!user) return null;
-
-    // Defensive check for profile and documents which might not exist on all user objects
-    const profile = user.profile || { phone_number: 'N/A', address: 'N/A' };
-    const documents = user.documents || [];
-
-    return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity duration-300">
-            <GlassCard className="w-full max-w-3xl max-h-[90vh] overflow-y-auto p-8">
-                <div className="flex justify-between items-start">
-                    <div>
-                        <h3 className="text-2xl font-bold text-[#1a3d2e]">{user.first_name} {user.last_name}</h3>
-                        <p className="text-sm text-[#4a6850] mt-1">{user.email} | <span className="font-semibold">{user.role}</span></p>
-                        <div className="mt-2"><UserStatusBadge status={user.status} /></div>
-                    </div>
-                    <button onClick={onClose} className="p-2 rounded-full hover:bg-white/50 transition-colors">
-                        <X className="w-6 h-6 text-[#4a6850]" />
-                    </button>
-                </div>
-
-                <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-[#6B9071]/30 pt-6">
-                    <div>
-                        <h4 className="font-semibold text-[#1a3d2e] mb-2">User Profile</h4>
-                        <p className="text-sm text-[#4a6850]"><span className="font-medium">Phone:</span> {profile.phone_number}</p>
-                        <p className="text-sm text-[#4a6850]"><span className="font-medium">Address:</span> {profile.address}</p>
-                        <p className="text-sm text-[#4a6850]"><span className="font-medium">Joined:</span> {new Date(user.created_at).toLocaleDateString()}</p>
-                    </div>
-                    <div>
-                        <h4 className="font-semibold text-[#1a3d2e] mb-2">Submitted Documents</h4>
-                        {documents.length > 0 ? (
-                            <ul className="space-y-2">
-                                {documents.map(doc => (
-                                    <li key={doc.id} className="flex justify-between items-center text-sm p-2 bg-white/30 rounded-lg">
-                                        <span>{doc.type}</span>
-                                        <UserStatusBadge status={doc.status} />
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="text-sm text-[#4a6850]">No documents submitted.</p>
-                        )}
-                    </div>
-                </div>
-
-                <div className="mt-8 border-t border-[#6B9071]/30 pt-6">
-                    <p className="text-sm text-[#4a6850] mb-4">
-                    **API Actions:** `PATCH /api/admin/users/{user.id}/[approve|reject]/` or `PATCH /api/admin/accounts/{user.id}/suspend/`
-                    </p>
-                    <div className="flex gap-4">
-                        <button 
-                            onClick={() => onApprove(user.id)} 
-                            className="flex-1 py-3 px-4 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors shadow-lg flex items-center justify-center gap-2">
-                            <Check className="w-5 h-5" /> Approve User
-                        </button>
-                        <button 
-                            onClick={() => onSuspend(user.id)} 
-                            className="flex-1 py-3 px-4 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-colors shadow-lg flex items-center justify-center gap-2">
-                            <ShieldOff className="w-5 h-5" /> Suspend User
-                        </button>
-
-                        <button 
-                            onClick={() => onReject(user.id)} 
-                            className="flex-1 py-3 px-4 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors shadow-lg flex items-center justify-center gap-2">
-                            <X className="w-5 h-5" /> Reject User
-                        </button>
-                    </div>
-                </div>
-            </GlassCard>
-        </div>
-    );
-};
-
-// 2. User & Account Management Dashboard (KYC/KYB) 👥
-const UsersPage = () => {
-
-    const [users, setUsers] = useState([]);
-    const [filterStatus, setFilterStatus] = useState('PENDING');
-
-    const [selectedUser, setSelectedUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    // Fetch all users from GET /api/accounts/admin/users/
-    useEffect(() => {
-        const fetchUsers = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const accessToken = localStorage.getItem('accessToken');
-                if (!accessToken) {
-                    throw new Error('Authentication token not found. Please log in.');
-                }
-
-                const url = filterStatus === 'ALL' 
-                    ? `${API_BASE_URL}/api/admin/users/`
-                    : `${API_BASE_URL}/api/admin/users/?status=${filterStatus}`;
-
-                const response = await fetch(url, {
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || 'Failed to fetch users.');
-                }
-
-                const data = await response.json();
-                setUsers(data);
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchUsers();
-    }, [filterStatus]);
-
-    // Fetch single user details from GET /api/accounts/admin/users/{userId}/
-    const handleViewUser = async (userId) => {
-        console.log(`Fetching details for user: ${userId}`);
-        try {
-            const accessToken = localStorage.getItem('accessToken');
-            if (!accessToken) throw new Error('Authentication token not found.');
-
-            const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch user details.');
-            }
-            
-            const userDetails = await response.json();
-            setSelectedUser(userDetails);
-        } catch (err) {
-            setError(err.message);
-            console.error(err.message);
-        }
-    };
-
-    const handleCloseModal = () => setSelectedUser(null);
-
-    const updateUserStatus = async (userId, action) => {
-        try {
-            const accessToken = localStorage.getItem('accessToken');
-            if (!accessToken) throw new Error('Authentication token not found.');
-
-            const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/${action}/`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || `Failed to ${action} user.`);
-            }
-
-            const newStatus = action === 'approve' ? 'ACTIVE' : 'BLOCKED';
-            setUsers(users.map(u => u.id === userId ? { ...u, status: newStatus } : u));
-            handleCloseModal();
-
-        } catch (err) {
-            console.error(err.message);
-            alert(`Error: ${err.message}`); // Simple alert for action failure
-        }
-    };
-
-    const handleApprove = (userId) => {
-        updateUserStatus(userId, 'approve');
-    };
-
-    const handleReject = (userId) => {
-        updateUserStatus(userId, 'reject');
-    };
-    const handleSuspend = async (userId) => {
-        try {
-            const accessToken = localStorage.getItem('accessToken');
-            if (!accessToken) throw new Error('Authentication token not found.');
-
-            const response = await fetch(`${API_BASE_URL}/api/admin/accounts/${userId}/suspend/`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || `Failed to suspend user.`);
-            }
-
-            setUsers(users.map(u => u.id === userId ? { ...u, status: 'SUSPENDED' } : u));
-            handleCloseModal();
-        } catch (err) {
-            alert(`Error: ${err.message}`);
-        }
-    };
-
-
-    return (
-        <>
-            <DashboardHeader 
-                title="Users & Account Management (KYC/KYB)" 
-                subtitle="Oversight of user base. Manage verification, roles, and status (ACTIVE, PENDING, BLOCKED)." 
-            />
-            
-            <section>
-                <GlassCard className="p-6">
-                    <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
-                        <Users className="w-5 h-5 mr-2 text-[#6B9071]" /> User List View
-                    </h3>
-
-                    <div className="flex space-x-2 mb-4 border-b border-[#6B9071]/30 pb-4">
-                        {['PENDING', 'ACTIVE', 'BLOCKED', 'SUSPENDED', 'ALL'].map(status => (
-                            <button 
-                                key={status} 
-                                onClick={() => setFilterStatus(status)}
-                                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                                    filterStatus === status 
-                                    ? 'bg-[#6B9071] text-white shadow-md' 
-                                    : 'bg-white/50 text-[#4a6850] hover:bg-white/80'
-                                }`}
-                            >
-                                {status}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="overflow-x-auto">
-                        {loading && <div className="text-center p-8 text-[#4a6850]">Loading users...</div>}
-                        {error && <div className="text-center p-8 text-red-600">{error}</div>}
-                        {!loading && !error && (
-                            <table className="min-w-full text-sm text-left">
-                                <thead className="border-b border-[#6B9071]/30 text-[#1a3d2e]">
-                                    <tr>
-                                        <th className="p-4">Name</th>
-                                        <th className="p-4">Role</th>
-                                        <th className="p-4">Status</th>
-                                        <th className="p-4">Joined On</th>
-                                        <th className="p-4">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {users.map(user => (
-                                        <tr key={user.id} className="border-b border-white/60 hover:bg-white/40">
-                                            <td className="p-4 font-medium text-[#1a3d2e]">{user.first_name} {user.last_name}</td>
-                                            <td className="p-4 text-[#4a6850]">{user.role}</td>
-                                            <td className="p-4"><UserStatusBadge status={user.status} /></td>
-                                            <td className="p-4 text-[#4a6850]">{new Date(user.created_at).toLocaleDateString()}</td>
-                                            <td className="p-4">
-                                                <button 
-                                                    onClick={() => handleViewUser(user.id)}
-                                                    className="px-3 py-1.5 bg-[#6B9071]/80 text-white text-xs font-semibold rounded-lg hover:bg-[#6B9071]">
-                                                    View Details
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        )}
-                    </div>
-                </GlassCard>
-            </section>
-
-            <UserDetailModal 
-                user={selectedUser} 
-                onClose={handleCloseModal}
-                onApprove={handleApprove}
-                onReject={handleReject}
-                onSuspend={handleSuspend}
-
-            />
-        </>
-    );
-};
-
-
-// 3. Asset & Listing Verification Dashboard 🏡
-const AssetsPage = () => {
-    const [assets, setAssets] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const assetFilters = [
-        { label: 'Pending Review', type: 'status', value: 'PENDING_REVIEW' },
-        { label: 'Pending Admin', type: 'workflow_status', value: 'PENDING_ADMIN' },
-        { label: 'Listed', type: 'status', value: 'LISTED' },
-        { label: 'Rejected', type: 'status', value: 'REJECTED' },
-        { label: 'All', type: 'status', value: 'ALL' },
-    ];
-    const [filter, setFilter] = useState(assetFilters[0]); // Default to first filter
-
-
-    useEffect(() => {
-        const fetchAssets = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const accessToken = localStorage.getItem('accessToken');
-                if (!accessToken) throw new Error('Authentication token not found.');
-
-                let url;
-                if (filter.value === 'ALL') {
-                    url = `${API_BASE_URL}/api/admin/assets/`;
-                } else {
-                    url = `${API_BASE_URL}/api/admin/assets/?${filter.type}=${filter.value}`;
-                }
-
-
-                const response = await fetch(url, {
-                    headers: { 'Authorization': `Bearer ${accessToken}` },
-                });
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || 'Failed to fetch assets.');
-                }
-                
-                const data = await response.json();
-                setAssets(data);
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchAssets();
-    }, [filter]);
-
-    const handleAssetAction = async (assetId, action) => {
-        try {
-            const accessToken = localStorage.getItem('accessToken');
-            if (!accessToken) throw new Error('Authentication token not found.');
-
-            const response = await fetch(`${API_BASE_URL}/api/admin/assets/${assetId}/${action}/`, {
-                method: 'PATCH',
-                headers: { 'Authorization': `Bearer ${accessToken}` },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || `Failed to ${action} asset.`);
-            }
-
-            // Remove from list on success
-            setAssets(assets.filter(asset => asset.id !== assetId));
-            const pastTense = {
-                approve: 'approved',
-                reject: 'rejected',
-                verify: 'verified',
-            }[action] || `${action}ed`;
-            alert(`Asset ${pastTense} successfully!`);
-
-
-        } catch (err) {
-            alert(`Error: ${err.message}`);
-        }
-    };
-
-    return (
-        <>
-            <DashboardHeader 
-                title="Asset & Listing Verification" 
-                subtitle="Review new assets submitted by Borrowers/Lenders, valuation reports, and monitor active offers." 
-            />
-            
-            <section className="mb-8">
-                <GlassCard className="p-8">
-                    <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
-                        <Gavel className="w-5 h-5 mr-2 text-[#6B9071]" /> Asset Review Queue
-                    </h3>
-                    <p className="text-[#4a6850] mb-4 text-sm">
-                        **API: GET /api/admin/assets/ - Vetting asset quality and title.
-                    </p>
-                    
-                    <div className="flex space-x-2 mb-4 border-b border-[#6B9071]/30 pb-4">
-                    {assetFilters.map(f => (
-                            <button 
-                            key={f.label} 
-                            onClick={() => setFilter(f)}
-
-                                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                                    filter.value === f.value && filter.type === f.type
-                                    ? 'bg-[#6B9071] text-white shadow-md' 
-                                    : 'bg-white/50 text-[#4a6850] hover:bg-white/80'
-                                }`}
-                            >
-                                {f.label}
-                                </button>
-                        ))}
-                    </div>
-
-                    <div className="overflow-x-auto">
-                        {loading && <div className="text-center p-8 text-[#4a6850]">Loading assets...</div>}
-                        {error && <div className="text-center p-8 text-red-600">{error}</div>}
-                        {!loading && !error && (
-                            <table className="min-w-full text-sm text-left">
-                                <thead className="border-b border-[#6B9071]/30 text-[#1a3d2e]">
-                                    <tr>
-                                        <th className="p-4">Asset ID</th>
-                                        <th className="p-4">Owner</th>
-                                        <th className="p-4">Type</th>
-                                        <th className="p-4">Valuation (KES)</th>
-                                        <th className="p-4">Status</th>
-                                        <th className="p-4">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {assets.map(asset => (
-                                        <tr key={asset.id} className="border-b border-white/60 hover:bg-white/40">
-                                            <td className="p-4 font-mono text-xs text-[#4a6850]">{asset.id}</td>
-                                            <td className="p-4 text-[#4a6850]">{asset.owner_email || 'N/A'}</td>
-                                            <td className="p-4 font-medium text-[#1a3d2e]">{asset.collateral_type}</td>
-                                            <td className="p-4 font-semibold text-[#1a3d2e]">{Number(asset.valuation_kes).toLocaleString()}</td>
-                                            <td className="p-4"><UserStatusBadge status={asset.status} /></td>
-                                            <td className="p-4 flex gap-2">
-                                                <button onClick={() => handleAssetAction(asset.id, 'approve')} className="px-3 py-1.5 bg-green-600/80 text-white text-xs font-semibold rounded-lg hover:bg-green-700 flex items-center gap-1"><Check size={14}/> Approve</button>
-                                                <button onClick={() => handleAssetAction(asset.id, 'verify')} className="px-3 py-1.5 bg-blue-600/80 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 flex items-center gap-1"><Check size={14}/> Verify</button>
-
-                                                <button onClick={() => handleAssetAction(asset.id, 'reject')} className="px-3 py-1.5 bg-red-600/80 text-white text-xs font-semibold rounded-lg hover:bg-red-700 flex items-center gap-1"><X size={14}/> Reject</button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        )}
-                        {!loading && assets.length === 0 && (
-                            <div className="text-center p-8 text-[#4a6850]">No assets found for this filter.</div>
-                        )}
-                    </div>
-                </GlassCard>
-            </section>
-
-       
-        </>
-    );
-};
-
-
-// 4. Document Management Dashboard (Compliance) 📜
-const DocumentsPage = () => {
-    const [documents, setDocuments] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    useEffect(() => {
-        const fetchDocuments = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const accessToken = localStorage.getItem('accessToken');
-                if (!accessToken) throw new Error('Authentication token not found.');
-
-                const response = await fetch(`${API_BASE_URL}/api/admin/documents/?status=PENDING_REVIEW`, {
-                    headers: { 'Authorization': `Bearer ${accessToken}` },
-                });
-                if (!response.ok) throw new Error('Failed to fetch pending documents.');
-                
-                const data = await response.json();
-                setDocuments(data);
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchDocuments();
-    }, []);
-
-    const handleApprove = async (docId) => {
-        try {
-            const accessToken = localStorage.getItem('accessToken');
-            if (!accessToken) throw new Error('Authentication token not found.');
-
-            await fetch(`${API_BASE_URL}/api/admin/documents/${docId}/approve/`, {
-                method: 'PATCH',
-                headers: { 'Authorization': `Bearer ${accessToken}` },
-            });
-            setDocuments(documents.filter(doc => doc.id !== docId));
-            alert('Document approved successfully!');
-        } catch (err) {
-            alert(`Error: ${err.message}`);
-        }
-    };
-
-    const handleView = async (docId) => {
-        try {
-            const accessToken = localStorage.getItem('accessToken');
-            if (!accessToken) throw new Error('Authentication token not found.');
-
-            const response = await fetch(`${API_BASE_URL}/api/admin/documents/${docId}/view/`, {
-                headers: { 'Authorization': `Bearer ${accessToken}` },
-            });
-            if (!response.ok) throw new Error('Failed to get viewable URL for document.');
-
-            const data = await response.json();
-            if (data.url) {
-                window.open(data.url, '_blank');
-            } else {
-                throw new Error('No viewable URL returned from API.');
-            }
-        } catch (err) {
-            alert(`Error: ${err.message}`);
-        }
-    };
-
-    return (
-        <>
-            <DashboardHeader 
-                title="Document Management (Compliance)" 
-                subtitle="Review and approve documents awaiting verification." 
-            />
-            <GlassCard className="p-6">
-                <h3 className="text-xl font-bold text-[#1a3d2e] mb-4">Documents Awaiting Review</h3>
-                <div className="overflow-x-auto">
-                    {loading && <div className="text-center p-8 text-[#4a6850]">Loading documents...</div>}
-                    {error && <div className="text-center p-8 text-red-600">{error}</div>}
-                    {!loading && !error && (
-                        <table className="min-w-full text-sm text-left">
-                            <thead className="border-b border-[#6B9071]/30 text-[#1a3d2e]">
-                                <tr>
-                                    <th className="p-4">Document ID</th>
-                                    <th className="p-4">User</th>
-                                    <th className="p-4">Type</th>
-                                    <th className="p-4">Uploaded On</th>
-                                    <th className="p-4">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {documents.map(doc => (
-                                    <tr key={doc.id} className="border-b border-white/60 hover:bg-white/40">
-                                        <td className="p-4 font-mono text-xs text-[#4a6850]">{doc.id}</td>
-                                        <td className="p-4 text-[#4a6850]">{doc.user_email}</td>
-                                        <td className="p-4 font-medium text-[#1a3d2e]">{doc.document_type}</td>
-                                        <td className="p-4 text-[#4a6850]">{new Date(doc.created_at).toLocaleDateString()}</td>
-                                        <td className="p-4 flex gap-2">
-                                            <button onClick={() => handleView(doc.id)} className="px-3 py-1.5 bg-blue-500/80 text-white text-xs font-semibold rounded-lg hover:bg-blue-600 flex items-center gap-1"><Eye size={14}/> View</button>
-                                            <button onClick={() => handleApprove(doc.id)} className="px-3 py-1.5 bg-green-600/80 text-white text-xs font-semibold rounded-lg hover:bg-green-700 flex items-center gap-1"><Check size={14}/> Approve</button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
-            </GlassCard>
-        </>
     );
 };
 
@@ -782,105 +228,23 @@ const TransactionsPage = () => {
 
 
 // =========================================================================
-// 3. SIDEBAR COMPONENT
-// =========================================================================
-
-const Sidebar = ({ isMenuOpen, setIsMenuOpen, currentPage, setCurrentPage, handleLogout }) => {
-    const menuItems = [
-    { key: 'overview', name: 'Dashboard', icon: LayoutDashboard },
-    { key: 'users', name: 'Users / KYC', icon: Users },
-    { key: 'assets', name: 'Assets / Listings', icon: Gavel },
-    { key: 'documents', name: 'Document Mgmt', icon: FileText },
-    { key: 'transactions', name: 'Transactions', icon: Wallet },
-
-  ];
-
-  const handleNavClick = (key) => {
-    setCurrentPage(key);
-    setIsMenuOpen(false);
-  };
-
-  return (
-    <>
-      {/* Mobile Menu Backdrop */}
-      <div 
-        className={`fixed inset-0 z-40 lg:hidden transition-opacity duration-300 ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-        onClick={() => setIsMenuOpen(false)}
-      >
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-      </div>
-
-      {/* Sidebar Panel */}
-      <div
-        className={`fixed inset-y-0 left-0 z-50 w-72 transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
-        >
-                <GlassCard className="h-full rounded-none lg:rounded-r-[32px] flex flex-col">
-            <div className="flex-1 p-6 flex flex-col overflow-y-auto">
-                {/* Logo and Close Button */}
-                <div className="flex items-center justify-between mb-10 flex-shrink-0">
-                  <div>
-                    <h2 className="text-3xl font-bold text-[#1a3d2e]">NPLin</h2>
-                    <p className="text-xs text-[#6B9071] mt-1">Admin Dashboard</p>
-                  </div>
-                  <button 
-                    className="lg:hidden text-[#4a6850] hover:text-[#1a3d2e] p-2 hover:bg-white/50 rounded-xl transition-all"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <XCircle className="w-6 h-6" />
-                  </button>
-                </div>
-
-                {/* Navigation Items */}
-                <nav className="space-y-2">
-                  {menuItems.map((item) => (
-                    <button
-                      key={item.key}
-                      onClick={() => handleNavClick(item.key)}
-                      className={`w-full text-left flex items-center space-x-3 p-4 rounded-2xl transition-all duration-200
-                        ${currentPage === item.key 
-                          ? 'bg-gradient-to-r from-[#6B9071] to-[#4a6850] text-white font-semibold shadow-lg transform scale-105' 
-                          : 'text-[#4a6850] font-medium hover:bg-white/60 hover:scale-102'}`}
-                    >
-                      <item.icon className="w-5 h-5" />
-                      <span>{item.name}</span>
-                    </button>
-                  ))}
-                </nav>
-
-            </div>
-
-     
-            {/* Sign Out Button */}
-            <div className="p-6 border-t border-[#C8E6C8]/50 flex-shrink-0">
-                <button 
-                    onClick={handleLogout}
-                    className="w-full py-3 text-sm text-red-600 hover:text-red-800 hover:bg-red-50/50 rounded-xl transition-all duration-200 font-medium"
-                  >
-                    Sign Out
-                  </button>
-
-            </div>
-        </GlassCard>
-      </div>
-    </>
-  );
-};
-
-
-// =========================================================================
 // 4. MAIN DASHBOARD LOGIC
 // =========================================================================
 
 
-
 export default function AdminDashboard({ setRole }) {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState('overview');
   const [dashboardData, setDashboardData] = useState(null);
   const [loadingOverview, setLoadingOverview] = useState(true);
   const [errorOverview, setErrorOverview] = useState(null);
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Determine the current page from the URL path
+  const currentPage = useMemo(() => {
+    const pathSegments = location.pathname.split('/').filter(Boolean);
+    return pathSegments[1] || 'overview'; // 'admin' is [0], so we check [1]
+  }, [location.pathname]);
 
 
   useEffect(() => {
@@ -915,33 +279,38 @@ export default function AdminDashboard({ setRole }) {
     };
 
     // Only fetch data if we are on the overview page
-    if (currentPage === 'overview') {
+    if (currentPage === 'overview' || currentPage === 'admin') {
         fetchDashboardData();
     }
-}, [currentPage]);
+}, [currentPage, location.pathname]);
 
 
 
   const renderPage = () => {
     switch (currentPage) {
-      case 'overview':
+      case 'dashboard': // Matches the path from the new sidebar
         if (loadingOverview) {
             return <div className="flex items-center justify-center h-64 text-lg text-[#4a6850]">Loading Dashboard Data...</div>;
         }
         if (errorOverview) {
             return <div className="flex items-center justify-center h-64 bg-red-100/50 rounded-2xl text-lg text-red-600 p-4">Error: {errorOverview}</div>;
         }
-        return <OverviewPage data={dashboardData} setCurrentPage={setCurrentPage} />;      case 'users':
-        return <UsersPage />;
+        return <OverviewPage data={dashboardData} />;
+      case 'users':
+        return <UserManagement />;
       case 'assets':
-        return <AssetsPage />;
+        return <AssetManagement />;
       case 'documents':
-        return <DocumentsPage />;
+        return <DocumentManagement />;
       case 'transactions':
         return <TransactionsPage />;
+      case 'offers':
+        return <OffersOverview />;
+      case 'profile':
+        return <AdminProfile />;
 
       default:
-        return <OverviewPage data={dashboardData} setCurrentPage={setCurrentPage} />;
+        return <OverviewPage data={dashboardData} />;
     }
   };
   const handleLogout = () => {
@@ -957,29 +326,18 @@ export default function AdminDashboard({ setRole }) {
     <div className="min-h-screen bg-gradient-to-br from-[#E0F2E0] via-[#C8E6C8] to-[#B0DAB0]">
       
       <div className="flex min-h-screen">
-        
         {/* Sidebar Component */}
-        <Sidebar 
-            isMenuOpen={isMenuOpen} 
-            setIsMenuOpen={setIsMenuOpen} 
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            handleLogout={handleLogout}
-
+        <ModernSidebar 
+            userRole="admin"
+            onLogout={handleLogout}
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-72 transition-all duration-300">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-80 lg:mr-0 mr-20 transition-all duration-300">
           
           {/* Mobile Header / Menu Toggle */}
           <div className="flex items-center justify-between lg:hidden mb-6">
-            <h1 className="text-2xl font-bold text-[#1a3d2e]">NPLin Admin</h1>
-            <button 
-              className="text-[#1a3d2e] p-3 rounded-2xl bg-white/60 backdrop-blur-lg shadow-md hover:shadow-lg transition-all"
-              onClick={() => setIsMenuOpen(true)}
-            >
-              <Menu className="w-6 h-6" />
-            </button>
+            <h1 className="text-2xl font-bold text-[#1a3d2e]">Admin Dashboard</h1>
           </div>
 
           <GlassCard className="p-6 lg:p-10 mb-8 rounded-3xl w-full min-h-[85vh]">
