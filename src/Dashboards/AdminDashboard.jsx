@@ -2,8 +2,9 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { 
-    LayoutDashboard, Users, Gavel, FileText, Wallet, Settings, List, XCircle, Menu, Building, TrendingUp, Handshake, 
-    Bot, Zap, Lock, Store, Check, X, ArrowRight, CreditCard, Search, ShieldOff, Eye
+    LayoutDashboard, Users, Gavel, FileText, Wallet, XCircle, Menu, Building, TrendingUp, Handshake,
+    Bot, Zap, Lock, Store, Check, X, ArrowRight, CreditCard, ShieldOff, Eye
+
 
 } from 'lucide-react';
 
@@ -66,16 +67,22 @@ const OperationalCard = ({ title, count, link, Icon, apiAction, linkText, onClic
 const UserStatusBadge = ({ status }) => {
     const statusStyles = {
         PENDING: 'bg-yellow-100 text-yellow-800 border border-yellow-300',
+        PENDING_REVIEW: 'bg-yellow-100 text-yellow-800 border border-yellow-300',
+
         ACTIVE: 'bg-green-100 text-green-800 border border-green-300',
+        LISTED: 'bg-green-100 text-green-800 border border-green-300',
+
         BLOCKED: 'bg-red-100 text-red-800 border border-red-300',
+        REJECTED: 'bg-red-100 text-red-800 border border-red-300',
+
         SUBMITTED: 'bg-blue-100 text-blue-800 border border-blue-300',
         SUSPENDED: 'bg-orange-100 text-orange-800 border border-orange-300',
 
     };
     return (
         <span className={`px-2.5 py-1 text-xs font-semibold rounded-full inline-block ${statusStyles[status] || 'bg-gray-100 text-gray-800'}`}>
-            {status}
-        </span>
+            {status.replace('_', ' ')}
+            </span>
     );
 };
 
@@ -138,12 +145,7 @@ const OverviewPage = ({ data, setCurrentPage }) => {
           </div>
         </section>
         
-        <section className="mt-10">
-           <h2 className="text-2xl font-semibold text-[#1a3d2e] mb-6">Marketplace KPIs (Simulated)</h2>
-           <GlassCard className="p-8 h-64 flex items-center justify-center text-[#4a6850]">
-              [KPI Charts for Active Listings, GMV, and STR would be displayed here]
-           </GlassCard>
-        </section>
+
       </>
     );
 };
@@ -437,42 +439,164 @@ const UsersPage = () => {
 
 
 // 3. Asset & Listing Verification Dashboard 🏡
-const AssetsPage = () => (
-    <>
-      <DashboardHeader 
-        title="Asset & Listing Verification" 
-        subtitle="Review new assets submitted by Borrowers/Lenders, valuation reports, and monitor active offers." 
-      />
-      
-      <section className="mb-8">
-        <GlassCard className="p-8">
-            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
-                <Gavel className="w-5 h-5 mr-2 text-[#6B9071]" /> Asset Review Queue
-            </h3>
-            <p className="text-[#4a6850] mb-4 text-sm">
-            {'**API: POST/PATCH /api/admin/asset-listings/{asset_id}/approve/** - Vetting asset quality and title.'}
-            </p>
-            <div className="h-64 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
-                [Data Table: Asset ID, Type, Status (Pending, Approved), Borrower/Lender, Approval Actions]
-            </div>
-        </GlassCard>
-      </section>
+const AssetsPage = () => {
+    const [assets, setAssets] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const assetFilters = [
+        { label: 'Pending Review', type: 'status', value: 'PENDING_REVIEW' },
+        { label: 'Pending Admin', type: 'workflow_status', value: 'PENDING_ADMIN' },
+        { label: 'Listed', type: 'status', value: 'LISTED' },
+        { label: 'Rejected', type: 'status', value: 'REJECTED' },
+        { label: 'All', type: 'status', value: 'ALL' },
+    ];
+    const [filter, setFilter] = useState(assetFilters[0]); // Default to first filter
 
-      <section>
-        <GlassCard className="p-8">
-            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
-                <Store className="w-5 h-5 mr-2 text-[#6B9071]" /> Asset Offer Monitoring
-            </h3>
-            <p className="text-[#4a6850] mb-4 text-sm">
-                **API: GET /api/admin/assets/offers/** - Ensures fair bidding and prevents manipulation during matching.
-            </p>
-            <div className="h-32 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
-                [Table: Offer ID, Asset ID, Financier, Amount, Status]
-            </div>
-        </GlassCard>
-      </section>
-    </>
-  );
+
+    useEffect(() => {
+        const fetchAssets = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const accessToken = localStorage.getItem('accessToken');
+                if (!accessToken) throw new Error('Authentication token not found.');
+
+                let url;
+                if (filter.value === 'ALL') {
+                    url = `${API_BASE_URL}/api/admin/assets/`;
+                } else {
+                    url = `${API_BASE_URL}/api/admin/assets/?${filter.type}=${filter.value}`;
+                }
+
+
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` },
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to fetch assets.');
+                }
+                
+                const data = await response.json();
+                setAssets(data);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchAssets();
+    }, [filter]);
+
+    const handleAssetAction = async (assetId, action) => {
+        try {
+            const accessToken = localStorage.getItem('accessToken');
+            if (!accessToken) throw new Error('Authentication token not found.');
+
+            const response = await fetch(`${API_BASE_URL}/api/admin/assets/${assetId}/${action}/`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || `Failed to ${action} asset.`);
+            }
+
+            // Remove from list on success
+            setAssets(assets.filter(asset => asset.id !== assetId));
+            const pastTense = {
+                approve: 'approved',
+                reject: 'rejected',
+                verify: 'verified',
+            }[action] || `${action}ed`;
+            alert(`Asset ${pastTense} successfully!`);
+
+
+        } catch (err) {
+            alert(`Error: ${err.message}`);
+        }
+    };
+
+    return (
+        <>
+            <DashboardHeader 
+                title="Asset & Listing Verification" 
+                subtitle="Review new assets submitted by Borrowers/Lenders, valuation reports, and monitor active offers." 
+            />
+            
+            <section className="mb-8">
+                <GlassCard className="p-8">
+                    <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
+                        <Gavel className="w-5 h-5 mr-2 text-[#6B9071]" /> Asset Review Queue
+                    </h3>
+                    <p className="text-[#4a6850] mb-4 text-sm">
+                        **API: GET /api/admin/assets/ - Vetting asset quality and title.
+                    </p>
+                    
+                    <div className="flex space-x-2 mb-4 border-b border-[#6B9071]/30 pb-4">
+                    {assetFilters.map(f => (
+                            <button 
+                            key={f.label} 
+                            onClick={() => setFilter(f)}
+
+                                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
+                                    filter.value === f.value && filter.type === f.type
+                                    ? 'bg-[#6B9071] text-white shadow-md' 
+                                    : 'bg-white/50 text-[#4a6850] hover:bg-white/80'
+                                }`}
+                            >
+                                {f.label}
+                                </button>
+                        ))}
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        {loading && <div className="text-center p-8 text-[#4a6850]">Loading assets...</div>}
+                        {error && <div className="text-center p-8 text-red-600">{error}</div>}
+                        {!loading && !error && (
+                            <table className="min-w-full text-sm text-left">
+                                <thead className="border-b border-[#6B9071]/30 text-[#1a3d2e]">
+                                    <tr>
+                                        <th className="p-4">Asset ID</th>
+                                        <th className="p-4">Owner</th>
+                                        <th className="p-4">Type</th>
+                                        <th className="p-4">Valuation (KES)</th>
+                                        <th className="p-4">Status</th>
+                                        <th className="p-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {assets.map(asset => (
+                                        <tr key={asset.id} className="border-b border-white/60 hover:bg-white/40">
+                                            <td className="p-4 font-mono text-xs text-[#4a6850]">{asset.id}</td>
+                                            <td className="p-4 text-[#4a6850]">{asset.owner_email || 'N/A'}</td>
+                                            <td className="p-4 font-medium text-[#1a3d2e]">{asset.collateral_type}</td>
+                                            <td className="p-4 font-semibold text-[#1a3d2e]">{Number(asset.valuation_kes).toLocaleString()}</td>
+                                            <td className="p-4"><UserStatusBadge status={asset.status} /></td>
+                                            <td className="p-4 flex gap-2">
+                                                <button onClick={() => handleAssetAction(asset.id, 'approve')} className="px-3 py-1.5 bg-green-600/80 text-white text-xs font-semibold rounded-lg hover:bg-green-700 flex items-center gap-1"><Check size={14}/> Approve</button>
+                                                <button onClick={() => handleAssetAction(asset.id, 'verify')} className="px-3 py-1.5 bg-blue-600/80 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 flex items-center gap-1"><Check size={14}/> Verify</button>
+
+                                                <button onClick={() => handleAssetAction(asset.id, 'reject')} className="px-3 py-1.5 bg-red-600/80 text-white text-xs font-semibold rounded-lg hover:bg-red-700 flex items-center gap-1"><X size={14}/> Reject</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                        {!loading && assets.length === 0 && (
+                            <div className="text-center p-8 text-[#4a6850]">No assets found for this filter.</div>
+                        )}
+                    </div>
+                </GlassCard>
+            </section>
+
+       
+        </>
+    );
+};
+
 
 // 4. Document Management Dashboard (Compliance) 📜
 const DocumentsPage = () => {
@@ -656,62 +780,6 @@ const TransactionsPage = () => {
     );
 };
 
-// 6. Communication Audit Dashboard 💬
-const AuditPage = () => (
-    <>
-      <DashboardHeader 
-        title="Communication Audit & Compliance Log" 
-        subtitle="Read-only access to conversation history for compliance and dispute resolution purposes (view upon need)." 
-      />
-      
-      <section className="mb-8">
-        <GlassCard className="p-8">
-            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
-                <Search className="w-5 h-5 mr-2 text-[#6B9071]" /> Conversation Search
-            </h3>
-            <p className="text-[#4a6850] mb-4 text-sm">
-                **API: GET /api/chat/** - Search conversations by User ID, Asset ID, or date range.
-            </p>
-            <div className="h-32 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
-                [Search Form & List of Conversation IDs]
-            </div>
-        </GlassCard>
-      </section>
-
-      <section>
-        <GlassCard className="p-8">
-            <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
-                <List className="w-5 h-5 mr-2 text-[#6B9071]" /> Chat Log Viewer (Read-Only)
-            </h3>
-            <p className="text-[#4a6850] mb-4 text-sm">
-                Detailed, read-only view of message history between parties.
-            </p>
-            <div className="h-64 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
-                [Display of Selected Chat Transcript]
-            </div>
-        </GlassCard>
-      </section>
-    </>
-  );
-
-// Standard Settings Page
-const SettingsPage = () => (
-    <>
-      <DashboardHeader 
-        title="Platform Settings" 
-        subtitle="Configure system parameters, fee structures, SLA targets, and user roles." 
-      />
-      <GlassCard className="p-8">
-          <h3 className="text-xl font-bold text-[#1a3d2e] mb-4 flex items-center">
-            <Settings className="w-5 h-5 mr-2 text-[#6B9071]" /> System Configuration
-          </h3>
-          <p className="text-[#4a6850] mb-4 text-sm">Update reserve fee percentage, anti-sniping duration, and KYC requirements.</p>
-          <div className="h-96 bg-white/30 border-2 border-dashed border-[#6B9071]/40 rounded-2xl flex items-center justify-center text-[#4a6850]">
-              [Configuration Forms for System Parameters]
-          </div>
-      </GlassCard>
-    </>
-);
 
 // =========================================================================
 // 3. SIDEBAR COMPONENT
@@ -724,8 +792,7 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen, currentPage, setCurrentPage, handl
     { key: 'assets', name: 'Assets / Listings', icon: Gavel },
     { key: 'documents', name: 'Document Mgmt', icon: FileText },
     { key: 'transactions', name: 'Transactions', icon: Wallet },
-    { key: 'audit', name: 'Comms Audit', icon: List },
-    { key: 'settings', name: 'Settings', icon: Settings },
+
   ];
 
   const handleNavClick = (key) => {
@@ -747,46 +814,51 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen, currentPage, setCurrentPage, handl
       <div
         className={`fixed inset-y-0 left-0 z-50 w-72 transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
         >
-           <GlassCard className="h-full rounded-none lg:rounded-r-[32px] p-6 flex flex-col">
-            {/* Logo and Close Button */}
-            <div className="flex items-center justify-between mb-10">
-              <div>
-                <h2 className="text-3xl font-bold text-[#1a3d2e]">NPLin</h2>
-                <p className="text-xs text-[#6B9071] mt-1">Admin Dashboard</p>
-              </div>
-              <button 
-                className="lg:hidden text-[#4a6850] hover:text-[#1a3d2e] p-2 hover:bg-white/50 rounded-xl transition-all"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <XCircle className="w-6 h-6" />
-              </button>
+                <GlassCard className="h-full rounded-none lg:rounded-r-[32px] flex flex-col">
+            <div className="flex-1 p-6 flex flex-col overflow-y-auto">
+                {/* Logo and Close Button */}
+                <div className="flex items-center justify-between mb-10 flex-shrink-0">
+                  <div>
+                    <h2 className="text-3xl font-bold text-[#1a3d2e]">NPLin</h2>
+                    <p className="text-xs text-[#6B9071] mt-1">Admin Dashboard</p>
+                  </div>
+                  <button 
+                    className="lg:hidden text-[#4a6850] hover:text-[#1a3d2e] p-2 hover:bg-white/50 rounded-xl transition-all"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <XCircle className="w-6 h-6" />
+                  </button>
+                </div>
+
+                {/* Navigation Items */}
+                <nav className="space-y-2">
+                  {menuItems.map((item) => (
+                    <button
+                      key={item.key}
+                      onClick={() => handleNavClick(item.key)}
+                      className={`w-full text-left flex items-center space-x-3 p-4 rounded-2xl transition-all duration-200
+                        ${currentPage === item.key 
+                          ? 'bg-gradient-to-r from-[#6B9071] to-[#4a6850] text-white font-semibold shadow-lg transform scale-105' 
+                          : 'text-[#4a6850] font-medium hover:bg-white/60 hover:scale-102'}`}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span>{item.name}</span>
+                    </button>
+                  ))}
+                </nav>
+
             </div>
 
-            {/* Navigation Items */}
-            <nav className="space-y-2 flex-1">
-              {menuItems.map((item) => (
-                <button
-                  key={item.key}
-                  onClick={() => handleNavClick(item.key)}
-                  className={`w-full text-left flex items-center space-x-3 p-4 rounded-2xl transition-all duration-200
-                    ${currentPage === item.key 
-                      ? 'bg-gradient-to-r from-[#6B9071] to-[#4a6850] text-white font-semibold shadow-lg transform scale-105' 
-                      : 'text-[#4a6850] font-medium hover:bg-white/60 hover:scale-102'}`}
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span>{item.name}</span>
-                </button>
-              ))}
-            </nav>
-
+     
             {/* Sign Out Button */}
-            <div className="mt-auto pt-6 border-t border-[#C8E6C8]/50">
-            <button 
-                onClick={handleLogout}
-                className="w-full py-3 text-sm text-red-600 hover:text-red-800 hover:bg-red-50/50 rounded-xl transition-all duration-200 font-medium"
-              >
-                Sign Out
-              </button>
+            <div className="p-6 border-t border-[#C8E6C8]/50 flex-shrink-0">
+                <button 
+                    onClick={handleLogout}
+                    className="w-full py-3 text-sm text-red-600 hover:text-red-800 hover:bg-red-50/50 rounded-xl transition-all duration-200 font-medium"
+                  >
+                    Sign Out
+                  </button>
+
             </div>
         </GlassCard>
       </div>
@@ -867,10 +939,7 @@ export default function AdminDashboard({ setRole }) {
         return <DocumentsPage />;
       case 'transactions':
         return <TransactionsPage />;
-      case 'audit':
-        return <AuditPage />;
-      case 'settings':
-        return <SettingsPage />;
+
       default:
         return <OverviewPage data={dashboardData} setCurrentPage={setCurrentPage} />;
     }
