@@ -99,11 +99,11 @@ export default function ModernSidebar({ userRole = 'admin', onLogout }) {
   };
 
   const userDetails = {
-    admin: { name: 'Admin User', avatar: '🛡️', color: 'from-green-500 to-green-700' },
-    borrower: { name: 'Borrower', avatar: '👤', color: 'from-blue-500 to-blue-700' },
-    financier: { name: 'Financier', avatar: '💰', color: 'from-purple-500 to-purple-700' },
-    lender: { name: 'Lender', avatar: '🏦', color: 'from-indigo-500 to-indigo-700' },
-    buyer: { name: 'Buyer', avatar: '🛒', color: 'from-teal-500 to-teal-700' },
+    admin: { name: 'Admin User', avatar: '🛡️' },
+    borrower: { name: 'Borrower', avatar: '👤' },
+    financier: { name: 'Financier', avatar: '💰' },
+    lender: { name: 'Lender', avatar: '🏦' },
+    buyer: { name: 'Buyer', avatar: '🛒' },
   };
 
   const currentUser = userDetails[userRole?.toLowerCase()] || { name: 'Guest', avatar: '👤' };
@@ -111,11 +111,11 @@ export default function ModernSidebar({ userRole = 'admin', onLogout }) {
   return (
     <>
       {/* Mobile Version - Right Side */}
-      <div className="lg:hidden fixed top-0 right-0 h-full w-20 bg-white/40 backdrop-blur-xl border-l border-white/20 shadow-2xl z-50 rounded-l-3xl">
+      <div className="lg:hidden fixed top-0 right-0 h-full w-20 bg-gray-50/80 backdrop-blur-xl border-l border-gray-200 shadow-2xl z-50 rounded-l-3xl">
         <div className="flex flex-col items-center h-full py-6">
           {/* Profile */}
           <div className="mb-8">
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${currentUser.color} flex items-center justify-center shadow-lg`}>
+            <div className={`w-12 h-12 rounded-full bg-gradient-to-br from-[#d8f3dc] to-[#40916c] flex items-center justify-center shadow-lg`}>
               <span className="text-white text-xl">{currentUser.avatar}</span>
             </div>
           </div>
@@ -130,7 +130,7 @@ export default function ModernSidebar({ userRole = 'admin', onLogout }) {
                         key={item.id}
                         onClick={() => handleMenuClick(item.id)}
                         className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
-                            isActive ? 'bg-gradient-to-r from-[#6B9071] to-[#4a6850] text-white shadow-lg' : 'text-[#4a6850] hover:bg-white/50'
+                            isActive ? 'bg-gradient-to-r from-[#d8f3dc] to-[#40916c] text-black shadow-lg' : 'text-gray-600 hover:bg-gray-200'
                         }`}
                     >
                         <Icon className="w-5 h-5" />
@@ -150,25 +150,25 @@ export default function ModernSidebar({ userRole = 'admin', onLogout }) {
       </div>
 
       {/* Desktop Version - Left Side */}
-      <div className="hidden lg:block fixed top-0 left-0 h-full w-80 bg-white/40 backdrop-blur-xl border-r border-white/20 shadow-2xl z-50 rounded-r-3xl">
+      <div className="hidden lg:block fixed top-0 left-0 h-full w-80 bg-gray-50/80 backdrop-blur-xl border-r border-gray-200 shadow-2xl z-50 rounded-r-3xl">
         <div className="flex flex-col h-full p-6">
           {/* Header */}
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-6">
-              <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${currentUser.color} flex items-center justify-center shadow-lg`}>
+              <div className={`w-12 h-12 rounded-full bg-gradient-to-br from-[#d8f3dc] to-[#40916c] flex items-center justify-center shadow-lg`}>
                 <span className="text-white text-2xl">{currentUser.avatar}</span>
               </div>
               <div>
-                <p className="text-xs text-[#4a6850] mb-1">Good morning</p>
-                <h2 className="text-lg font-semibold text-[#1a3d2e]">{currentUser.name}</h2>
+                <p className="text-xs text-gray-600 mb-1">Good morning</p>
+                <h2 className="text-lg font-semibold text-black">{currentUser.name}</h2>
               </div>
             </div>
           </div>
 
           {/* Menu Section */}
           <div className="flex-1 mb-8">
-            <div className="flex items-center justify-between mb-3 px-2">
-              <span className="text-xs font-semibold text-[#4a6850] uppercase">Menu</span>
+            <div className="flex items-center justify-between mb-4 px-2">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Menu</span>
             </div>
             <div className="space-y-1">
               {menuItems.map((item) => {
@@ -181,9 +181,9 @@ export default function ModernSidebar({ userRole = 'admin', onLogout }) {
                     onClick={() => handleMenuClick(item.id)}
                     className={`
                       w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all
-                      ${isActive
-                        ? 'bg-gradient-to-r from-[#6B9071] to-[#4a6850] text-white font-semibold shadow-lg transform scale-105' 
-                        : 'text-[#4a6850] font-medium hover:bg-white/60 hover:scale-102'
+                      ${isActive 
+                        ? 'bg-gradient-to-r from-[#d8f3dc] to-[#40916c] text-black font-semibold shadow-lg transform scale-105' 
+                        : 'text-gray-600 font-medium hover:bg-gray-200/70 hover:scale-102'
                       }
                     `}
                   >

@@ -1,4 +1,17 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Bar, Line, Pie } from 'react-chartjs-2';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ModernSidebar from '../components/Sidebar'; // Import the new sidebar
 import UserManagement from '../Admin/UserManagement';
@@ -8,9 +21,21 @@ import OffersOverview from '../Admin/OffersOverview'; // Import the new OffersOv
 import AdminProfile from '../Admin/AdminProfile'; // Import the new AdminProfile component
 
 import { 
-    LayoutDashboard, Users, Gavel, FileText, Wallet, XCircle, Menu, Building, TrendingUp, Handshake,
+    LayoutDashboard, Users, Gavel, FileText, Wallet, XCircle, Menu, Building, TrendingUp, Handshake, BarChart3, PieChart,
     Bot, Zap, Lock, Store, Check, X, ArrowRight, CreditCard, ShieldOff, Eye
 } from 'lucide-react';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 // =========================================================================
 // 1. CONSTANTS & CONFIG
@@ -23,47 +48,36 @@ const API_BASE_URL = 'http://127.0.0.1:8000';
 // =========================================================================
 
 // Glass Card Component
-const GlassCard = ({ children, className = "", ...props }) => (
-  <div 
-    className={`relative overflow-hidden rounded-3xl bg-white/40 border border-white/60 shadow-xl ${className}`}
-    style={{
-      background: 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.3) 100%)',
-      backdropFilter: 'blur(20px) saturate(180%)',
-      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-      boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
-    }}
-    {...props}
-  >
-    <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-80"></div>
+const Card = ({ children, className = "", ...props }) => (
+  <div className={`relative rounded-3xl bg-white border border-gray-200 shadow-lg ${className}`} {...props}>
     <div className="relative z-10">{children}</div>
   </div>
 );
 
 // Header Component
 const DashboardHeader = ({ title, subtitle }) => (
-  <header className="pb-4 mb-8 border-b border-[#6B9071]/30">
-    <h1 className="text-3xl font-bold text-[#1a3d2e]">{title}</h1>
-    <p className="mt-1 text-sm text-[#4a6850]">{subtitle}</p>
+  <header className="pb-4 mb-8">
+    <h1 className="text-4xl font-bold text-black">{title}</h1>
+    <p className="mt-2 text-lg text-gray-600">{subtitle}</p>
   </header>
 );
 
 // Operational Metric Card for Overview
-const OperationalCard = ({ title, count, link, Icon, apiAction, linkText, onClick }) => (
+const OperationalCard = ({ title, count, link, Icon, linkText, onClick }) => (
     <a href={link} onClick={(e) => { e.preventDefault(); onClick && onClick(); }} className="block hover:scale-105 transition-all duration-300 ease-out cursor-pointer">
 
-        <GlassCard className="p-6 h-full flex flex-col justify-between">
+        <Card className="p-6 h-full flex flex-col justify-between bg-gray-50/50 hover:bg-white">
             <div className="flex items-start justify-between">
-                <Icon className="w-8 h-8 text-[#6B9071]" />
-                <span className="text-xs text-[#4a6850] px-2 py-1 bg-[#C8E6C8]/50 rounded-full">{apiAction}</span>
+                <Icon className="w-8 h-8 text-[#40916c]" />
             </div>
             <div className="mt-4">
                 <div className="text-4xl font-extrabold text-red-600">{count}</div>
-                <div className="text-lg font-medium text-[#1a3d2e] mt-1">{title}</div>
+                <div className="text-lg font-medium text-black mt-1">{title}</div>
             </div>
-            <div className="mt-4 text-sm flex items-center text-[#6B9071] hover:text-[#4a6850]">
+            <div className="mt-4 text-sm flex items-center text-[#40916c] hover:text-black">
                 {linkText} <ArrowRight className="w-4 h-4 ml-1" />
             </div>
-        </GlassCard>
+        </Card>
     </a>
 );
 
@@ -97,24 +111,137 @@ const UserStatusBadge = ({ status }) => {
 
 // 1. Main Admin Dashboard (Landing Page) 🏠
 const OverviewPage = ({ data }) => {
-    if (!data || !data.system_summary) {
-        return (
-            <GlassCard className="p-8 h-64 flex items-center justify-center text-red-600">
-                Could not load dashboard summary data.
-            </GlassCard>
-        );
-    }
-
-    const { pending_users, pending_assets, pending_documents } = data.system_summary;
-    const { manage_accounts_url, review_assets_url, review_documents_url } = data;
+    const [analytics, setAnalytics] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
   
+    useEffect(() => {
+      const fetchAnalytics = async () => {
+        try {
+          const accessToken = localStorage.getItem('accessToken');
+          if (!accessToken) throw new Error('Authentication token not found.');
+          
+          const response = await fetch(`${API_BASE_URL}/api/accounts/admin/analytics/`, {
+            headers: { 'Authorization': `Bearer ${accessToken}` },
+          });
+
+          if (!response.ok) throw new Error('Failed to fetch analytics data.');
+          
+          const data = await response.json();
+          setAnalytics(data);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchAnalytics();
+    }, []);
+
+    // Chart Data
+    const usersByRoleData = {
+        labels: analytics ? Object.keys(analytics.users_by_role) : [],
+        datasets: [{
+            label: 'Users by Role',
+            data: analytics ? Object.values(analytics.users_by_role) : [],
+            backgroundColor: ['#40916c', '#52b788', '#74c69d', '#95d5b2', '#b7e4c7'],
+        }]
+    };
+
+    const usersByStatusData = {
+        labels: analytics ? Object.keys(analytics.users_by_status) : [],
+        datasets: [{
+            label: 'Users by Status',
+            data: analytics ? Object.values(analytics.users_by_status) : [],
+            backgroundColor: '#52b788',
+            borderColor: '#40916c',
+            borderWidth: 1,
+        }]
+    };
+
+    // Mock time-series data for line graphs
+    const last30DaysLabels = Array.from({ length: 30 }, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (29 - i));
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+
+    const lineChartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false, // Hide legend for a cleaner look
+            },
+            tooltip: {
+                enabled: true,
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: 'white',
+                bodyColor: 'white',
+                borderColor: '#40916c',
+                borderWidth: 1,
+                padding: 10,
+                callbacks: {
+                    label: (context) => `${context.dataset.label}: ${context.raw}`,
+                },
+            },
+        },
+        scales: {
+            x: {
+                grid: {
+                    display: false,
+                },
+                ticks: {
+                    color: '#555',
+                },
+            },
+            y: {
+                grid: {
+                    color: '#e9e9e9',
+                    borderDash: [5, 5],
+                },
+                ticks: {
+                    color: '#555',
+                },
+            },
+        },
+    };
+
+    const lineGraphData = {
+        labels: last30DaysLabels,
+        datasets: [
+            {
+                label: 'Platform Activity',
+                data: Array.from({ length: 30 }, () => Math.floor(Math.random() * 25 + 5)),
+                borderColor: '#40916c',
+                backgroundColor: (context) => {
+                    const ctx = context.chart.ctx;
+                    const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+                    gradient.addColorStop(0, '#40916c80');
+                    gradient.addColorStop(1, '#40916c00');
+                    return gradient;
+                },
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#40916c',
+            }
+        ]
+    };
+
+    if (loading) return <div className="text-center p-8">Loading analytics...</div>;
+    if (error) return <div className="text-center p-8 text-red-600 bg-red-50 rounded-xl">Error: {error}</div>;
+    if (!analytics) return <div className="text-center p-8">No analytics data available.</div>;
+
+    const { pending_users = 0, pending_assets = 0, pending_documents = 0 } = data?.system_summary || {};
+    const { manage_accounts_url, review_assets_url, review_documents_url } = data?.system_summary || {};
   
     return (
       <>
         <DashboardHeader 
           title="Executive Dashboard: Mission Control" 
-          subtitle="Highest priority actions for account activation, listing approval, and compliance document processing." 
+          subtitle="System-wide analytics and high-priority action items." 
         />
   
         <section className="mt-8">
@@ -125,7 +252,6 @@ const OverviewPage = ({ data }) => {
               count={pending_users}
               link="#"
               Icon={Users}
-              apiAction={`GET ${manage_accounts_url}`}
               linkText="Manage Accounts"
               onClick={() => navigate('/admin/users')}
             />
@@ -134,7 +260,6 @@ const OverviewPage = ({ data }) => {
               count={pending_assets}
               link="#"
               Icon={Gavel}
-              apiAction={`GET ${review_assets_url}`}
               linkText="Review Listings"
               onClick={() => navigate('/admin/assets')}
             />
@@ -143,11 +268,39 @@ const OverviewPage = ({ data }) => {
               count={pending_documents}
               link="#"
               Icon={FileText}
-              apiAction={`GET ${review_documents_url}`}
               linkText="Process Documents"
               onClick={() => navigate('/admin/documents')}
             />
           </div>
+        </section>
+
+        <section className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <Card className="lg:col-span-2 p-6">
+            <h3 className="text-xl font-bold text-black mb-4 flex items-center gap-2"><BarChart3 /> Activity Over Last 30 Days</h3>
+            <div className="h-80">
+              <Line data={lineGraphData} options={lineChartOptions} />
+            </div>
+          </Card>
+          <Card className="p-6">
+            <h3 className="text-xl font-bold text-black mb-4 flex items-center gap-2"><PieChart /> Users by Role</h3>
+            <div className="h-64 flex items-center justify-center">
+              <Pie data={usersByRoleData} options={{ responsive: true, maintainAspectRatio: false }} />
+            </div>
+          </Card>
+        </section>
+
+        <section className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <Card className="p-6">
+            <h3 className="text-xl font-bold text-black mb-4">Users by Status</h3>
+            <div className="h-80">
+              <Bar data={usersByStatusData} options={{ responsive: true, maintainAspectRatio: false, indexAxis: 'y' }} />
+            </div>
+          </Card>
+          <Card className="p-6">
+            <h3 className="text-xl font-bold text-black mb-4">Platform Totals</h3>
+            {/* Placeholder for the second bar graph */}
+            <div className="flex items-center justify-center h-80 bg-gray-100 rounded-xl text-gray-500">Second Bar Graph Here</div>
+          </Card>
         </section>
         
 
@@ -187,18 +340,19 @@ const TransactionsPage = () => {
 
     return (
         <>
+          g;
             <DashboardHeader 
                 title="Transaction & Settlement Monitoring" 
                 subtitle="Auditing all platform transactions, from offer funding to final settlement." 
             />
-            <GlassCard className="p-6">
-                <h3 className="text-xl font-bold text-[#1a3d2e] mb-4">Platform Transactions</h3>
+            <Card className="p-6">
+                <h3 className="text-xl font-bold text-black mb-4">Platform Transactions</h3>
                 <div className="overflow-x-auto">
-                    {loading && <div className="text-center p-8 text-[#4a6850]">Loading transactions...</div>}
+                    {loading && <div className="text-center p-8 text-gray-600">Loading transactions...</div>}
                     {error && <div className="text-center p-8 text-red-600">{error}</div>}
                     {!loading && !error && (
                         <table className="min-w-full text-sm text-left">
-                            <thead className="border-b border-[#6B9071]/30 text-[#1a3d2e]">
+                            <thead className="border-b border-gray-200 text-black">
                                 <tr>
                                     <th className="p-4">Transaction ID</th>
                                     <th className="p-4">Amount (KES)</th>
@@ -209,19 +363,19 @@ const TransactionsPage = () => {
                             </thead>
                             <tbody>
                                 {transactions.map(tx => (
-                                    <tr key={tx.id} className="border-b border-white/60 hover:bg-white/40">
-                                        <td className="p-4 font-mono text-xs text-[#4a6850]">{tx.id}</td>
-                                        <td className="p-4 font-semibold text-[#1a3d2e]">{Number(tx.amount_kes).toLocaleString()}</td>
-                                        <td className="p-4 text-[#4a6850]">{tx.transaction_type}</td>
+                                    <tr key={tx.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                        <td className="p-4 font-mono text-xs text-gray-500">{tx.id}</td>
+                                        <td className="p-4 font-semibold text-black">{Number(tx.amount_kes).toLocaleString()}</td>
+                                        <td className="p-4 text-gray-600">{tx.transaction_type}</td>
                                         <td className="p-4"><UserStatusBadge status={tx.status} /></td>
-                                        <td className="p-4 text-[#4a6850]">{new Date(tx.created_at).toLocaleString()}</td>
+                                        <td className="p-4 text-gray-600">{new Date(tx.created_at).toLocaleString()}</td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
                     )}
                 </div>
-            </GlassCard>
+            </Card>
         </>
     );
 };
@@ -279,7 +433,7 @@ export default function AdminDashboard({ setRole }) {
     };
 
     // Only fetch data if we are on the overview page
-    if (currentPage === 'overview' || currentPage === 'admin') {
+    if (currentPage === 'dashboard') {
         fetchDashboardData();
     }
 }, [currentPage, location.pathname]);
@@ -290,7 +444,7 @@ export default function AdminDashboard({ setRole }) {
     switch (currentPage) {
       case 'dashboard': // Matches the path from the new sidebar
         if (loadingOverview) {
-            return <div className="flex items-center justify-center h-64 text-lg text-[#4a6850]">Loading Dashboard Data...</div>;
+            return <div className="flex items-center justify-center h-64 text-lg text-gray-600">Loading Dashboard Data...</div>;
         }
         if (errorOverview) {
             return <div className="flex items-center justify-center h-64 bg-red-100/50 rounded-2xl text-lg text-red-600 p-4">Error: {errorOverview}</div>;
@@ -323,7 +477,7 @@ export default function AdminDashboard({ setRole }) {
     navigate('/login');
   };
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#E0F2E0] via-[#C8E6C8] to-[#B0DAB0]">
+    <div className="min-h-screen bg-white">
       
       <div className="flex min-h-screen">
         {/* Sidebar Component */}
@@ -337,14 +491,14 @@ export default function AdminDashboard({ setRole }) {
           
           {/* Mobile Header / Menu Toggle */}
           <div className="flex items-center justify-between lg:hidden mb-6">
-            <h1 className="text-2xl font-bold text-[#1a3d2e]">Admin Dashboard</h1>
+            <h1 className="text-2xl font-bold text-black">Admin Dashboard</h1>
           </div>
 
-          <GlassCard className="p-6 lg:p-10 mb-8 rounded-3xl w-full min-h-[85vh]">
+          <div className="p-6 lg:p-10 mb-8 rounded-3xl w-full min-h-[85vh] bg-gray-50/50 border border-gray-200">
             {renderPage()}
-          </GlassCard>
+          </div>
 
-          <footer className="text-center text-sm text-[#4a6850] mt-6">
+          <footer className="text-center text-sm text-gray-500 mt-6">
               <p>&copy; 2025 NPLin Marketplace. All data real-time (simulated).</p>
           </footer>
         </main>

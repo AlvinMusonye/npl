@@ -173,7 +173,12 @@ export default function LoginPage({ setRole }) {
 
 
     } catch (err) {
-      setError(err.message || 'A network error occurred. Please try again.');
+      // CUSTOM ERROR HANDLING: Check for the specific "not active" message.
+      if (err.message === 'Your account is not active. Please contact support.') {
+        setError('Account is Awaiting verification');
+      } else {
+        setError(err.message || 'A network error occurred. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -209,92 +214,107 @@ export default function LoginPage({ setRole }) {
       </nav>
 
       {/* Main Content */}
-      <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-100px)] px-4 sm:px-6 lg:px-8 py-12">
-        <GlassCard className="w-full max-w-md p-6 sm:p-10">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl sm:text-5xl font-extrabold text-[#0F2A1D] mb-2">
-              Welcome Back
-            </h1>
-            <p className="text-[#375534] text-lg">
-              Sign in to your NPLin account
-            </p>
-          </div>
-
-          {isSuccess && (
-            <div className="mt-4 text-center text-green-700 bg-green-100 border border-green-400 rounded-lg p-4 text-md font-semibold animate-fadeIn mb-6">
-              ✅ Login successful as **{userRole.replace('_', ' ')}**! Redirecting...
+      <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-160px)] px-10 md:px-6 lg:px-8 py-16">
+        <GlassCard className="w-full max-w-5xl p-6 sm:p-10">
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
+            {/* Left-side Text */}
+            <div className="hidden lg:block text-left">
+              <h1 className="text-3xl font-extrabold text-[#0F2A1D] mb-4 leading-tight">
+                Welcome Back
+              </h1>
+              <p className="text-[#375534] text-md leading-relaxed">
+                Securely access your dashboard to manage assets, review offers, and connect with financiers.
+              </p>
             </div>
-          )}
 
-          {/* Error Display */}
-          {error && (
-            <div className="mt-4 text-center text-red-700 bg-red-100 border border-red-400 rounded-lg p-3 text-sm mb-6 animate-fadeIn">
-              {error}
-            </div>
-          )}
+            {/* Right-side Form */}
+            <div>
+              <div className="text-center mb-8 lg:hidden">
+                <h1 className="text-4xl sm:text-5xl font-extrabold text-[#0F2A1D] mb-2">
+                  Welcome Back
+                </h1>
+                <p className="text-[#375534] text-lg">
+                  Sign in to your NPLin account
+                </p>
+              </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            
-            <Input
-              label="Email Address"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="email@gmail.com"
-              type="email"
-              required
-            />
+              {isSuccess && (
+                <div className="mt-4 text-center text-green-700 bg-green-100 border border-green-400 rounded-lg p-4 text-lg font-semibold animate-fadeIn mb-6">
+                  ✅ Login successful as **{userRole.replace('_', ' ')}**! Redirecting...
+                </div>
+              )}
 
-            <Input
-              label="Password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="password"
-              type={showPassword ? 'text' : 'password'}
-              required
-              icon={showPassword ? EyeOff : Eye}
-              onIconClick={() => setShowPassword(!showPassword)}
+              {/* Error Display */}
+              {error && (
+                <div className="mt-4 text-center text-green-500 bg-green-100 border border-green-400 rounded-lg p-3 text-md mb-6 animate-fadeIn">
+                  {error}
+                </div>
+              )}
 
-            />
-
-            <div className="flex items-center justify-between">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 text-[#375534] bg-white/25 border-white/40 rounded focus:ring-[#375534]/70"
+              <form onSubmit={handleSubmit} className="space-y-6">
+                
+                <Input
+                  label="Email Address"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="email@gmail.com"
+                  type="email"
+                  required
                 />
-                <span className="ml-2 text-sm text-[#375534]">Remember me</span>
-              </label>
-              <a href="#" className="text-sm text-[#0F2A1D] font-medium hover:underline">
-                Forgot password?
-              </a>
+
+                <Input
+                  label="Password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  icon={showPassword ? EyeOff : Eye}
+                  onIconClick={() => setShowPassword(!showPassword)}
+
+                />
+
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 text-[#375534] bg-white/25 border-white/40 rounded focus:ring-[#375534]/70"
+                    />
+                    <span className="ml-2 text-sm text-[#375534]">Remember me</span>
+                  </label>
+                  <a href="#" className="text-sm text-[#0F2A1D] font-medium hover:underline">
+                    Forgot password?
+                  </a>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full px-8 py-4 bg-gradient-to-r from-[#375534] to-[#0F2A1D] text-white font-bold rounded-xl shadow-2xl hover:scale-[1.02] transition-transform duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+                  disabled={isLoading || isSuccess}
+                >
+                  {isLoading ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Signing In...
+                    </span>
+                  ) : 'Sign In'}
+                </button>
+              </form>
+
+              <div className="mt-8 text-center">
+                <p className="text-[#375534] text-sm">
+                  Don't have an account?{' '}
+                  <a href="/signup" className="text-[#0F2A1D] font-semibold hover:underline">
+                    Create one
+                  </a>
+                </p>
+              </div>
             </div>
-
-            <button
-              type="submit"
-              className="w-full px-8 py-4 bg-gradient-to-r from-[#375534] to-[#0F2A1D] text-white font-bold rounded-xl shadow-2xl hover:scale-[1.02] transition-transform duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
-              disabled={isLoading || isSuccess}
-            >
-              {isLoading ? (
-                <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Signing In...
-                </span>
-              ) : 'Sign In'}
-            </button>
-          </form>
-
-          <div className="mt-8 text-center">
-            <p className="text-[#375534] text-sm">
-              Don't have an account?{' '}
-              <a href="/signup" className="text-[#0F2A1D] font-semibold hover:underline">
-                Create one
-              </a>
-            </p>
           </div>
         </GlassCard>
       </div>

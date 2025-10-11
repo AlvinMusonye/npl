@@ -64,15 +64,15 @@ const CounterOfferModal = ({ offer, onClose, onSubmit }) => {
     if (!offer) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-md">
             <GlassCard className="w-full max-w-md p-8">
                 <h3 className="text-2xl font-bold text-[#1a3d2e] mb-6">Make Counter Offer</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <InputField icon={DollarSign} label="Counter Amount (KES)" name="offer_amount_kes" type="number" value={counterData.offer_amount_kes} onChange={handleChange} />
                     <InputField icon={MessageSquare} label="Your Comment" name="borrower_comment" type="text" value={counterData.borrower_comment} onChange={handleChange} />
                     <div className="flex gap-3 pt-4">
-                        <button type="button" onClick={onClose} className="flex-1 py-3 bg-white/40 hover:bg-white/60 text-[#1a3d2e] font-semibold rounded-xl border border-white/40">Cancel</button>
-                        <button type="submit" className="flex-1 py-3 bg-gradient-to-r from-[#6B9071] to-[#4a6850] text-white font-bold rounded-xl">Submit Counter</button>
+                        <button type="button" onClick={onClose} className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl border border-gray-300">Cancel</button>
+                        <button type="submit" className="flex-1 py-3 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-bold rounded-xl">Submit Counter</button>
                     </div>
                 </form>
             </GlassCard>
@@ -90,36 +90,36 @@ const OfferCard = ({ offer, onAccept, onDecline, onCounter }) => {
     const config = statusConfig[offer.status];
 
     return (
-        <GlassCard className="p-6">
-            <div className="flex justify-between items-start mb-4 border-b border-white/40 pb-3">
-                <h3 className="text-xl font-bold text-[#1a3d2e]">Offer on: {offer.collateral_identifier}</h3>
+        <GlassCard className="p-6 bg-gray-50/50 hover:bg-white hover:shadow-xl transition-all">
+            <div className="flex justify-between items-start mb-4 border-b border-gray-200 pb-3">
+                <h3 className="text-xl font-bold text-black">Offer on: {offer.collateral_identifier}</h3>
                 <span className={`font-semibold ${config?.color || 'text-gray-600'}`}>{offer.status}</span>
             </div>
             
             <div className="space-y-3 mb-4">
                 <div className="flex justify-between text-sm">
-                    <span className="text-[#4a6850]">Financier</span>
-                    <span className="font-semibold text-[#1a3d2e]">{offer.lender_name}</span>
+                    <span className="text-gray-500">Financier</span>
+                    <span className="font-semibold text-black">{offer.lender_name}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold">
-                    <span className="text-[#4a6850]">Offer Amount</span>
+                    <span className="text-gray-500">Offer Amount</span>
                     <span className="text-green-700">KSh {Number(offer.offer_amount_kes).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                    <span className="text-[#4a6850]">Proposed Rate</span>
-                    <span className="font-semibold text-[#1a3d2e]">{parseFloat(offer.proposed_interest_rate * 100).toFixed(2)}%</span>
+                    <span className="text-gray-500">Proposed Rate</span>
+                    <span className="font-semibold text-black">{parseFloat(offer.proposed_interest_rate * 100).toFixed(2)}%</span>
                 </div>
             </div>
 
             {offer.status === 'PENDING' || offer.status === 'COUNTERED' ? (
-                <div className="mt-4 pt-4 border-t border-white/40 flex flex-col sm:flex-row gap-3">
-                    <button onClick={() => onAccept(offer.offer_id)} className="flex-1 px-4 py-2 bg-green-600/80 hover:bg-green-700 text-white font-semibold rounded-xl shadow-md flex items-center justify-center gap-2">
+                <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col sm:flex-row gap-3">
+                    <button onClick={() => onAccept(offer.offer_id)} className="flex-1 px-4 py-2 bg-green-100 hover:bg-green-200 text-green-800 font-bold rounded-xl border border-green-200 shadow-sm flex items-center justify-center gap-2">
                         <Check className="w-4 h-4" /> Accept
                     </button>
-                    <button onClick={() => onCounter(offer)} className="flex-1 px-4 py-2 bg-blue-600/80 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-md flex items-center justify-center gap-2">
+                    <button onClick={() => onCounter(offer)} className="flex-1 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold rounded-xl border border-blue-200 shadow-sm flex items-center justify-center gap-2">
                         <ArrowLeftRight className="w-4 h-4" /> Counter
                     </button>
-                    <button onClick={() => onDecline(offer.offer_id)} className="flex-1 px-4 py-2 bg-red-600/80 hover:bg-red-700 text-white font-semibold rounded-xl shadow-md flex items-center justify-center gap-2">
+                    <button onClick={() => onDecline(offer.offer_id)} className="flex-1 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-800 font-bold rounded-xl border border-red-200 shadow-sm flex items-center justify-center gap-2">
                         <X className="w-4 h-4" /> Decline
                     </button>
                 </div>
@@ -214,19 +214,19 @@ export default function MyOffersPage({ setRole }) {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#E0F2E0] via-[#C8E6C8] to-[#B0DAB0]">
+        <div className="min-h-screen bg-white">
             <div className="flex min-h-screen">
                 <ModernSidebar userRole="borrower" onLogout={handleLogout} />
 
                 <main className="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-80 lg:mr-0 mr-20 transition-all duration-300">
-                    <GlassCard className="p-6 lg:p-10 w-full min-h-[85vh]">
-                        <header className="pb-4 mb-8 border-b border-[#6B9071]/30">
-                            <h1 className="text-4xl font-bold text-[#1a3d2e]">My Offers Received</h1>
-                            <p className="mt-2 text-lg text-[#4a6850]">Review, accept, or negotiate offers from financiers.</p>
+                    <div className="p-0 lg:p-4 w-full min-h-[85vh]">
+                        <header className="pb-4 mb-8">
+                            <h1 className="text-4xl font-bold text-black">My Offers Received</h1>
+                            <p className="mt-2 text-lg text-gray-600">Review, accept, or negotiate offers from financiers.</p>
                         </header>
 
-                        {loading && <div className="text-center p-8 text-[#4a6850]">Loading your offers...</div>}
-                        {error && <div className="text-center p-8 text-red-600 bg-red-100/50 rounded-2xl">Error: {error}</div>}
+                        {loading && <div className="text-center p-8 text-gray-600">Loading your offers...</div>}
+                        {error && <div className="p-8 text-center text-red-600 bg-red-50 rounded-2xl">{error}</div>}
                         
                         {!loading && !error && (
                             offers.length > 0 ? (
@@ -242,13 +242,13 @@ export default function MyOffersPage({ setRole }) {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="text-center py-16">
-                                    <h3 className="text-2xl font-bold text-[#1a3d2e]">No Offers Yet</h3>
-                                    <p className="text-[#4a6850] mt-2">You have not received any offers on your listed assets.</p>
+                                <div className="text-center py-16 bg-gray-50 rounded-3xl border border-gray-200">
+                                    <h3 className="text-2xl font-bold text-black">No Offers Yet</h3>
+                                    <p className="text-gray-500 mt-2">You have not received any offers on your listed assets.</p>
                                 </div>
                             )
                         )}
-                    </GlassCard>
+                    </div>
                 </main>
             </div>
 

@@ -16,18 +16,9 @@ const API_BASE_URL = 'http://127.0.0.1:8000';
 
 // Glass Card Component
 const GlassCard = ({ children, className = "", ...props }) => (
-  <div 
-    className={`relative overflow-hidden rounded-3xl bg-white/40 border border-white/60 shadow-xl ${className}`}
-    style={{
-      background: 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.3) 100%)',
-      backdropFilter: 'blur(20px) saturate(180%)',
-      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-    }}
-    {...props}
-  >
-    <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-80"></div>
-    <div className="relative z-10">{children}</div>
-  </div>
+    <div className={`relative overflow-hidden rounded-3xl bg-white border border-gray-200 shadow-lg ${className}`} {...props}>
+        <div className="relative z-10 h-full">{children}</div>
+    </div>
 );
 
 // Status Badge Component
@@ -55,7 +46,7 @@ const MyAssetCard = ({ asset, navigate }) => {
     const primaryImage = asset.images && asset.images.length > 0 ? asset.images[0] : 'https://placehold.co/600x400/E0F2E0/4a6850?text=No+Image';
 
     return (
-      <GlassCard className="group relative overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl">
+      <GlassCard className="group transition-all duration-500 hover:scale-[1.02] hover:shadow-xl hover:shadow-[#40916c]/20">
         <div className="relative">
           <div className="relative h-56 overflow-hidden rounded-t-3xl">
             <img 
@@ -71,25 +62,25 @@ const MyAssetCard = ({ asset, navigate }) => {
 
           <div className="p-6">
             <div className="flex items-center gap-2 mb-3">
-              <Icon className="w-5 h-5 text-[#1a3d2e]" />
-              <h3 className="text-xl font-bold text-[#1a3d2e] group-hover:text-black transition-colors">
+              <Icon className="w-5 h-5 text-gray-600" />
+              <h3 className="text-xl font-bold text-black group-hover:text-[#40916c] transition-colors">
                 {asset.primary_identifier}
               </h3>
             </div>
 
             <div className="space-y-3 mb-4">
               <div className="flex justify-between items-center text-sm">
-                <span className="text-[#4a6850]">Market Valuation</span>
-                <span className="font-semibold text-[#1a3d2e]">KSh {Number(asset.market_valuation_kes).toLocaleString()}</span>
+                <span className="text-gray-500">Market Valuation</span>
+                <span className="font-semibold text-black">KSh {Number(asset.market_valuation_kes).toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
-                <span className="text-[#4a6850]">Offers Received</span>
+                <span className="text-gray-500">Offers Received</span>
                 <span className="font-bold text-blue-700">{asset.offer_count || 0}</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-white/30">
-              <button className="flex items-center gap-2 px-4 py-2 bg-white/40 backdrop-blur-sm rounded-lg border border-white/30 text-sm font-medium text-[#4a6850] hover:bg-white/60 transition-all">
+            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+              <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-all">
                 <Eye className="w-4 h-4" />
                 View Details
               </button>
@@ -150,28 +141,28 @@ export default function MyAssetsPage({ setRole }) {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#E0F2E0] via-[#C8E6C8] to-[#B0DAB0]">
+        <div className="min-h-screen bg-white">
             <div className="flex min-h-screen">
                 <ModernSidebar userRole="borrower" onLogout={handleLogout} />
 
                 <main className="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-80 lg:mr-0 mr-20 transition-all duration-300">
-                    <GlassCard className="p-6 lg:p-10 w-full min-h-[85vh]">
-                        <header className="flex justify-between items-center pb-4 mb-8 border-b border-[#6B9071]/30">
+                    <div className="p-0 lg:p-4 w-full min-h-[85vh]">
+                        <header className="flex justify-between items-center pb-4 mb-8">
                             <div>
-                                <h1 className="text-4xl font-bold text-[#1a3d2e]">My Asset Listings</h1>
-                                <p className="mt-2 text-lg text-[#4a6850]">Track the status and manage your listed collateral.</p>
+                                <h1 className="text-4xl font-bold text-gray-800">My Asset Listings</h1>
+                                <p className="mt-2 text-lg text-gray-600">Track the status and manage your listed collateral.</p>
                             </div>
                             <button
                                 onClick={() => navigate('/borrower/register-asset')}
-                                className="px-6 py-3 bg-gradient-to-r from-[#6B9071] to-[#4a6850] text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2"
+                                className="px-6 py-3 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] text-black font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2 hover:scale-105"
                             >
                                 <Upload className="w-5 h-5" />
                                 List New Asset
                             </button>
                         </header>
 
-                        {loading && <div className="text-center p-8 text-[#4a6850]">Loading your assets...</div>}
-                        {error && <div className="text-center p-8 text-red-600 bg-red-100/50 rounded-2xl">{error}</div>}
+                        {loading && <div className="text-center p-8 text-gray-600">Loading your assets...</div>}
+                        {error && <div className="p-8 text-center text-red-600 bg-red-50 rounded-2xl">{error}</div>}
                         
                         {!loading && !error && (
                             assets.length > 0 ? (
@@ -181,12 +172,12 @@ export default function MyAssetsPage({ setRole }) {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="text-center py-16">
-                                    <h3 className="text-2xl font-bold text-[#1a3d2e]">No Assets Listed Yet</h3>
-                                    <p className="text-[#4a6850] mt-2 mb-6">Click "List New Asset" to get started and receive financing offers.</p>
+                                <div className="text-center py-16 bg-gray-50 rounded-3xl border border-gray-200">
+                                    <h3 className="text-2xl font-bold text-gray-800">No Assets Listed Yet</h3>
+                                    <p className="text-gray-600 mt-2 mb-6">Click "List New Asset" to get started and receive financing offers.</p>
                                     <button
                                         onClick={() => navigate('/borrower/register-asset')}
-                                        className="px-8 py-4 bg-gradient-to-r from-[#6B9071] to-[#4a6850] text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2 mx-auto"
+                                        className="px-8 py-4 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-bold rounded-xl shadow-lg hover:shadow-xl flex items-center gap-2 mx-auto"
                                     >
                                         <Upload className="w-5 h-5" />
                                         List Your First Asset
@@ -194,7 +185,7 @@ export default function MyAssetsPage({ setRole }) {
                                 </div>
                             )
                         )}
-                    </GlassCard>
+                    </div>
                 </main>
             </div>
         </div>

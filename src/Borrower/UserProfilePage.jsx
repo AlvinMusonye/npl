@@ -127,15 +127,15 @@ const UserProfilePage = ({ role, setRole }) => {
 
   const InputField = ({ icon: Icon, label, field, type = "text", options = null }) => (
     <div className="space-y-2">
-      <label className="block text-sm font-semibold text-gray-700">{label}</label>
+      <label className="block text-sm font-medium text-gray-700">{label}</label>
       <div className="relative">
-        <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-600" />
+        <Icon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
         {options ? (
           <select
             value={isEditing ? editedData[field] : profileData[field]}
             onChange={(e) => handleInputChange(field, e.target.value)}
             disabled={!isEditing}
-            className="w-full pl-11 pr-4 py-3 bg-white/40 backdrop-blur-md rounded-xl border border-white/40 text-gray-800 outline-none focus:border-white/60 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl border border-gray-300 text-black outline-none focus:ring-2 focus:ring-[#40916c] transition-all disabled:opacity-60 disabled:cursor-not-allowed appearance-none"
           >
             {options.map(option => (
               <option key={option} value={option}>{option}</option>
@@ -147,7 +147,7 @@ const UserProfilePage = ({ role, setRole }) => {
             value={isEditing ? editedData[field] : profileData[field]}
             onChange={(e) => handleInputChange(field, e.target.value)}
             disabled={!isEditing}
-            className="w-full pl-11 pr-4 py-3 bg-white/40 backdrop-blur-md rounded-xl border border-white/40 text-gray-800 outline-none focus:border-white/60 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl border border-gray-300 text-black outline-none focus:ring-2 focus:ring-[#40916c] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           />
         )}
       </div>
@@ -155,35 +155,34 @@ const UserProfilePage = ({ role, setRole }) => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#E0F2E0] via-[#C8E6C8] to-[#B0DAB0]">
+    <div className="min-h-screen bg-white">
       <div className="flex min-h-screen">
         <ModernSidebar userRole={role || localStorage.getItem('userRole')} onLogout={handleLogout} />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-80 lg:mr-0 mr-20 transition-all duration-300">
         {/* Profile Header Card */}
-        <div className="relative overflow-hidden rounded-3xl bg-white/20 backdrop-blur-xl border border-white/30 p-8 mb-8 shadow-2xl">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-white/10 pointer-events-none" />
+        <div className="relative rounded-3xl bg-gray-50 border border-gray-200 p-8 mb-8 shadow-sm">
           
           <div className="relative flex flex-col md:flex-row items-center gap-8">
             {/* Profile Picture */}
             <div className="relative group">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#c8d5c0] to-[#b8cdb0] border-4 border-white/50 shadow-xl flex items-center justify-center">
-                <User className="w-16 h-16 text-gray-700" />
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#d8f3dc] to-[#40916c] border-4 border-white shadow-xl flex items-center justify-center">
+                <User className="w-16 h-16 text-white" />
               </div>
-              <button className="absolute bottom-0 right-0 p-2 bg-white/40 backdrop-blur-md rounded-full border border-white/50 hover:bg-white/60 transition-all shadow-lg">
-                <Camera className="w-5 h-5 text-gray-800" />
+              <button className="absolute bottom-0 right-0 p-2 bg-white rounded-full border border-gray-300 hover:bg-gray-100 transition-all shadow-md">
+                <Camera className="w-5 h-5 text-black" />
               </button>
             </div>
 
             {/* Profile Info */}
             <div className="flex-1 text-center md:text-left">
-              <h2 className="text-4xl font-bold text-gray-800 mb-2">{profileData.full_name}</h2>
-              <p className="text-gray-700 text-lg mb-4">{profileData.email}</p>
+              <h2 className="text-4xl font-bold text-black mb-2">{profileData.full_name}</h2>
+              <p className="text-gray-600 text-lg mb-4">{profileData.email}</p>
               <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-                <div className="px-4 py-2 bg-white/40 backdrop-blur-md rounded-full border border-white/40">
-                  <span className="text-sm font-semibold text-gray-700">Verified Account</span>
+                <div className="px-4 py-2 bg-white rounded-full border border-gray-200">
+                  <span className="text-sm font-semibold text-black">Verified Account</span>
                 </div>
-                <div className="px-4 py-2 bg-green-500/30 backdrop-blur-md rounded-full border border-green-500/40">
+                <div className="px-4 py-2 bg-green-100 rounded-full border border-green-200">
                   <span className="text-sm font-semibold text-green-800">KYC Complete</span>
                 </div>
               </div>
@@ -193,7 +192,7 @@ const UserProfilePage = ({ role, setRole }) => {
             {!isEditing ? (
               <button
                 onClick={() => setIsEditing(true)}
-                className="px-8 py-3 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
+                className="px-8 py-3 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] text-black font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2 hover:scale-105"
               >
                 <Edit2 className="w-5 h-5" />
                 Edit Profile
@@ -202,14 +201,14 @@ const UserProfilePage = ({ role, setRole }) => {
               <div className="flex gap-3">
                 <button
                   onClick={handleSave}
-                  className="px-6 py-3 bg-green-500/40 backdrop-blur-md hover:bg-green-500/60 text-green-900 font-bold rounded-xl border border-green-500/40 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
+                  className="px-6 py-3 bg-green-100 hover:bg-green-200 text-green-800 font-bold rounded-xl border border-green-200 shadow-sm flex items-center justify-center gap-2"
                 >
                   <Save className="w-5 h-5" />
                   Save
                 </button>
                 <button
                   onClick={handleCancel}
-                  className="px-6 py-3 bg-red-500/40 backdrop-blur-md hover:bg-red-500/60 text-red-900 font-bold rounded-xl border border-red-500/40 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
+                  className="px-6 py-3 bg-red-100 hover:bg-red-200 text-red-800 font-bold rounded-xl border border-red-200 shadow-sm flex items-center justify-center gap-2"
                 >
                   <X className="w-5 h-5" />
                   Cancel
@@ -222,11 +221,10 @@ const UserProfilePage = ({ role, setRole }) => {
         {/* Profile Details Cards */}
         <div className="grid md:grid-cols-2 gap-8">
           {/* Personal Information */}
-          <div className="relative overflow-hidden rounded-3xl bg-white/20 backdrop-blur-xl border border-white/30 p-8 shadow-xl">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-white/10 pointer-events-none" />
+          <div className="relative rounded-3xl bg-white border border-gray-200 p-8 shadow-lg">
             <div className="relative">
-              <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <User className="w-6 h-6" />
+              <h3 className="text-2xl font-bold text-black mb-6 flex items-center gap-3">
+                <User className="w-6 h-6 text-[#40916c]" />
                 Personal Information
               </h3>
               <div className="space-y-4">
@@ -239,11 +237,10 @@ const UserProfilePage = ({ role, setRole }) => {
           </div>
 
           {/* Government ID Information */}
-          <div className="relative overflow-hidden rounded-3xl bg-white/20 backdrop-blur-xl border border-white/30 p-8 shadow-xl">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-white/10 pointer-events-none" />
+          <div className="relative rounded-3xl bg-white border border-gray-200 p-8 shadow-lg">
             <div className="relative">
-              <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <CreditCard className="w-6 h-6" />
+              <h3 className="text-2xl font-bold text-black mb-6 flex items-center gap-3">
+                <CreditCard className="w-6 h-6 text-[#40916c]" />
                 Identification
               </h3>
               <div className="space-y-4">
@@ -260,11 +257,10 @@ const UserProfilePage = ({ role, setRole }) => {
           </div>
 
           {/* Employment & Income */}
-          <div className="relative overflow-hidden rounded-3xl bg-white/20 backdrop-blur-xl border border-white/30 p-8 shadow-xl">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-white/10 pointer-events-none" />
+          <div className="relative rounded-3xl bg-white border border-gray-200 p-8 shadow-lg">
             <div className="relative">
-              <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <Briefcase className="w-6 h-6" />
+              <h3 className="text-2xl font-bold text-black mb-6 flex items-center gap-3">
+                <Briefcase className="w-6 h-6 text-[#40916c]" />
                 Employment Details
               </h3>
               <div className="space-y-4">
@@ -297,11 +293,10 @@ const UserProfilePage = ({ role, setRole }) => {
           </div>
 
           {/* Financial Status */}
-          <div className="relative overflow-hidden rounded-3xl bg-white/20 backdrop-blur-xl border border-white/30 p-8 shadow-xl">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-white/10 pointer-events-none" />
+          <div className="relative rounded-3xl bg-white border border-gray-200 p-8 shadow-lg">
             <div className="relative">
-              <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <DollarSign className="w-6 h-6" />
+              <h3 className="text-2xl font-bold text-black mb-6 flex items-center gap-3">
+                <DollarSign className="w-6 h-6 text-[#40916c]" />
                 Financial Information
               </h3>
               <div className="space-y-4">
@@ -319,14 +314,14 @@ const UserProfilePage = ({ role, setRole }) => {
                 />
                 
                 {/* Additional Info Display */}
-                <div className="mt-6 p-4 bg-white/30 backdrop-blur-md rounded-xl border border-white/40">
+                <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold text-gray-700">Account Status</span>
+                    <span className="text-sm font-semibold text-gray-600">Account Status</span>
                     <span className="text-sm font-bold text-green-700">Active</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-gray-700">Member Since</span>
-                    <span className="text-sm font-bold text-gray-800">January 2024</span>
+                    <span className="text-sm font-semibold text-gray-600">Member Since</span>
+                    <span className="text-sm font-bold text-black">January 2024</span>
                   </div>
                 </div>
               </div>
@@ -335,11 +330,10 @@ const UserProfilePage = ({ role, setRole }) => {
         </div>
 
         {/* Security Section */}
-        <div className="mt-8 relative overflow-hidden rounded-3xl bg-white/20 backdrop-blur-xl border border-white/30 p-8 shadow-xl">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-white/10 pointer-events-none" />
+        <div className="mt-8 relative rounded-3xl bg-white border border-gray-200 p-8 shadow-lg">
           <div className="relative">
-            <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-              <Lock className="w-6 h-6" />
+            <h3 className="text-2xl font-bold text-black mb-6 flex items-center gap-3">
+              <Lock className="w-6 h-6 text-[#40916c]" />
               Security Settings
             </h3>
             <div className="flex flex-col md:flex-row gap-4">

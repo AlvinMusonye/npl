@@ -13,31 +13,23 @@ const API_BASE_URL = 'http://127.0.0.1:8000';
 // =========================================================================
 
 const GlassCard = ({ children, className = "", ...props }) => (
-  <div 
-    className={`relative overflow-hidden rounded-3xl bg-white/40 border border-white/60 shadow-xl ${className}`}
-    style={{
-      background: 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.3) 100%)',
-      backdropFilter: 'blur(20px) saturate(180%)',
-    }}
-    {...props}
-  >
-    <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-80"></div>
+  <div className={`relative overflow-hidden rounded-3xl bg-white border border-gray-200 shadow-lg ${className}`} {...props}>
     <div className="relative z-10">{children}</div>
   </div>
 );
 
 const InputField = ({ icon: Icon, label, name, placeholder, value, onChange, type = "text" }) => (
     <div className="space-y-2">
-      <label className="block text-sm font-semibold text-[#1a3d2e]">{label}</label>
+      <label className="block text-sm font-medium text-gray-700">{label}</label>
       <div className="relative">
-        <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#4a6850]" />
+        <Icon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
         <input
           type={type}
           name={name}
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          className="w-full pl-11 pr-4 py-3 bg-white/40 backdrop-blur-md rounded-xl border border-white/40 text-[#1a3d2e] placeholder-[#4a6850]/70 outline-none focus:ring-2 focus:ring-[#6B9071] transition-all"
+          className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl border border-gray-300 text-black placeholder-gray-400 outline-none focus:ring-2 focus:ring-[#40916c] transition-all"
         />
       </div>
     </div>
@@ -45,14 +37,14 @@ const InputField = ({ icon: Icon, label, name, placeholder, value, onChange, typ
 
 const SelectField = ({ icon: Icon, label, name, value, onChange, children }) => (
     <div className="space-y-2">
-      <label className="block text-sm font-semibold text-[#1a3d2e]">{label}</label>
+      <label className="block text-sm font-medium text-gray-700">{label}</label>
       <div className="relative">
-        <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#4a6850]" />
+        <Icon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
         <select
           name={name}
           value={value}
           onChange={onChange}
-          className="w-full pl-11 pr-4 py-3 bg-white/40 backdrop-blur-md rounded-xl border border-white/40 text-[#1a3d2e] outline-none focus:ring-2 focus:ring-[#6B9071] appearance-none"
+          className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl border border-gray-300 text-black outline-none focus:ring-2 focus:ring-[#40916c] appearance-none"
         >
           {children}
         </select>
@@ -61,18 +53,18 @@ const SelectField = ({ icon: Icon, label, name, value, onChange, children }) => 
 );
 
 const SuccessModal = ({ onClose, transactionId }) => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
-        <GlassCard className="p-12 max-w-md mx-4 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="p-12 max-w-md mx-4 shadow-2xl bg-white rounded-3xl border">
             <div className="text-center">
-                <CheckCircle className="w-20 h-20 text-green-600 mx-auto mb-6" />
-                <h3 className="text-3xl font-bold text-[#1a3d2e] mb-4">Transaction Recorded!</h3>
-                <p className="text-[#4a6850] mb-2">The transaction has been successfully recorded on the platform.</p>
-                <p className="text-xs text-[#4a6850]/80 mb-8">ID: {transactionId}</p>
-                <button onClick={onClose} className="px-8 py-3 bg-gradient-to-r from-[#6B9071] to-[#4a6850] text-white font-bold rounded-xl">
+                <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-6" />
+                <h3 className="text-3xl font-bold text-black mb-4">Transaction Recorded!</h3>
+                <p className="text-gray-600 mb-2">The transaction has been successfully recorded on the platform.</p>
+                <p className="text-xs text-gray-500 mb-8">ID: {transactionId}</p>
+                <button onClick={onClose} className="px-8 py-3 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] text-black font-bold rounded-xl">
                     Record Another
                 </button>
             </div>
-        </GlassCard>
+        </div>
     </div>
 );
 
@@ -152,15 +144,15 @@ export default function TransactionRecordsPage({ setRole }) {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#E0F2E0] via-[#C8E6C8] to-[#B0DAB0]">
+        <div className="min-h-screen bg-white">
             {showSuccess && <SuccessModal onClose={() => setShowSuccess(false)} transactionId={newTxId} />}
             <div className="flex min-h-screen">
                 <ModernSidebar userRole="buyer" onLogout={handleLogout} />
                 <main className="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-80 lg:mr-0 mr-20 transition-all duration-300">
-                    <GlassCard className="p-6 lg:p-10 w-full">
-                        <header className="pb-4 mb-8 border-b border-[#6B9071]/30">
-                            <h1 className="text-4xl font-bold text-[#1a3d2e]">Record a Transaction</h1>
-                            <p className="mt-2 text-lg text-[#4a6850]">Manually record a payment you made for an asset.</p>
+                    <div className="p-0 lg:p-4 w-full">
+                        <header className="pb-4 mb-8">
+                            <h1 className="text-4xl font-bold text-black">Record a Transaction</h1>
+                            <p className="mt-2 text-lg text-gray-600">Manually record a payment you made for an asset.</p>
                         </header>
 
                         <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-6">
@@ -182,26 +174,26 @@ export default function TransactionRecordsPage({ setRole }) {
                             </SelectField>
                             <InputField icon={Briefcase} label="Related Asset ID" name="related_asset" placeholder="Enter asset UUID" value={formData.related_asset} onChange={handleChange} />
                             <div className="space-y-2">
-                                <label className="block text-sm font-semibold text-[#1a3d2e]">Description</label>
+                                <label className="block text-sm font-medium text-gray-700">Description</label>
                                 <textarea
                                     name="description"
                                     rows="4"
                                     placeholder="e.g., Full payment for repossessed vehicle KDA 555Z."
                                     value={formData.description}
                                     onChange={handleChange}
-                                    className="w-full p-4 bg-white/40 backdrop-blur-md rounded-xl border border-white/40 text-[#1a3d2e] placeholder-[#4a6850]/70 outline-none focus:ring-2 focus:ring-[#6B9071] transition-all"
+                                    className="w-full p-4 bg-gray-50 rounded-xl border border-gray-300 text-black placeholder-gray-400 outline-none focus:ring-2 focus:ring-[#40916c] transition-all"
                                 ></textarea>
                             </div>
 
-                            {error && <div className="text-center p-3 text-red-700 bg-red-100/50 rounded-xl">{error}</div>}
+                            {error && <div className="text-center p-3 text-red-700 bg-red-100 rounded-xl">{error}</div>}
 
                             <div className="pt-4">
-                                <button type="submit" disabled={loading} className="w-full py-4 bg-gradient-to-r from-[#6B9071] to-[#4a6850] text-white font-bold rounded-xl text-lg disabled:opacity-50">
+                                <button type="submit" disabled={loading} className="w-full py-4 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] text-black font-bold rounded-xl text-lg disabled:opacity-50">
                                     {loading ? 'Recording...' : 'Record Transaction'}
                                 </button>
                             </div>
                         </form>
-                    </GlassCard>
+                    </div>
                 </main>
             </div>
         </div>

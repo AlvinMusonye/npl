@@ -13,30 +13,22 @@ const API_BASE_URL = 'http://127.0.0.1:8000';
 // =========================================================================
 
 const GlassCard = ({ children, className = "", ...props }) => (
-  <div 
-    className={`relative overflow-hidden rounded-3xl bg-white/40 border border-white/60 shadow-xl ${className}`}
-    style={{
-      background: 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.3) 100%)',
-      backdropFilter: 'blur(20px) saturate(180%)',
-    }}
-    {...props}
-  >
-    <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-80"></div>
+  <div className={`relative rounded-3xl bg-white border border-gray-200 shadow-lg ${className}`} {...props}>
     <div className="relative z-10">{children}</div>
   </div>
 );
 
 const NavCard = ({ title, description, Icon, onClick }) => (
-    <div onClick={onClick} className="block hover:scale-105 transition-all duration-300 ease-out cursor-pointer">
-        <GlassCard className="p-6 h-full flex flex-col justify-between">
+    <div onClick={onClick} className="block group hover:scale-[1.03] transition-all duration-300 ease-out cursor-pointer">
+        <GlassCard className="p-6 h-full flex flex-col justify-between bg-gray-50/50 group-hover:bg-white group-hover:shadow-xl group-hover:shadow-[#40916c]/20">
             <div>
-                <div className="p-3 inline-block bg-white/50 rounded-xl mb-4">
-                    <Icon className="w-8 h-8 text-[#6B9071]" />
+                <div className="p-3 inline-block bg-white rounded-xl mb-4 border">
+                    <Icon className="w-8 h-8 text-[#40916c]" />
                 </div>
-                <h3 className="text-xl font-bold text-[#1a3d2e]">{title}</h3>
-                <p className="text-sm text-[#4a6850] mt-2">{description}</p>
+                <h3 className="text-xl font-bold text-black">{title}</h3>
+                <p className="text-sm text-gray-600 mt-2">{description}</p>
             </div>
-            <div className="mt-6 text-sm flex items-center font-semibold text-[#6B9071] hover:text-[#4a6850]">
+            <div className="mt-6 text-sm flex items-center font-semibold text-gray-700 group-hover:text-black">
                 Go to {title} <ArrowRight className="w-4 h-4 ml-2" />
             </div>
         </GlassCard>
@@ -86,27 +78,27 @@ export default function LenderDashboard({ setRole }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#E0F2E0] via-[#C8E6C8] to-[#B0DAB0]">
+    <div className="min-h-screen bg-white">
       <div className="flex min-h-screen">
         <ModernSidebar userRole="lender" onLogout={handleLogout} />
         <main className="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-80 lg:mr-0 mr-20 transition-all duration-300">
-          <GlassCard className="p-6 lg:p-10 w-full min-h-[85vh]">
-            {loading && <div className="text-center p-8 text-[#4a6850]">Loading Dashboard...</div>}
-            {error && <div className="text-center p-8 text-red-600 bg-red-100/50 rounded-2xl">{error}</div>}
+          <div className="p-0 lg:p-4 w-full min-h-[85vh]">
+            {loading && <div className="text-center p-8 text-gray-600">Loading Dashboard...</div>}
+            {error && <div className="text-center p-8 text-red-600 bg-red-50 rounded-2xl">{error}</div>}
             {dashboardData && (
               <>
-                <header className="pb-4 mb-8 border-b border-[#6B9071]/30">
-                  <h1 className="text-4xl font-bold text-[#1a3d2e]">{dashboardData.welcome_message}</h1>
-                  <p className="mt-2 text-lg text-[#4a6850]">Manage your assets and view contact requests.</p>
+                <header className="p-8 mb-12 bg-gray-50 rounded-3xl border border-gray-200">
+                  <h1 className="text-4xl font-bold text-black">{dashboardData.welcome_message}</h1>
+                  <p className="mt-2 text-lg text-gray-600">Manage your assets and view contact requests.</p>
                 </header>
-                <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   <NavCard title="My Listed Assets" description="View and manage your listed assets." Icon={Briefcase} onClick={() => navigate('/lender/assets')} />
                   <NavCard title="Register New Asset" description="List a new asset for sale on the marketplace." Icon={Plus} onClick={() => navigate('/lender/register-asset')} />
                   <NavCard title="My Contact Requests" description="Review requests from potential buyers." Icon={Contact} onClick={() => navigate('/lender/contact-requests')} />
                 </section>
               </>
             )}
-          </GlassCard>
+          </div>
         </main>
       </div>
     </div>
