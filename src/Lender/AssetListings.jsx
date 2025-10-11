@@ -13,15 +13,7 @@ const API_BASE_URL = 'http://127.0.0.1:8000';
 // =========================================================================
 
 const GlassCard = ({ children, className = "", ...props }) => (
-  <div 
-    className={`relative overflow-hidden rounded-3xl bg-white/40 border border-white/60 shadow-xl ${className}`}
-    style={{
-      background: 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.3) 100%)',
-      backdropFilter: 'blur(20px) saturate(180%)',
-    }}
-    {...props}
-  >
-    <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-80"></div>
+  <div className={`relative overflow-hidden rounded-3xl bg-white border border-gray-200 shadow-lg ${className}`} {...props}>
     <div className="relative z-10">{children}</div>
   </div>
 );
@@ -35,7 +27,7 @@ const AssetCard = ({ asset }) => {
     const amountLabel = asset.listing_type === 'FOR_SALE' ? 'Sale Price' : 'Relief Requested';
 
     return (
-      <GlassCard className="group relative overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl">
+      <GlassCard className="group transition-all duration-500 hover:scale-[1.02] hover:shadow-xl hover:shadow-[#40916c]/20">
         <div className="relative h-56 overflow-hidden rounded-t-3xl">
           <img 
             src={primaryImage} 
@@ -45,20 +37,20 @@ const AssetCard = ({ asset }) => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
         </div>
         <div className="p-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Icon className="w-5 h-5 text-[#1a3d2e]" />
-            <h3 className="text-xl font-bold text-[#1a3d2e] truncate" title={asset.primary_identifier}>
+          <div className="flex items-center gap-3 mb-3">
+            <Icon className="w-5 h-5 text-gray-600" />
+            <h3 className="text-xl font-bold text-black truncate group-hover:text-[#40916c] transition-colors" title={asset.primary_identifier}>
               {asset.primary_identifier}
             </h3>
           </div>
           <div className="space-y-3 mb-4">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-[#4a6850]">{amountLabel}</span>
+              <span className="text-gray-500">{amountLabel}</span>
               <span className="font-semibold text-lg text-green-700">KSh {Number(displayAmount).toLocaleString()}</span>
             </div>
           </div>
-          <div className="flex items-center justify-center pt-4 border-t border-white/30">
-            <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#c8d5c0]/80 to-[#b8cdb0]/80 hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-[#1a3d2e] font-semibold rounded-lg shadow-md hover:shadow-lg transition-all">
+          <div className="flex items-center justify-center pt-4 border-t border-gray-100">
+            <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-sm transition-all">
               <Contact className="w-5 h-5" />
               Request Contact
             </button>
@@ -107,18 +99,18 @@ export default function AssetListings({ setRole }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#E0F2E0] via-[#C8E6C8] to-[#B0DAB0]">
+    <div className="min-h-screen bg-white">
       <div className="flex min-h-screen">
         <ModernSidebar userRole="lender" onLogout={handleLogout} />
         <main className="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-80 lg:mr-0 mr-20 transition-all duration-300">
-          <GlassCard className="p-6 lg:p-10 w-full min-h-[85vh]">
-            <header className="pb-4 mb-8 border-b border-[#6B9071]/30">
-              <h1 className="text-4xl font-bold text-[#1a3d2e]">Marketplace</h1>
-              <p className="mt-2 text-lg text-[#4a6850]">Browse assets available for sale or financing.</p>
+          <div className="p-0 lg:p-4 w-full min-h-[85vh]">
+            <header className="pb-4 mb-8">
+              <h1 className="text-4xl font-bold text-black">Marketplace</h1>
+              <p className="mt-2 text-lg text-gray-600">Browse assets available for sale or financing.</p>
             </header>
 
-            {loading && <div className="text-center p-8 text-[#4a6850]">Loading marketplace assets...</div>}
-            {error && <div className="text-center p-8 text-red-600 bg-red-100/50 rounded-2xl">{error}</div>}
+            {loading && <div className="text-center p-8 text-gray-600">Loading marketplace assets...</div>}
+            {error && <div className="text-center p-8 text-red-600 bg-red-50 rounded-2xl">{error}</div>}
             
             {!loading && !error && (
               assets.length > 0 ? (
@@ -128,13 +120,13 @@ export default function AssetListings({ setRole }) {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-16">
-                  <h3 className="text-2xl font-bold text-[#1a3d2e]">Marketplace is Empty</h3>
-                  <p className="text-[#4a6850] mt-2">There are no public asset listings at the moment.</p>
+                <div className="text-center py-16 bg-gray-50 rounded-3xl border border-gray-200">
+                  <h3 className="text-2xl font-bold text-black">Marketplace is Empty</h3>
+                  <p className="text-gray-500 mt-2">There are no public asset listings at the moment.</p>
                 </div>
               )
             )}
-          </GlassCard>
+          </div>
         </main>
       </div>
     </div>

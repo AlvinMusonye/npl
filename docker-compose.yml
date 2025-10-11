@@ -1,0 +1,25 @@
+services:
+  minio:
+    image: minio/minio:RELEASE.2023-09-04T19-57-37Z
+    ports:
+      - "9000:9000" # API Port
+      - "9001:9001" # Console Port
+    volumes:
+      - ./minio_data:/data
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add myminio http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb myminio/nplin-docs;
+      echo '[{\"AllowedOrigins\":[\"*\"],\"AllowedMethods\":[\"PUT\",\"GET\",\"HEAD\"],\"AllowedHeaders\":[\"*\"]}]' > /tmp/cors.json;
+      /usr/bin/mc anonymous set-json /tmp/cors.json myminio/nplin-docs;
+      echo 'Bucket nplin-docs created and CORS policy set.';
+      "

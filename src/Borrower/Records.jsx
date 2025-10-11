@@ -219,13 +219,13 @@ export default function MyTransactionsPage({ setRole }) {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#E0F2E0] via-[#C8E6C8] to-[#B0DAB0]">
+        <div className="min-h-screen bg-white">
             <div className="flex min-h-screen">
                 <ModernSidebar userRole="borrower" onLogout={handleLogout} />
 
                 <main className="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-80 lg:mr-0 mr-20 transition-all duration-300">
-                    <GlassCard className="p-6 lg:p-10 w-full min-h-[85vh]">
-                        <header className="pb-4 mb-8 border-b border-[#6B9071]/30">
+                    <div className="p-0 lg:p-4 w-full min-h-[85vh]">
+                        <header className="pb-4 mb-8">
                             <h1 className="text-4xl font-bold text-[#1a3d2e]">My Transactions</h1>
                             <p className="mt-2 text-lg text-[#4a6850]">A complete history of your financial activities on the platform.</p>
                         </header>
@@ -249,7 +249,7 @@ export default function MyTransactionsPage({ setRole }) {
                                 )}
                             </div>
                         )}
-                    </GlassCard>
+                    </div>
                 </main>
             </div>
             {isModalOpen && (

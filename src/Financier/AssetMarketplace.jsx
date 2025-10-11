@@ -13,31 +13,23 @@ const API_BASE_URL = 'http://127.0.0.1:8000';
 // =========================================================================
 
 const GlassCard = ({ children, className = "", ...props }) => (
-  <div 
-    className={`relative overflow-hidden rounded-3xl bg-white/40 border border-white/60 shadow-xl ${className}`}
-    style={{
-      background: 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.3) 100%)',
-      backdropFilter: 'blur(20px) saturate(180%)',
-    }}
-    {...props}
-  >
-    <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-80"></div>
+  <div className={`relative overflow-hidden rounded-3xl bg-white border border-gray-200 shadow-lg ${className}`} {...props}>
     <div className="relative z-10">{children}</div>
   </div>
 );
 
 const InputField = ({ icon: Icon, label, name, placeholder, value, onChange, type = "text" }) => (
     <div className="space-y-2">
-      <label className="block text-sm font-semibold text-[#1a3d2e]">{label}</label>
+      <label className="block text-sm font-medium text-gray-700">{label}</label>
       <div className="relative">
-        <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#4a6850]" />
+        <Icon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
         <input
           type={type}
           name={name}
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          className="w-full pl-11 pr-4 py-3 bg-white/40 backdrop-blur-md rounded-xl border border-white/40 text-[#1a3d2e] placeholder-[#4a6850]/70 outline-none focus:ring-2 focus:ring-[#6B9071] transition-all"
+          className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl border border-gray-300 text-black placeholder-gray-400 outline-none focus:ring-2 focus:ring-[#40916c] transition-all"
         />
       </div>
     </div>
@@ -74,30 +66,30 @@ const OfferModal = ({ asset, onClose, onSubmit }) => {
     if (!asset) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/10 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <GlassCard className="w-full max-w-lg p-8">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="w-full max-w-lg p-8 bg-white rounded-3xl border shadow-2xl">
                 <div className="flex justify-between items-start">
-                    <h3 className="text-2xl font-bold text-[#1a3d2e] mb-2">Submit Offer</h3>
-                    <button onClick={onClose} className="p-2 -mt-2 -mr-2 rounded-full hover:bg-white/50"><X className="w-6 h-6 text-[#4a6850]" /></button>
+                    <h3 className="text-2xl font-bold text-black mb-2">Submit Offer</h3>
+                    <button onClick={onClose} className="p-2 -mt-2 -mr-2 rounded-full hover:bg-gray-100"><X className="w-6 h-6 text-gray-600" /></button>
                 </div>
-                <p className="text-[#4a6850] mb-6">For asset: <span className="font-semibold">{asset.primary_identifier || asset.collateral_uuid}</span></p>
+                <p className="text-gray-600 mb-6">For asset: <span className="font-semibold">{asset.primary_identifier || asset.collateral_uuid}</span></p>
                 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <InputField icon={DollarSign} label="Offer Amount (KES)" name="offer_amount_kes" type="number" value={offerData.offer_amount_kes} onChange={handleChange} />
                     <InputField icon={Percent} label="Proposed Interest Rate (%)" name="proposed_interest_rate" type="number" step="0.01" value={offerData.proposed_interest_rate} onChange={handleChange} />
                     <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-[#1a3d2e]">Comment</label>
-                        <textarea name="lender_comment" rows="3" value={offerData.lender_comment} onChange={handleChange} className="w-full p-4 bg-white/40 rounded-xl border border-white/40 text-[#1a3d2e] placeholder-[#4a6850]/70 outline-none focus:ring-2 focus:ring-[#6B9071]" />
+                        <label className="block text-sm font-medium text-gray-700">Comment</label>
+                        <textarea name="lender_comment" rows="3" value={offerData.lender_comment} onChange={handleChange} className="w-full p-4 bg-gray-50 rounded-xl border border-gray-300 text-black placeholder-gray-400 outline-none focus:ring-2 focus:ring-[#40916c]" />
                     </div>
-                    {error && <p className="text-red-600 text-sm text-center">{error}</p>}
+                    {error && <p className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg">{error}</p>}
                     <div className="flex gap-4 pt-4">
-                        <button type="button" onClick={onClose} className="flex-1 py-3 bg-white/40 hover:bg-white/60 text-[#1a3d2e] font-semibold rounded-xl border border-white/40">Cancel</button>
-                        <button type="submit" disabled={submitting} className="flex-1 py-3 bg-gradient-to-r from-[#6B9071] to-[#4a6850] text-white font-bold rounded-xl disabled:opacity-50">
+                        <button type="button" onClick={onClose} className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-black font-semibold rounded-xl border border-gray-300">Cancel</button>
+                        <button type="submit" disabled={submitting} className="flex-1 py-3 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] text-black font-bold rounded-xl disabled:opacity-50">
                             {submitting ? 'Submitting...' : 'Submit Offer'}
                         </button>
                     </div>
                 </form>
-            </GlassCard>
+            </div>
         </div>
     );
 };
@@ -108,27 +100,27 @@ const AssetCard = ({ asset, onMakeOffer }) => {
     const primaryImage = asset.images && asset.images.length > 0 ? asset.images[0] : 'https://placehold.co/600x400/E0F2E0/4a6850?text=No+Image';
 
     return (
-      <GlassCard className="group">
+      <GlassCard className="group hover:shadow-xl hover:shadow-[#40916c]/20 transition-all duration-300">
         <div className="relative h-56 overflow-hidden rounded-t-3xl">
           <img src={primaryImage} alt={asset.primary_identifier} className="w-full h-full object-cover" />
         </div>
         <div className="p-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Icon className="w-5 h-5 text-[#1a3d2e]" />
-            <h3 className="text-xl font-bold text-[#1a3d2e] truncate">{asset.primary_identifier || 'Asset'}</h3>
+          <div className="flex items-center gap-3 mb-3">
+            <Icon className="w-5 h-5 text-gray-600" />
+            <h3 className="text-xl font-bold text-black truncate group-hover:text-[#40916c] transition-colors">{asset.primary_identifier || 'Asset'}</h3>
           </div>
           <div className="space-y-3 mb-4">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-[#4a6850]">Relief Requested</span>
+              <span className="text-gray-500">Relief Requested</span>
               <span className="font-semibold text-lg text-green-700">KSh {Number(asset.relief_amount_requested_kes).toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center text-sm">
-              <span className="text-[#4a6850]">Borrower Risk Score</span>
-              <span className="font-bold text-[#1a3d2e]">{asset.borrower_risk_score || 'N/A'}</span>
+              <span className="text-gray-500">Borrower Risk Score</span>
+              <span className="font-bold text-black">{asset.borrower_risk_score || 'N/A'}</span>
             </div>
           </div>
-          <div className="pt-4 border-t border-white/30">
-            <button onClick={() => onMakeOffer(asset)} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#c8d5c0]/80 to-[#b8cdb0]/80 hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-[#1a3d2e] font-semibold rounded-lg">
+          <div className="pt-4 border-t border-gray-100">
+            <button onClick={() => onMakeOffer(asset)} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-sm transition-all">
               <DollarSign className="w-5 h-5" /> Make an Offer
             </button>
           </div>
@@ -194,18 +186,18 @@ export default function AssetMarketplace({ setRole }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#E0F2E0] via-[#C8E6C8] to-[#B0DAB0]">
+    <div className="min-h-screen bg-white">
       <div className="flex min-h-screen">
         <ModernSidebar userRole="financier" onLogout={handleLogout} />
         <main className="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-80 lg:mr-0 mr-20 transition-all duration-300">
-          <GlassCard className="p-6 lg:p-10 w-full min-h-[85vh]">
-            <header className="pb-4 mb-8 border-b border-[#6B9071]/30">
-              <h1 className="text-4xl font-bold text-[#1a3d2e]">Asset Marketplace</h1>
-              <p className="mt-2 text-lg text-[#4a6850]">Browse distressed assets and find investment opportunities.</p>
+          <div className="p-0 lg:p-4 w-full min-h-[85vh]">
+            <header className="pb-4 mb-8">
+              <h1 className="text-4xl font-bold text-black">Asset Marketplace</h1>
+              <p className="mt-2 text-lg text-gray-600">Browse distressed assets and find investment opportunities.</p>
             </header>
 
-            {loading && <div className="text-center p-8 text-[#4a6850]">Loading marketplace...</div>}
-            {error && <div className="text-center p-8 text-red-600 bg-red-100/50 rounded-2xl">{error}</div>}
+            {loading && <div className="text-center p-8 text-gray-600">Loading marketplace...</div>}
+            {error && <div className="text-center p-8 text-red-600 bg-red-50 rounded-2xl">{error}</div>}
             
             {!loading && !error && (
               assets.length > 0 ? (
@@ -215,13 +207,13 @@ export default function AssetMarketplace({ setRole }) {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-16">
-                  <h3 className="text-2xl font-bold text-[#1a3d2e]">Marketplace is Currently Empty</h3>
-                  <p className="text-[#4a6850] mt-2">Check back later for new investment opportunities.</p>
+                <div className="text-center py-16 bg-gray-50 rounded-3xl border border-gray-200">
+                  <h3 className="text-2xl font-bold text-black">Marketplace is Currently Empty</h3>
+                  <p className="text-gray-500 mt-2">Check back later for new investment opportunities.</p>
                 </div>
               )
             )}
-          </GlassCard>
+          </div>
         </main>
       </div>
       {selectedAsset && (
