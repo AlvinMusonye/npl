@@ -204,14 +204,14 @@ const OffersChatPage = ({ setView }) => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#d4e4d0] via-[#c8d5c0] to-[#b8cdb0]">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/30 border-b border-white/30 shadow-lg">
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-12">
               <h1 className="text-3xl font-bold text-gray-800">NPLin</h1>
-              <nav className="hidden md:flex gap-8">
+              <nav className="hidden md:flex gap-8 items-center">
                 <a href="#" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">Dashboard</a>
                 <button onClick={() => setView('list')} className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
                   List Asset
@@ -219,7 +219,7 @@ const OffersChatPage = ({ setView }) => {
                 <a href="#" className="text-gray-900 font-bold border-b-2 border-gray-800">Offers</a>
               </nav>
             </div>
-            <button className="px-6 py-2.5 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl">
+            <button className="px-6 py-2.5 bg-white hover:bg-gray-100 text-gray-800 font-semibold rounded-xl border border-gray-200 transition-all duration-300 shadow-sm hover:shadow-md">
               Profile
             </button>
           </div>
@@ -229,12 +229,12 @@ const OffersChatPage = ({ setView }) => {
       <div className="max-w-7xl mx-auto px-6 py-12">
         {/* Header Section */}
         <div className="mb-8">
-          <h2 className="text-4xl font-bold text-gray-800 mb-4">Offers & Messages</h2>
-          <p className="text-xl text-gray-700">Review offers and communicate with financiers</p>
+          <h2 className="text-4xl font-bold text-gray-800 mb-2">Welcome Back!</h2>
+          <p className="text-xl text-gray-600">Review offers and communicate with financiers.</p>
         </div>
 
         {/* Stats */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <div className="grid md:grid-cols-4 gap-6 mb-12">
           <div className="relative overflow-hidden rounded-2xl bg-white/20 backdrop-blur-xl border border-white/30 p-6">
             <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />
             <div className="relative">
@@ -243,7 +243,7 @@ const OffersChatPage = ({ setView }) => {
             </div>
           </div>
           <div className="relative overflow-hidden rounded-2xl bg-white/20 backdrop-blur-xl border border-white/30 p-6">
-            <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/20 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/10 to-transparent pointer-events-none" />
             <div className="relative">
               <div className="text-sm text-gray-600 mb-1">Pending</div>
               <div className="text-3xl font-bold text-yellow-800">
@@ -252,7 +252,7 @@ const OffersChatPage = ({ setView }) => {
             </div>
           </div>
           <div className="relative overflow-hidden rounded-2xl bg-white/20 backdrop-blur-xl border border-white/30 p-6">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-transparent pointer-events-none" />
             <div className="relative">
               <div className="text-sm text-gray-600 mb-1">Countered</div>
               <div className="text-3xl font-bold text-blue-800">
@@ -261,7 +261,7 @@ const OffersChatPage = ({ setView }) => {
             </div>
           </div>
           <div className="relative overflow-hidden rounded-2xl bg-white/20 backdrop-blur-xl border border-white/30 p-6">
-            <div className="absolute inset-0 bg-gradient-to-br from-green-400/20 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 to-transparent pointer-events-none" />
             <div className="relative">
               <div className="text-sm text-gray-600 mb-1">Accepted</div>
               <div className="text-3xl font-bold text-green-800">
@@ -275,7 +275,7 @@ const OffersChatPage = ({ setView }) => {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Offers List */}
           <div className="lg:col-span-1 space-y-4">
-            <div className="relative overflow-hidden rounded-2xl bg-white/20 backdrop-blur-xl border border-white/30 p-4">
+            <div className="relative overflow-hidden rounded-2xl bg-gray-50/50 border border-gray-200 p-4">
               <h3 className="text-xl font-bold text-gray-800 mb-4">All Offers</h3>
               <div className="space-y-3 max-h-[600px] overflow-y-auto">
                 {offers.map(offer => (
@@ -288,7 +288,7 @@ const OffersChatPage = ({ setView }) => {
           {/* Chat & Details */}
           <div className="lg:col-span-2">
             {selectedOffer ? (
-              <div className="relative overflow-hidden rounded-3xl bg-white/20 backdrop-blur-xl border border-white/30 shadow-xl">
+              <div className="relative overflow-hidden rounded-3xl bg-gray-50/50 border border-gray-200 shadow-lg">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-white/10 pointer-events-none" />
                 
                 <div className="relative">
@@ -307,7 +307,7 @@ const OffersChatPage = ({ setView }) => {
 
                     {/* Offer Details */}
                     <div className="grid md:grid-cols-3 gap-4">
-                      <div className="p-4 bg-white/30 backdrop-blur-md rounded-xl border border-white/30">
+                      <div className="p-4 bg-white/50 backdrop-blur-md rounded-xl border border-gray-200">
                         <div className="flex items-center gap-2 text-gray-600 mb-1">
                           <DollarSign className="w-4 h-4" />
                           <span className="text-xs">Offer Amount</span>
@@ -316,7 +316,7 @@ const OffersChatPage = ({ setView }) => {
                           KSh {selectedOffer.offer_amount_kes.toLocaleString()}
                         </div>
                       </div>
-                      <div className="p-4 bg-white/30 backdrop-blur-md rounded-xl border border-white/30">
+                      <div className="p-4 bg-white/50 backdrop-blur-md rounded-xl border border-gray-200">
                         <div className="flex items-center gap-2 text-gray-600 mb-1">
                           <TrendingUp className="w-4 h-4" />
                           <span className="text-xs">Interest Rate</span>
@@ -325,7 +325,7 @@ const OffersChatPage = ({ setView }) => {
                           {selectedOffer.proposed_interest_rate}%
                         </div>
                       </div>
-                      <div className="p-4 bg-white/30 backdrop-blur-md rounded-xl border border-white/30">
+                      <div className="p-4 bg-white/50 backdrop-blur-md rounded-xl border border-gray-200">
                         <div className="flex items-center gap-2 text-gray-600 mb-1">
                           <Calendar className="w-4 h-4" />
                           <span className="text-xs">Loan Term</span>
@@ -336,7 +336,7 @@ const OffersChatPage = ({ setView }) => {
                       </div>
                     </div>
 
-                    <div className="mt-4 p-4 bg-white/20 backdrop-blur-sm rounded-xl border border-white/20">
+                    <div className="mt-4 p-4 bg-white/30 backdrop-blur-sm rounded-xl border border-gray-200/80">
                       <p className="text-sm text-gray-700">{selectedOffer.financier_comment}</p>
                     </div>
                   </div>
@@ -352,8 +352,8 @@ const OffersChatPage = ({ setView }) => {
                         >
                           <div
                             className={`max-w-[80%] p-4 rounded-2xl backdrop-blur-md border ${
-                              msg.sender === 'borrower'
-                                ? 'bg-[#c8d5c0]/40 border-[#c8d5c0]/50'
+                              msg.sender === 'borrower' ?
+                                'bg-gradient-to-br from-[#d8f3dc] to-[#40916c] text-white'
                                 : 'bg-white/40 border-white/50'
                             }`}
                           >
@@ -375,11 +375,11 @@ const OffersChatPage = ({ setView }) => {
                           onChange={(e) => setMessage(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                           placeholder="Type your message..."
-                          className="flex-1 px-4 py-3 bg-white/40 backdrop-blur-md rounded-xl border border-white/40 text-gray-800 placeholder-gray-600 outline-none focus:border-white/60 transition-all"
+                          className="flex-1 px-4 py-3 bg-white/80 backdrop-blur-md rounded-xl border border-gray-300 text-gray-800 placeholder-gray-500 outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all"
                         />
                         <button
                           onClick={handleSendMessage}
-                          className="px-6 py-3 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
+                          className="px-6 py-3 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] hover:from-[#40916c] hover:to-[#d8f3dc] text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
                         >
                           <Send className="w-5 h-5" />
                         </button>
@@ -414,7 +414,7 @@ const OffersChatPage = ({ setView }) => {
                 </div>
               </div>
             ) : (
-              <div className="relative overflow-hidden rounded-3xl bg-white/20 backdrop-blur-xl border border-white/30 p-12 text-center">
+              <div className="relative overflow-hidden rounded-3xl bg-gray-50/50 border border-gray-200 p-12 text-center h-full flex flex-col justify-center items-center">
                 <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-2xl font-bold text-gray-800 mb-2">Select an Offer</h3>
                 <p className="text-gray-600">Choose an offer from the list to view details and chat with the financier</p>
@@ -426,7 +426,7 @@ const OffersChatPage = ({ setView }) => {
         {/* Counter Offer Modal */}
         {showCounterOffer && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="relative w-full max-w-md bg-white/20 backdrop-blur-2xl rounded-3xl border border-white/30 shadow-2xl p-8">
+            <div className="relative w-full max-w-md bg-white/90 backdrop-blur-2xl rounded-3xl border border-gray-200 shadow-2xl p-8">
               <h3 className="text-2xl font-bold text-gray-800 mb-6">Make Counter Offer</h3>
               
               <div className="space-y-4 mb-6">
@@ -436,8 +436,8 @@ const OffersChatPage = ({ setView }) => {
                     type="number"
                     value={counterOfferData.offer_amount_kes}
                     onChange={(e) => setCounterOfferData({ ...counterOfferData, offer_amount_kes: e.target.value })}
-                    placeholder="900000"
-                    className="w-full px-4 py-3 bg-white/40 backdrop-blur-md rounded-xl border border-white/40 text-gray-800 placeholder-gray-600 outline-none focus:border-white/60 transition-all"
+                    placeholder="e.g. 950000"
+                    className="w-full px-4 py-3 bg-white/80 backdrop-blur-md rounded-xl border border-gray-300 text-gray-800 placeholder-gray-500 outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all"
                   />
                 </div>
                 <div>
@@ -447,8 +447,8 @@ const OffersChatPage = ({ setView }) => {
                     step="0.1"
                     value={counterOfferData.proposed_interest_rate}
                     onChange={(e) => setCounterOfferData({ ...counterOfferData, proposed_interest_rate: e.target.value })}
-                    placeholder="17.5"
-                    className="w-full px-4 py-3 bg-white/40 backdrop-blur-md rounded-xl border border-white/40 text-gray-800 placeholder-gray-600 outline-none focus:border-white/60 transition-all"
+                    placeholder="e.g. 17.5"
+                    className="w-full px-4 py-3 bg-white/80 backdrop-blur-md rounded-xl border border-gray-300 text-gray-800 placeholder-gray-500 outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all"
                   />
                 </div>
                 <div>
@@ -457,8 +457,8 @@ const OffersChatPage = ({ setView }) => {
                     rows="4"
                     value={counterOfferData.borrower_comment}
                     onChange={(e) => setCounterOfferData({ ...counterOfferData, borrower_comment: e.target.value })}
-                    placeholder="Thank you for the offer. I can accept if you can meet the full relief amount at a slightly lower rate..."
-                    className="w-full px-4 py-3 bg-white/40 backdrop-blur-md rounded-xl border border-white/40 text-gray-800 placeholder-gray-600 outline-none focus:border-white/60 transition-all resize-none"
+                    placeholder="Add a comment for the financier..."
+                    className="w-full px-4 py-3 bg-white/80 backdrop-blur-md rounded-xl border border-gray-300 text-gray-800 placeholder-gray-500 outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all resize-none"
                   ></textarea>
                 </div>
               </div>
@@ -466,13 +466,13 @@ const OffersChatPage = ({ setView }) => {
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowCounterOffer(false)}
-                  className="flex-1 py-3 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all duration-300"
+                  className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl border border-gray-300 transition-all duration-300"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleCounterOffer}
-                  className="flex-1 py-3 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="flex-1 py-3 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] hover:from-[#40916c] hover:to-[#d8f3dc] text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   Submit Counter
                 </button>

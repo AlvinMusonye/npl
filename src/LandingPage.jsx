@@ -19,6 +19,7 @@ export default function NPLinLanding() {
 
   const [isHopping, setIsHopping] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const chatContainerRef = useRef(null);
 
 
@@ -30,16 +31,19 @@ export default function NPLinLanding() {
         entries.forEach((entry) => {
           setIsVisible(prev => ({
             ...prev,
-            [entry.target.id]: entry.isIntersecting
+            // Once an element is visible, keep it that way
+            [entry.target.id]: prev[entry.target.id] || entry.isIntersecting
           }));
         });
       },
       { threshold: 0.2 } 
     );
-    document.querySelectorAll('[id]').forEach((el) => {
+    // Only observe the elements that have on-scroll animations
+    const animatedElements = document.querySelectorAll('#hero-text, #why-nplin, #marketplace-header, #social-proof, #tech-header, #cta-card, #action-steps');
+    animatedElements.forEach((el) => {
       observer.observe(el);
     });
-    return () => observer.disconnect();
+    return () => animatedElements.forEach((el) => observer.unobserve(el));
   }, []);
 
   const rafIdRef = useRef(null);
@@ -234,42 +238,13 @@ const sendMessage = async () => {
     }
   };
 
-  const GlassCard = ({ children, className = "", blur = "backdrop-blur-3xl", ...props }) => (
+  const GlassCard = ({ children, className = "", ...props }) => (
     <div 
-      className={`relative overflow-hidden rounded-[32px] ${blur} bg-white/30 border border-white/60 shadow-[0_25px_80px_rgba(15,42,29,0.2)] ${className}`}
-      style={{
-        background: 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.25) 30%, rgba(255,255,255,0.1) 70%, rgba(255,255,255,0.05) 100%)',
-        backdropFilter: 'blur(10px) saturate(180%) brightness(120%) contrast(110%)',
-        WebkitBackdropFilter: 'blur(10px) saturate(180%) brightness(120%) contrast(110%)',
-        boxShadow: `
-          inset 0 2px 0 rgba(255,255,255,0.6),
-          inset 0 -1px 0 rgba(255,255,255,0.2),
-          0 25px 80px rgba(15,42,29,0.2),
-          0 0 0 1px rgba(255,255,255,0.1)
-        `,
-      }}
+      className={`relative rounded-3xl bg-white/50 border border-gray-200 shadow-xl transition-all duration-500 ease-in-out hover:shadow-2xl hover:shadow-[#40916c]/40 ${className}`}
       {...props}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-white/50 via-white/25 to-transparent opacity-90"></div>
-      <div className="absolute -top-24 -left-24 w-80 h-80 bg-white/70 rounded-full blur-3xl"></div>
-      <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-white/40 rounded-full blur-2xl"></div>
-      <div className="absolute top-8 right-8 w-32 h-32 bg-white/50 rounded-full blur-xl"></div>
-      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
-      <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-transparent via-white/60 to-transparent"></div>
-      <div className="absolute bottom-0 right-0 w-full h-1 bg-gradient-to-l from-transparent via-white/40 to-transparent"></div>
-      <div className="relative z-10">{children}</div>
+      <div className="relative h-full">{children}</div>
     </div>
-  );
-
-  const LiquidBlob = ({ className = "", size = "w-96 h-96", delay = 0, blur = "blur-3xl" }) => (
-    <div 
-      className={`absolute rounded-full opacity-40 blur-3xl animate-pulse ${size} ${className}`}
-      style={{
-        background: 'radial-gradient(circle, rgba(100, 160, 120, 0.5) 0%, rgba(160, 200, 170, 0.3) 40%, rgba(200, 230, 210, 0.15) 70%, transparent 90%)',
-        animationDelay: `${delay}s`,
-        animationDuration: '8s'
-      }}
-    ></div>
   );
 
   const Modal = ({ isOpen, onClose, data }) => {
@@ -278,24 +253,23 @@ const sendMessage = async () => {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div 
-          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          className="absolute inset-0 bg-gray-900/70 backdrop-blur-sm"
           onClick={onClose}
         ></div>
         <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-          <GlassCard className="p-8">
+          <div className="p-8 rounded-3xl bg-gradient-to-br from-white to-gray-100 shadow-2xl border border-gray-200/50">
             <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center space-x-4">
-                <div className="text-4xl">{data.icon}</div>
-                <div>
-                  <h2 className="text-3xl font-bold text-[#0F2A1D] font-[var(--font-secondary)]">
+              <div className="flex items-center">
+                <div className="text-black pr-6">
+                  <h2 className="text-2xl md:text-3xl font-bold">
                     {data.title}
                   </h2>
-                  <p className="text-[#375534] text-lg mt-2">{data.description}</p>
+                  <p className="text-gray-600 text-lg mt-2">{data.description}</p>
                 </div>
               </div>
               <button
                 onClick={onClose}
-                className="text-[#375534] hover:text-[#0F2A1D] transition-colors p-2"
+                className="text-gray-500 hover:text-black transition-colors p-2"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -305,27 +279,27 @@ const sendMessage = async () => {
 
             <div className="grid md:grid-cols-2 gap-8">
               <div>
-                <h3 className="text-xl font-bold text-[#0F2A1D] mb-4 font-[var(--font-secondary)]">
+                <h3 className="text-xl font-bold text-black mb-4">
                   Key Features
                 </h3>
                 <ul className="space-y-3">
                   {data.details.map((detail, index) => (
                     <li key={index} className="flex items-start space-x-3">
-                      <div className="w-2 h-2 bg-[#375534] rounded-full mt-2 flex-shrink-0"></div>
-                      <span className="text-[#375534] text-sm">{detail}</span>
+                      <div className="w-2 h-2 bg-[#40916c] rounded-full mt-2 flex-shrink-0"></div>
+                      <span className="text-gray-700 text-sm">{detail}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
               <div>
-                <h3 className="text-xl font-bold text-[#0F2A1D] mb-4 font-[var(--font-secondary)]">
+                <h3 className="text-xl font-bold text-black mb-4">
                   Benefits
                 </h3>
                 <ul className="space-y-3">
                   {data.benefits.map((benefit, index) => (
                     <li key={index} className="flex items-start space-x-3">
-                      <div className="w-6 h-6 bg-gradient-to-r from-[#375534] to-[#0F2A1D] rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-6 h-6 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] rounded-full flex items-center justify-center flex-shrink-0">
                         {/* FIX: Use FaCheck icon here instead of nested SVG */}
                         <FaCheck className="w-3 h-3 text-white" />
                       </div>
@@ -336,7 +310,58 @@ const sendMessage = async () => {
               </div>
             </div>
 
-          </GlassCard>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const ContactFormModal = ({ isOpen, onClose }) => {
+    if (!isOpen) return null;
+
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      // Placeholder for form submission logic
+      console.log("Contact form submitted");
+      onClose();
+      // You can add a success message here
+    };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div 
+          className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
+          onClick={onClose}
+        ></div>
+        <div className="relative w-full max-w-lg bg-gradient-to-br from-white to-gray-100 rounded-3xl shadow-2xl p-8 border border-gray-200/50">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-black">Contact Us</h2>
+            <button onClick={onClose} className="text-gray-500 hover:text-black p-2">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+              <input type="text" id="name" name="name" required className="w-full px-4 py-2 bg-white/80 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#40916c] outline-none transition" />
+            </div>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+              <input type="email" id="email" name="email" required className="w-full px-4 py-2 bg-white/80 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#40916c] outline-none transition" />
+            </div>
+            <div>
+              <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+              <textarea id="message" name="message" rows="4" required className="w-full px-4 py-2 bg-white/80 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#40916c] outline-none transition"></textarea>
+            </div>
+            <div className="flex justify-end">
+              <button 
+                type="submit"
+                className="px-8 py-3 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] text-black font-bold rounded-xl cursor-pointer hover:scale-105 transition-transform shadow-lg hover:shadow-xl"
+              >
+                Send Message
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     );
@@ -345,66 +370,59 @@ const sendMessage = async () => {
   // --- Main Render ---
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#E0F2E0] via-[#C8E6C8] to-[#B0DAB0] overflow-hidden relative">
-      {/* Animated Liquid Background Elements */}
-      <LiquidBlob className="top-0 right-0 transform translate-x-1/2 -translate-y-1/2" size="w-[400px] h-[400px]" blur="blur-2xl" />
-      <LiquidBlob className="bottom-0 left-0 transform -translate-x-1/2 translate-y-1/2" size="w-[500px] h-[500px]" delay={2} />
-      
+    <div className="min-h-screen bg-white overflow-hidden relative">
       {/* Navigation */}
       <nav className="relative z-20 py-6">
-        <GlassCard className="mx-auto max-w-7xl px-8 py-4">
+        <div className="mx-auto max-w-7xl px-4 sm:px-8 py-4 rounded-3xl bg-white/80 backdrop-blur-lg border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between nav-smooth">
-            <div className="text-2xl font-bold font-[var(--font-secondary)] text-[#0F2A1D]">
+            <div className="text-3xl font-bold text-black">
               NPLin
             </div>
-            <div className="hidden md:flex space-x-8 text-[#375534] font-[var(--font-secondary)]">
-              <a href="#marketplace" className="hover:text-[#0F2A1D] hover:scale-110 transition-transform duration-300 ease-out hover:font-bold">Marketplace</a>
-              <a href="#solutions" className="hover:text-[#0F2A1D] hover:scale-110 transition-transform duration-300 ease-out hover:font-bold">Solutions</a>
-              <a href="#technology" className="hover:text-[#0F2A1D] hover:scale-110 transition-transform duration-300 ease-out hover:font-bold">Technology</a>
-              <a href="#contact" className="hover:text-[#0F2A1D] hover:scale-110 transition-transform duration-300 ease-out hover:font-bold">Contact</a>
+            <div className="hidden md:flex space-x-8 text-gray-600 font-medium">
+              <a href="#marketplace" className="hover:text-black transition-colors">Marketplace</a>
+              <a href="#solutions" className="hover:text-black transition-colors">Solutions</a>
+              <a href="#technology" className="hover:text-black transition-colors">Technology</a>
+              <a href="#resources" className="hover:text-black transition-colors">Resources</a>
+              <a href="#contact" className="hover:text-black transition-colors">Contact</a>
             </div>
             <a href="/signup">
-              <GlassCard className="px-6 py-2 bg-gradient-to-r from-[#375534] to-[#0F2A1D] text-black cursor-pointer hover:scale-105 transition-transform">
+              <button className="px-6 py-2 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] text-black rounded-xl cursor-pointer hover:scale-105 transition-transform shadow-md hover:shadow-lg">
                 Get Started
-              </GlassCard>
+              </button>
             </a>
           </div>
-        </GlassCard>
+        </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="relative z-10 py-20">
-        <div className="max-w-7xl mx-auto px-8">
+      <section className="relative z-10 py-12 md:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-8">
               <div 
                 id="hero-text"
-                className={`transition-all duration-300 ${isVisible['hero-text'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                className={`transition-all duration-1000 ease-in-out ${isVisible['hero-text'] ? 'opacity-100 translate-y-0 scale-100 blur-0' : 'opacity-0 translate-y-10 scale-95 blur-sm'}`}
               >
-                <h1 className="text-6xl lg:text-7xl font-bold font-[var(--font-secondary)] text-[#0F2A1D] leading-[1.1] mb-6">
-                  The Future of 
-                  <span className="bg-gradient-to-r from-[#6B9071] to-[#375534] bg-clip-text text-transparent"> Distressed Debt</span>
-                  <span className="block">in Africa</span>
+                <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold text-black leading-tight mb-6">
+                  The Future of Distressed Assets in Africa:
+                  <span className="bg-gradient-to-r from-[#40916c] to-[#1b4332] bg-clip-text text-transparent"> Fast, Fair, and Transparent.</span>
                 </h1>
-                <p className="text-xl text-[#375534] leading-relaxed font-[var(--font-primary)] max-w-2xl">
-                  Transforming financial challenges into opportunities. NPLin bridges the gap between distressed assets and capital, creating a transparent ecosystem where everyone wins.
+                <p className="text-lg md:text-xl text-gray-600 leading-relaxed max-w-2xl">
+                  NPLin transforms non-performing loans and repossessed assets into liquid capital through a secure, data-driven marketplace, ensuring maximum recovery for lenders and fair resolutions for borrowers.
                 </p>
               </div>
               
               <div className="flex flex-col sm:flex-row gap-4">
-                <GlassCard className="px-10 py-5 bg-gradient-to-r from-[#375534] to-[#0F2A1D] text-black cursor-pointer hover:scale-110 transition-transform ease-out inline-flex items-center justify-center">
-                  <span className="font-bold tracking-wide">Explore Platform</span>
-                </GlassCard>
-                <a href="/signup">
-                  <GlassCard className="px-10 py-5 text-[#0F2A1D] cursor-pointer hover:scale-110 transition-transform ease-out inline-flex items-center justify-center ring-1 ring-[#0F2A1D]/20">
-                    <span className="font-bold tracking-wide">Get Started</span>
-                  </GlassCard>
+                <a href="#marketplace">
+                  <button className="px-10 py-4 text-black bg-white font-bold tracking-wide rounded-xl cursor-pointer hover:scale-105 transition-transform ease-out inline-flex items-center justify-center border border-gray-300 shadow-md hover:shadow-lg">
+                    Explore the Marketplace
+                  </button>
                 </a>
               </div>
             </div>
 
             <div className="relative">
-               <GlassCard className="p-0 h-96 overflow-hidden">
+               <GlassCard className={`p-0 h-96 overflow-hidden transition-all duration-1000 ease-in-out delay-200 ${isVisible['hero-text'] ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-10 scale-95'}`}>
                  <img
                     src="/web image.jpeg" 
                     alt="NPLin Platform Preview"
@@ -417,17 +435,17 @@ const sendMessage = async () => {
       </section>
 
       {/* Why NPLin Section */}
-      <section id="solutions" className="py-20 relative z-10">
-        <div className="max-w-7xl mx-auto px-8">
+      <section id="solutions" className="py-20 relative z-10 bg-gradient-to-br from-white to-gray-50/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 border-t border-gray-200/80 pt-20">
           <div 
             id="why-nplin"
-            className={`text-center mb-16 transition-all duration-300 ${isVisible['why-nplin'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+            className={`text-center mb-16 transition-all duration-1000 ease-in-out ${isVisible['why-nplin'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 blur-sm'}`}
           >
-            <h2 className="text-5xl font-bold font-[var(--font-secondary)] text-[#0F2A1D] mb-6">
-              Why NPLin is Your Essential Partner
+            <h2 className="text-4xl md:text-5xl font-bold text-black mb-6">
+              The NPLin Marketplace: Unlocking Value for All Stakeholders
             </h2>
-            <p className="text-xl text-[#375534] max-w-3xl mx-auto font-[var(--font-primary)]">
-              We're not just a platform; we're a complete solution bridging distressed assets with opportunity.
+            <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+              A transparent, efficient, and regulatory-compliant platform designed to resolve the global challenge of non-performing assets. We minimize the value destruction of traditional liquidation by providing a secure environment for competitive sales, ensuring better outcomes for every party involved.
             </p>
           </div>
 
@@ -435,43 +453,41 @@ const sendMessage = async () => {
             {[
               {
                 key: "financialInstitutions",
-                title: "Financial Institutions",
-                description: "Maximize recovery rates and turn dormant portfolios into liquid capital through our vetted investor network.",
-                  // FIX: Simplified icon usage
-                  icon: <FaBuilding className="w-12 h-12 text-[#6B9071]" />,
-                gradient: "from-[#6B9071]/20 to-[#AEC3B0]/20"
+                title: "Financial Institutions (Lenders)",
+                description: "Maximize recovery rates and turn dormant portfolios into liquid capital. Reduce holding costs and operational expenses.",
+                  icon: <FaBuilding className="w-12 h-12 text-[#40916c]" />,
+                gradient: "from-green-50 to-green-100"
               },
               {
                 key: "investors",
                 title: "Investors & Asset Managers", 
-                description: "Access curated NPL portfolios with ML-powered analytics for smarter, faster investment decisions.",
-                  // FIX: Simplified icon usage
-                  icon: <FaChartLine className="w-12 h-12 text-[#375534]" />,
-                gradient: "from-[#375534]/20 to-[#6B9071]/20"
+                description: "Access curated NPL inventories with transparent documentation and professional valuations. Make smarter, faster decisions with ML-powered analytics.",
+                  icon: <FaChartLine className="w-12 h-12 text-[#40916c]" />,
+                gradient: "from-blue-50 to-blue-100"
               },
               {
                 key: "borrowers",
-                title: "Borrowers",
-                description: "Find fair resolution through restructuring solutions and financial counseling for a fresh start.",
-                  // FIX: Simplified icon usage
-                  icon: <FaHandshake className="w-12 h-12 text-[#AEC3B0]" />,
-                gradient: "from-[#AEC3B0]/20 to-[#E3EED4]/20"
+                title: "Borrowers (Debt Resolution)",
+                description: "Avoid losing assets and regain control over your financial future. Access flexible repayment solutions and better settlement terms than forced repossession.",
+                  icon: <FaHandshake className="w-12 h-12 text-[#40916c]" />,
+                gradient: "from-yellow-50 to-yellow-100"
               }
             ].map((item, index) => (
                <GlassCard 
                 key={index} 
-                className={`p-8 hover:scale-105 transition-all duration-300 bg-gradient-to-br ${item.gradient} cursor-pointer`}
+                className={`p-8 hover:scale-105 cursor-pointer hover:bg-white/70 transition-all duration-700 ease-in-out ${isVisible['why-nplin'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                style={{ transitionDelay: `${index * 150}ms` }}
                 onClick={() => setActiveModal(item.key)}
                >
                  <div className="mb-4">{item.icon}</div>
-                 <h3 className="text-2xl font-bold font-[var(--font-secondary)] text-[#0F2A1D] mb-4">
+                 <h3 className="text-2xl font-bold text-black mb-4">
                     {item.title}
                  </h3>
-                 <p className="text-[#375534] leading-relaxed font-[var(--font-primary)]">
+                 <p className="text-gray-600 leading-relaxed">
                     {item.description}
                  </p>
-                 <button className="mt-4 text-[#0F2A1D] text-sm font-medium flex items-center">
-                    Learn More
+                 <button className="mt-4 text-black text-sm font-medium flex items-center group-hover:text-[#40916c]">
+                    {item.key === 'financialInstitutions' ? 'Learn How Lenders Win →' : item.key === 'investors' ? 'Access Investment Opportunities →' : 'Find Your Resolution →'}
                     {/* FIX: Use the React Icon directly */}
                     <MdOutlineArrowRight className="w-5 h-5 ml-2" />
                  </button>
@@ -482,135 +498,162 @@ const sendMessage = async () => {
       </section>
 
       {/* Marketplace Section */}
-      <section id="marketplace" className="py-20 relative z-10">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div className="mt-8">
-              <div className="relative h-[28rem] overflow-hidden rounded-[32px]">
-                <img
-                  src="/webimage2.jpeg"
-                  alt="NPLin Marketplace Platform"
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-5xl font-bold font-[var(--font-secondary)] text-[#0F2A1D] mb-6">
-                  The NPLin Marketplace
-                </h2>
-                <p className="text-xl text-[#375534] mb-6 font-[var(--font-primary)]">
-                  Unlock hidden value from recovered assets through secure, transparent bidding processes.
+      <section id="marketplace" className="py-20 relative z-10 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8">
+          <div 
+            id="marketplace-header"
+            className={`text-center mb-16 transition-all duration-1000 ease-in-out ${isVisible['marketplace-header'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 blur-sm'}`}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-black mb-6">
+              Curated Inventory: Assets Available on NPLin
+            </h2>
+            <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+              Each listing includes comprehensive due diligence reports, condition reports, and professional valuation data to ensure fully informed decision-making.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                title: "Real Estate",
+                description: "Residential, commercial, and land properties with detailed condition and mortgage default reports.",
+                icon: <FaBuilding className="w-10 h-10 text-[#40916c]" />
+              },
+              {
+                title: "Motor Vehicles",
+                description: "Cars, trucks, and specialty vehicles reclaimed due to loan default, featuring comprehensive inspection data.",
+                icon: <FaStore className="w-10 h-10 text-[#40916c]" />
+              },
+              {
+                title: "Business Assets",
+                description: "Machinery, equipment, and other collateral tied to commercial loans, accompanied by operational history and maintenance records.",
+                icon: <FaChartLine className="w-10 h-10 text-[#40916c]" />
+              }
+            ].map((asset, index) => (
+              <GlassCard 
+                key={index} 
+                className={`p-8 text-center transition-all duration-700 ease-in-out ${isVisible['marketplace-header'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                style={{ transitionDelay: `${index * 150}ms` }}>
+                <div className="flex justify-center mb-4">
+                  {asset.icon}
+                </div>
+                <h3 className="text-2xl font-bold text-black mb-4">
+                  {asset.title}
+                </h3>
+                <p className="text-gray-600">
+                  {asset.description}
                 </p>
-              </div>
-
-              <div className="space-y-6">
-                {[
-                  { metric: "24 months to 3-6 months", label: "Reduced sale timeframe" },
-                  { metric: "Higher recovery rates", label: "Than traditional methods" },
-                  { metric: "Blockchain secured", label: "Verified transactions" }
-                ].map((item, index) => (
-                  <GlassCard key={index} className="p-6 bg-white/5">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-[#6B9071] to-[#375534] rounded-full flex items-center justify-center text-white font-bold">
-                        <FaCheck /> {/* Using FaCheck for the tick */}
-                      </div>
-                      <div>
-                        <div className="font-bold text-[#0F2A1D] text-lg font-[var(--font-secondary)]">
-                          {item.metric}
-                        </div>
-                        <div className="text-[#375534] font-[var(--font-primary)]">
-                          {item.label}
-                        </div>
-                      </div>
-                    </div>
-                  </GlassCard>
-                ))}
-              </div>
+              </GlassCard>
+            ))}
+          </div>
+          <div 
+            id="social-proof"
+            className={`mt-24 text-center p-10 rounded-3xl bg-gradient-to-br from-gray-50 to-green-50/50 border border-gray-200 shadow-inner transition-all duration-1000 ease-in-out ${isVisible['social-proof'] ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+          >
+            <h3 className="text-3xl font-bold text-black mb-6">Social Proof & Quick Wins</h3>
+            <div className="grid md:grid-cols-3 gap-8 text-left">
+              <div className="p-6 bg-white/80 rounded-2xl border border-gray-200 shadow-xl text-black"><strong>Reduced Time-to-Sale:</strong> from 24 months to 3-6 months</div>
+              <div className="p-6 bg-white/80 rounded-2xl border border-gray-200 shadow-xl text-black"><strong>Higher Recovery Rates:</strong> than traditional liquidation methods</div>
+              <div className="p-6 bg-white/80 rounded-2xl border border-gray-200 shadow-xl text-black"><strong>Secure Transactions:</strong> Blockchain-secured and data-verified</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Technology Section */}
-      <section id="technology" className="py-20 relative z-10">
-        <div className="max-w-7xl mx-auto px-8 text-center">
+      <section id="technology" className="py-20 relative z-10 bg-gradient-to-br from-white to-gray-50/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 text-center">
           <div 
             id="tech-header"
-            className={`mb-16 transition-all duration-300 ${isVisible['tech-header'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+            className={`mb-16 transition-all duration-1000 ease-in-out ${isVisible['tech-header'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 blur-sm'}`}
           >
-            <h2 className="text-5xl font-bold font-[var(--font-secondary)] text-[#0F2A1D] mb-6">
-              Technology-Driven Excellence
+            <h2 className="text-4xl md:text-5xl font-bold text-black mb-6">
+              Technology-Driven Excellence: Secure & Data-Powered
             </h2>
-            <p className="text-xl text-[#375534] max-w-3xl mx-auto font-[var(--font-primary)]">
-              Powered by proprietary algorithms providing real-time market intelligence and predictive analytics.
+            <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+              Our platform is built on proprietary algorithms that provide real-time market intelligence and predictive analytics, ensuring integrity and speed across all transactions. We ensure Fair Valuation through professional, industry-standard appraisals at the point of listing.
             </p>
           </div>
 
-          <GlassCard className="p-16 bg-gradient-to-br from-[#0F2A1D]/5 to-[#375534]/5">
+          <div className="p-16 bg-gray-50 rounded-3xl border border-gray-200">
             <div className="grid md:grid-cols-3 gap-8">
                 {[
                   { 
                     key: "aiAnalytics",
-                    title: "AI Analytics", 
-                    icon: <FaRobot className="w-16 h-16 text-[#6B9071] mx-auto" />,
-                    desc: "Machine learning algorithms for smarter decisions" 
-                  },
-                  { 
-                    key: "realTimeData",
-                    title: "Real-time Data", 
-                    icon: <FaBolt className="w-16 h-16 text-[#375534] mx-auto" />,
-                    desc: "Live market intelligence and risk assessments" 
+                    title: "Tunu Ai Assistant", 
+                    icon: <FaRobot className="w-16 h-16 text-[#40916c] mx-auto" />,
+                    desc: "Get instant answers and guidance on distressed assets, market trends, and platform features with our intelligent virtual assistant." 
                   },
                   { 
                     key: "securePlatform",
                     title: "Secure Platform", 
-                    icon: <FaLock className="w-16 h-16 text-[#AEC3B0] mx-auto" />,
-                    desc: "Blockchain-secured transactions and data protection" 
+                    icon: <FaLock className="w-16 h-16 text-[#40916c] mx-auto" />,
+                    desc: "Blockchain-secured transactions, advanced escrow systems, and strict data protection to safeguard all parties and prevent post-sale disputes." 
+                  },
+                  { 
+                    key: "regulatoryCompliance",
+                    title: "Regulatory Compliance",
+                    icon: <FaCheck className="w-16 h-16 text-[#40916c] mx-auto" />,
+                    desc: "Full adherence to international accounting standards (IFRS) and local regulations, supported by legal advisor collaboration."
                   }
                 ].map((tech, index) => (
                   <div 
                     key={index} 
-                    className="text-center space-y-4 cursor-pointer hover:scale-105 transition-transform"
+                    className={`text-center space-y-4 cursor-pointer hover:scale-105 transition-all duration-700 ease-in-out ${isVisible['tech-header'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                    style={{ transitionDelay: `${index * 150}ms` }}
                     onClick={() => setActiveModal(tech.key)}
                   >
                     <div className="mb-4">{tech.icon}</div>
-                    <h3 className="text-2xl font-bold text-[#0F2A1D] font-[var(--font-secondary)]">
+                    <h3 className="text-2xl font-bold text-black">
                       {tech.title}
                     </h3>
-                    <p className="text-[#375534] font-[var(--font-primary)]">{tech.desc}</p>
-                    <button className="mt-4 text-[#0F2A1D] text-sm font-medium flex items-center justify-center">
-                      Learn More
-                      {/* FIX: Use the React Icon directly */}
-                      <MdOutlineArrowRight className="w-5 h-5 ml-2" />
-                    </button>
+                    <p className="text-gray-600">{tech.desc}</p>
                   </div>
                 ))}
             </div>
-          </GlassCard>
+          </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section id="contact" className="py-20 relative z-10">
-        <div className="max-w-4xl mx-auto px-8 text-center">
-          <GlassCard className="p-16 bg-gradient-to-br from-[#375534]/10 to-[#0F2A1D]/10">
-            <h2 className="text-5xl font-bold font-[var(--font-secondary)] text-[#0F2A1D] mb-6">
-            Ready to Transform Your Financial Strategy? <FaCheck className="inline-block text-[#375534]" />
+      <section id="contact" className="py-20 relative z-10 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 text-center">
+          <GlassCard 
+            id="cta-card"
+            className={`p-8 md:p-12 bg-gradient-to-br from-gray-50/50 to-green-50/20 transition-all duration-1000 ease-in-out ${isVisible['cta-card'] ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} shadow-2xl hover:shadow-[#40916c]/50`}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-black mb-4">
+              Ready to Transform Your Financial Strategy?
             </h2>
-            <p className="text-xl text-[#375534] mb-8 font-[var(--font-primary)]">
-              Join the future of distressed debt management. Whether you're optimizing portfolios, seeking opportunities, or need a fresh start.
+            <p className="text-lg md:text-xl text-gray-600 mb-12">
+              Join the marketplace that is transforming Africa’s financial challenges into sustainable growth. Whether you are optimizing portfolio recovery or seeking a fresh start by resolving debt.
             </p>
+            <div id="action-steps" className="grid md:grid-cols-3 gap-8 mb-12 text-left">
+              <div 
+                className={`p-6 bg-white rounded-xl border border-gray-200 shadow-lg hover:shadow-xl hover:shadow-[#40916c]/30 transition-all duration-700 ease-in-out ${isVisible['cta-card'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                style={{ transitionDelay: '200ms' }}
+              >
+                <h4 className="font-bold text-lg mb-2 text-black">List Assets</h4>
+                <p className="text-sm text-black">Easily upload your assets with professional support and set your desired sale terms.</p>
+              </div>
+              <div 
+                className={`p-6 bg-white rounded-xl border border-gray-200 shadow-lg hover:shadow-xl hover:shadow-[#40916c]/30 transition-all duration-700 ease-in-out ${isVisible['cta-card'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                style={{ transitionDelay: '350ms' }}
+              >
+                <h4 className="font-bold text-lg mb-2 text-black">Browse Opportunities</h4>
+                <p className="text-sm text-black">Discover verified, high-value assets with transparent documentation for investment.</p>
+              </div>
+              <div 
+                className={`p-6 bg-white rounded-xl border border-gray-200 shadow-lg hover:shadow-xl hover:shadow-[#40916c]/30 transition-all duration-700 ease-in-out ${isVisible['cta-card'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                style={{ transitionDelay: '500ms' }}
+              >
+                <h4 className="font-bold text-lg mb-2 text-black">Connect with Experts</h4>
+                <p className="text-sm text-black">Access our vetted network of legal and financial professionals for seamless resolution.</p>
+              </div>
+            </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="/signup">
-                <GlassCard className="px-12 py-4 bg-gradient-to-r from-[#375534] to-[#0F2A1D] text-black cursor-pointer hover:scale-105 transition-transform">
-                <span className="font-bold text-lg">Get Started</span>
-              </GlassCard>
-              </a>
-              <GlassCard className="px-12 py-4 text-[#0F2A1D] cursor-pointer hover:scale-105 transition-transform">
-                <span className="font-bold text-lg">Contact Us</span>
-              </GlassCard>
+              <button onClick={() => setIsContactModalOpen(true)} className="px-12 py-4 text-black bg-white font-bold text-lg rounded-xl cursor-pointer hover:scale-105 transition-transform border border-gray-300 shadow-xl hover:shadow-2xl">
+                Contact Us
+              </button>
             </div>
           </GlassCard>
         </div>
@@ -618,22 +661,22 @@ const sendMessage = async () => {
 
       {/* Footer */}
       <footer className="py-16 relative z-10">
-        <div className="max-w-7xl mx-auto px-8">
-          <GlassCard className="p-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8">
+          <div className="p-8 bg-gray-50 rounded-3xl border border-gray-200">
             <div className="text-center">
-              <div className="text-3xl font-bold text-[#0F2A1D] font-[var(--font-secondary)] mb-4">
+              <div className="text-3xl font-bold text-black mb-4">
                 NPLin
               </div>
-              <p className="text-[#375534] font-[var(--font-primary)]">
+              <p className="text-gray-600">
                 Transforming Africa's financial landscape, one asset at a time.
               </p>
-              <div className="flex justify-center space-x-8 mt-6 text-[#375534]">
-                <a href="#" className="hover:text-[#0F2A1D]">Privacy</a>
-                <a href="#" className="hover:text-[#0F2A1D]">Terms</a>
-                <a href="#" className="hover:text-[#0F2A1D]">Support</a>
+              <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-8 mt-6 text-gray-500">
+                <a href="#" className="hover:text-black">Privacy Policy</a>
+                <a href="#" className="hover:text-black">Terms of Service</a>
+                <a href="#" className="hover:text-black">Contact</a>
               </div>
             </div>
-          </GlassCard>
+          </div>
         </div>
       </footer>
 
@@ -641,17 +684,17 @@ const sendMessage = async () => {
       <div className="fixed bottom-6 right-6 z-50">
         {/* Chat Widget */}
         {isChatOpen && (
-  <div className="fixed bottom-20 right-6 w-80 bg-white rounded-2xl shadow-xl flex flex-col">
-    <div className="p-4 border-b font-bold text-[#0F2A1D]">NPLin Chatbot</div>
+  <div className="fixed bottom-24 right-4 w-[calc(100vw-2rem)] max-w-sm sm:w-80 bg-white rounded-2xl shadow-xl flex flex-col">
+    <div className="p-4 border-b font-bold text-black">NPLin Chatbot</div>
 
     <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 h-64">
       {messages.map((msg, index) => (
         <div
           key={index}
           className={`p-2 rounded-xl text-sm ${
-            msg.sender === 'user'
-              ? 'bg-[#375534] text-white self-end text-right'
-              : 'bg-gray-100 text-[#0F2A1D] self-start text-left'
+            msg.sender === 'user' ?
+              'bg-gradient-to-br from-[#d8f3dc] to-[#40916c] text-white self-end text-right' :
+              'bg-gray-100 text-black self-start text-left'
           }`}
         >
           {msg.text}
@@ -675,11 +718,11 @@ const sendMessage = async () => {
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         placeholder="Type your message..."
-        className="flex-1 px-2 outline-none text-[#0F2A1D]"
+        className="flex-1 px-2 outline-none text-black bg-transparent"
       />
       <button
         onClick={sendMessage}
-        className="p-2 text-[#0F2A1D] hover:text-[#375534]"
+        className="p-2 text-gray-600 hover:text-[#40916c]"
       >
         <IoSend />
       </button>
@@ -690,7 +733,7 @@ const sendMessage = async () => {
         {/* Chat Button */}
         <button
           onClick={() => setIsChatOpen(!isChatOpen)}
-          className={`w-16 h-16 rounded-full bg-gradient-to-r from-[#375534] to-[#0F2A1D] text-white flex items-center justify-center shadow-2xl transition-all duration-300 ease-in-out ${isHopping ? 'animate-hop' : ''} `}
+          className={`w-16 h-16 rounded-full bg-gradient-to-r from-[#d8f3dc] to-[#40916c] text-white flex items-center justify-center shadow-2xl transition-all duration-300 ease-in-out hover:scale-110 ${isHopping ? 'animate-hop' : ''} `}
         >
                   <FaRobot className="w-8 h-8" />
 
@@ -702,6 +745,10 @@ const sendMessage = async () => {
         isOpen={!!activeModal} 
         onClose={() => setActiveModal(null)} 
         data={activeModal ? modalData[activeModal] : null} 
+      />
+      <ContactFormModal
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
       />
     </div>
   );

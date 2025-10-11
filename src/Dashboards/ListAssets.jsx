@@ -13,8 +13,8 @@ const API_BASE_URL = 'http://127.0.0.1:8000';
 
 // Card component with glassmorphism style
 const GlassCard = ({ children, className = "", ...props }) => (
-    <div 
-      className={`relative overflow-hidden rounded-3xl bg-white/20 border border-white/30 shadow-xl ${className}`}
+    <div
+      className={`relative overflow-hidden rounded-3xl bg-white/20 border border-gray-200 shadow-lg ${className}`}
       style={{
         backdropFilter: 'blur(10px) saturate(180%)',
         WebkitBackdropFilter: 'blur(10px) saturate(180%)',
@@ -37,7 +37,7 @@ const InputField = ({ icon: Icon, label, field, type = "text", placeholder, valu
           value={value}
           onChange={onChange}
           disabled={disabled}
-          className="w-full pl-11 pr-4 py-3 bg-white/40 backdrop-blur-md rounded-xl border border-white/40 text-gray-800 placeholder-gray-600 outline-none focus:border-white/60 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full pl-11 pr-4 py-3 bg-white/80 backdrop-blur-md rounded-xl border border-gray-300 text-gray-800 placeholder-gray-500 outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
         />
       </div>
     </div>
@@ -46,14 +46,14 @@ const InputField = ({ icon: Icon, label, field, type = "text", placeholder, valu
 // Status Badge Component
 const getStatusBadge = (status) => {
     const statusConfig = {
-      'Listed': { color: 'bg-green-500/30 border-green-500/40 text-green-800' },
-      'Under Review': { color: 'bg-yellow-500/30 border-yellow-500/40 text-yellow-800' },
-      'Action Required': { color: 'bg-red-500/30 border-red-500/40 text-red-800' },
-      'Verified': { color: 'bg-blue-500/30 border-blue-500/40 text-blue-800' },
-      'Pending Approval': { color: 'bg-yellow-500/30 border-yellow-500/40 text-yellow-800' },
-      'Active': { color: 'bg-green-500/30 border-green-500/40 text-green-800' },
+      'Listed': { color: 'bg-green-100 border-green-200 text-green-800' },
+      'Under Review': { color: 'bg-yellow-100 border-yellow-200 text-yellow-800' },
+      'Action Required': { color: 'bg-red-100 border-red-200 text-red-800' },
+      'Verified': { color: 'bg-blue-100 border-blue-200 text-blue-800' },
+      'Pending Approval': { color: 'bg-yellow-100 border-yellow-200 text-yellow-800' },
+      'Active': { color: 'bg-green-100 border-green-200 text-green-800' },
     };
-    const config = statusConfig[status] || { color: 'bg-gray-500/30 border-gray-500/40 text-gray-800' };
+    const config = statusConfig[status] || { color: 'bg-gray-100 border-gray-200 text-gray-800' };
     return (
       <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md border ${config.color}`}>
         <span className="text-xs font-semibold">{status}</span>
@@ -69,9 +69,9 @@ const getStatusBadge = (status) => {
 
 
 const assetTypes = [
-    { value: 'VEHICLE', label: 'Vehicle', icon: Car, color: 'from-blue-400/30 to-blue-500/30' },
-    { value: 'PROPERTY', label: 'Property', icon: Home, color: 'from-green-400/30 to-green-500/30' },
-    { value: 'LAND', label: 'Land', icon: Maximize, color: 'from-yellow-400/30 to-yellow-500/30' }
+    { value: 'VEHICLE', label: 'Vehicle', icon: Car, color: 'from-blue-50 to-blue-100' },
+    { value: 'PROPERTY', label: 'Property', icon: Home, color: 'from-green-50 to-green-100' },
+    { value: 'LAND', label: 'Land', icon: Maximize, color: 'from-yellow-50 to-yellow-100' }
 ];
 
 // =========================================================================
@@ -105,7 +105,7 @@ const BorrowerLandingDashboard = ({ myAssets, myOffers, setCurrentPage }) => {
 
     const MetricCard = ({ title, value, Icon, color, action }) => (
         <GlassCard 
-            className="p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.03] transition-all"
+            className="p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.03] transition-all bg-white/50"
             onClick={action}
         >
             <div className="flex items-center justify-between">
@@ -123,7 +123,7 @@ const BorrowerLandingDashboard = ({ myAssets, myOffers, setCurrentPage }) => {
 
     return (
         <div className="space-y-10">
-            <div className="p-8 bg-white/40 backdrop-blur-xl rounded-3xl border border-white/40 shadow-2xl">
+            <div className="p-8 bg-gray-50/50 backdrop-blur-xl rounded-3xl border border-gray-200 shadow-xl">
             <h2 className="text-4xl font-bold text-gray-900 mb-2">Welcome Back, {user ? user.first_name : 'User'}!</h2>
             <div className="flex items-center gap-3 text-lg text-gray-700">
                     <CheckCircle className="w-5 h-5 text-green-600" />
@@ -167,7 +167,7 @@ const BorrowerLandingDashboard = ({ myAssets, myOffers, setCurrentPage }) => {
 
             <section>
                 <h3 className="text-2xl font-bold text-gray-800 mb-6">Loan Servicing Portal</h3>
-                <GlassCard className="p-6">
+                <GlassCard className="p-6 bg-white/50">
                     <div className="grid md:grid-cols-3 gap-6 items-center">
                         <div>
                             <p className="text-sm text-gray-600">Outstanding Loan Balance</p>
@@ -181,7 +181,7 @@ const BorrowerLandingDashboard = ({ myAssets, myOffers, setCurrentPage }) => {
                         </div>
                         <button
                             onClick={() => setCurrentPage('loan-servicing')}
-                            className="w-full px-6 py-3 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                            className="w-full px-6 py-3 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] hover:from-[#40916c] hover:to-[#d8f3dc] text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                         >
                             <CreditCard className="w-5 h-5" /> Manage Repayments
                         </button>
@@ -203,10 +203,10 @@ const AssetTypeCard = ({ type, setAssetType, setStep }) => {
           setAssetType(type.value);
           setStep(2);
         }}
-        className="group relative overflow-hidden rounded-3xl p-8 bg-white/20 backdrop-blur-xl border border-white/30 hover:bg-white/30 transition-all duration-500 hover:scale-105 hover:shadow-2xl"
+        className="group relative overflow-hidden rounded-3xl p-8 bg-white/50 backdrop-blur-xl border border-gray-200 hover:bg-white/80 transition-all duration-500 hover:scale-105 hover:shadow-2xl"
       >
         <div className={`absolute inset-0 bg-gradient-to-br ${type.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-        <div className="relative flex flex-col items-center gap-4">
+        <div className="relative flex flex-col items-center gap-4 text-center">
           <div className="p-6 bg-white/40 backdrop-blur-md rounded-2xl border border-white/40 group-hover:scale-110 transition-transform duration-300">
             <Icon className="w-16 h-16 text-gray-700" />
           </div>
@@ -291,14 +291,14 @@ const AssetFormSection = ({ step, setStep, formData, setFormData, uploadedImages
                 {[1, 2, 3].map((stepNum) => (
                     <React.Fragment key={stepNum}>
                     <div className={`flex items-center gap-3 px-6 py-3 rounded-full backdrop-blur-md border transition-all duration-300 ${
-                        step >= stepNum 
-                        ? 'bg-white/40 border-white/60 shadow-lg' 
-                        : 'bg-white/20 border-white/30'
+                        step >= stepNum
+                        ? 'bg-white/80 border-gray-300 shadow-lg'
+                        : 'bg-white/50 border-gray-200'
                     }`}>
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-all ${
-                        step >= stepNum 
-                            ? 'bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] text-gray-800' 
-                            : 'bg-white/30 text-gray-600'
+                        step >= stepNum
+                            ? 'bg-gradient-to-r from-[#d8f3dc] to-[#40916c] text-white'
+                            : 'bg-gray-200 text-gray-600'
                         }`}>
                         {step > stepNum ? <CheckCircle className="w-5 h-5" /> : stepNum}
                         </div>
@@ -315,8 +315,8 @@ const AssetFormSection = ({ step, setStep, formData, setFormData, uploadedImages
             {/* Step 1: Select Asset Type */}
             {step === 1 && (
                 <div className="space-y-8">
-                <div className="text-center mb-8">
-                    <h2 className="text-4xl font-bold text-gray-800 mb-4">List Your Distressed Asset</h2>
+                <div className="text-center mb-12">
+                    <h2 className="text-4xl font-bold text-gray-800 mb-4">List Your Asset</h2>
                     <p className="text-xl text-gray-700">Choose the type of asset you want to list for relief financing</p>
                 </div>
                 <div className="grid md:grid-cols-3 gap-6">
@@ -330,12 +330,12 @@ const AssetFormSection = ({ step, setStep, formData, setFormData, uploadedImages
             {/* Step 2: Asset Details */}
             {step === 2 && (
                 <div className="space-y-8">
-                <div className="text-center mb-8">
+                <div className="text-center mb-12">
                     <h2 className="text-4xl font-bold text-gray-800 mb-4">Asset Details</h2>
                     <p className="text-xl text-gray-700">Provide information about your {assetTypes.find(t => t.value === formData.collateral_type)?.label.toLowerCase()}</p>
                 </div>
 
-                <GlassCard className="p-8 shadow-2xl">
+                <GlassCard className="p-8 shadow-2xl bg-white/50">
                     <div className="grid md:grid-cols-2 gap-6">
                     {/* Common Fields */}
                     <InputField icon={FileText} label="Primary Identifier" field="primary_identifier" placeholder="Unique identifier (e.g., Title/Reg. No.)" value={formData.primary_identifier} onChange={(e) => handleInputChange('primary_identifier', e.target.value)} />
@@ -346,10 +346,10 @@ const AssetFormSection = ({ step, setStep, formData, setFormData, uploadedImages
                     </div>
 
                     <div className="flex gap-4 mt-8">
-                    <button onClick={() => setStep(1)} className="flex-1 px-6 py-3 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl">
+                    <button onClick={() => setStep(1)} className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl border border-gray-300 transition-all duration-300 shadow-lg hover:shadow-xl">
                         Back
                     </button>
-                    <button onClick={() => setStep(3)} className="flex-1 px-6 py-3 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-bold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl">
+                    <button onClick={() => setStep(3)} className="flex-1 px-6 py-3 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] hover:from-[#40916c] hover:to-[#d8f3dc] text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl">
                         Continue
                     </button>
                     </div>
@@ -360,15 +360,15 @@ const AssetFormSection = ({ step, setStep, formData, setFormData, uploadedImages
             {/* Step 3: Images & Submit */}
             {step === 3 && (
                 <div className="space-y-8">
-                <div className="text-center mb-8">
+                <div className="text-center mb-12">
                     <h2 className="text-4xl font-bold text-gray-800 mb-4">Upload Images & Documents</h2>
                     <p className="text-xl text-gray-700">Add photos and required documents to complete the listing process.</p>
                 </div>
 
-                <GlassCard className="p-8 shadow-2xl">
+                <GlassCard className="p-8 shadow-2xl bg-white/50">
                     <div className="mb-8">
                     <label className="block cursor-pointer">
-                        <div className="border-2 border-dashed border-white/40 rounded-2xl p-12 bg-white/10 hover:bg-white/20 transition-all duration-300 text-center">
+                        <div className="border-2 border-dashed border-gray-300 rounded-2xl p-12 bg-gray-50/50 hover:bg-gray-100 transition-all duration-300 text-center">
                         <Upload className="w-16 h-16 mx-auto mb-4 text-gray-600" />
                         <p className="text-lg font-semibold text-gray-800 mb-2">Click to upload images (Title, Logbook, Photos)</p>
                         <p className="text-sm text-gray-600">PNG, JPG, PDF up to 10MB each</p>
@@ -383,8 +383,8 @@ const AssetFormSection = ({ step, setStep, formData, setFormData, uploadedImages
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {uploadedImages.map((imageObj, index) => (
                             <div key={index} className="relative group">
-                            {imageObj.file.type.includes('pdf') 
-                                ? <FileText className="w-full h-32 object-cover rounded-xl border border-white/40 p-8 text-gray-600 bg-white/40" />
+                            {imageObj.file.type.includes('pdf')
+                                ? <FileText className="w-full h-32 object-cover rounded-xl border border-gray-300 p-8 text-gray-600 bg-white/80" />
                                 : <img src={imageObj.preview} alt={`Upload ${index + 1}`} className="w-full h-32 object-cover rounded-xl border border-white/40" />
                             }
                             <button onClick={() => removeImage(index)} className="absolute top-2 right-2 p-2 bg-red-500/80 hover:bg-red-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -397,10 +397,10 @@ const AssetFormSection = ({ step, setStep, formData, setFormData, uploadedImages
                     )}
 
                     <div className="flex gap-4">
-                    <button onClick={() => setStep(2)} className="flex-1 px-6 py-3 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl">
+                    <button onClick={() => setStep(2)} className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl border border-gray-300 transition-all duration-300 shadow-lg hover:shadow-xl">
                         Back
                     </button>
-                    <button onClick={handleSubmit} className="flex-1 px-6 py-3 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-bold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                    <button onClick={handleSubmit} className="flex-1 px-6 py-3 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] hover:from-[#40916c] hover:to-[#d8f3dc] text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
                         <CheckCircle className="w-5 h-5" />
                         Submit Asset
                     </button>
@@ -420,7 +420,7 @@ const AssetManagementView = ({ myAssets, setCurrentPage, setFormData, setAssetTy
         const { icon: Icon } = assetTypeDetails[asset.type];
     
         return (
-          <GlassCard className="group relative overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl">
+          <GlassCard className="group relative overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl bg-white/50">
             <div className="relative">
               <div className="relative h-56 overflow-hidden rounded-t-3xl">
                 <img 
@@ -457,14 +457,14 @@ const AssetManagementView = ({ myAssets, setCurrentPage, setFormData, setAssetTy
                   </div>
                 </div>
     
-                <div className="flex items-center justify-between pt-4 border-t border-white/30">
-                  <button className="flex items-center gap-2 px-4 py-2 bg-white/40 backdrop-blur-sm rounded-lg border border-white/30 text-sm font-medium text-gray-700 hover:bg-white/60 transition-all">
+                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                  <button className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-all">
                     <Eye className="w-4 h-4" />
                     View Details
                   </button>
                   <button 
                     onClick={() => setCurrentPage('offers-review')}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#c8d5c0]/80 to-[#b8cdb0]/80 hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] hover:from-[#40916c] hover:to-[#d8f3dc] text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
                   >
                     <MessageSquare className="w-4 h-4" />
                     Offers
@@ -485,7 +485,7 @@ const AssetManagementView = ({ myAssets, setCurrentPage, setFormData, setAssetTy
                         setStep(1); 
                         setCurrentPage('asset-registration');
                     }}
-                    className="px-6 py-3 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-bold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2"
+                    className="px-6 py-3 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] hover:from-[#40916c] hover:to-[#d8f3dc] text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2"
                 >
                     <Upload className="w-5 h-5" />
                     List New Asset
@@ -520,8 +520,8 @@ const OffersReviewDashboard = ({ myOffers, loading, error, onAccept, onDecline, 
         const config = statusConfig[offer.status];
 
         return (
-            <GlassCard className="p-6">
-                <div className="flex justify-between items-start mb-4 border-b border-white/40 pb-3">
+            <GlassCard className="p-6 bg-white/50">
+                <div className="flex justify-between items-start mb-4 border-b border-gray-200 pb-3">
                 <h3 className="text-xl font-bold text-gray-800">Offer on: {offer.asset_title || 'N/A'}</h3>
                 <span className={`font-semibold ${config.color}`}>{offer.status}</span>
                 </div>
@@ -542,7 +542,7 @@ const OffersReviewDashboard = ({ myOffers, loading, error, onAccept, onDecline, 
                 </div>
 
                 {offer.status === 'PENDING' && (
-                    <div className="mt-4 pt-4 border-t border-white/40 flex flex-col sm:flex-row gap-3">
+                    <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col sm:flex-row gap-3">
 
                         <button 
                             onClick={() => onAccept(offer.id)}
@@ -591,7 +591,7 @@ const OffersReviewDashboard = ({ myOffers, loading, error, onAccept, onDecline, 
                             ))}
                         </div>
                     ) : (
-                        <GlassCard className="p-10 text-center">
+                        <GlassCard className="p-10 text-center bg-white/50">
                             <h3 className="text-2xl font-bold text-gray-800">No Offers Yet</h3>
                             <p className="text-gray-600 mt-2">You have not received any offers on your assets.</p>
                         </GlassCard>
@@ -624,15 +624,15 @@ const CounterOfferModal = ({ offer, onClose, onSubmit }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <GlassCard className="w-full max-w-md p-8">
+            <GlassCard className="w-full max-w-md p-8 bg-white/90">
                 <h3 className="text-2xl font-bold text-gray-800 mb-6">Make Counter Offer</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <InputField icon={DollarSign} label="Counter Amount (KES)" name="offer_amount_kes" type="number" value={counterData.offer_amount_kes} onChange={handleChange} />
                     <InputField icon={TrendingUp} label="Proposed Interest Rate (%)" name="proposed_interest_rate" type="number" step="0.1" value={counterData.proposed_interest_rate} onChange={handleChange} />
                     <InputField icon={MessageSquare} label="Your Comment" name="borrower_comment" type="text" value={counterData.borrower_comment} onChange={handleChange} />
                     <div className="flex gap-3 pt-4">
-                        <button type="button" onClick={onClose} className="flex-1 py-3 bg-white/40 hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40">Cancel</button>
-                        <button type="submit" className="flex-1 py-3 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] text-gray-800 font-bold rounded-xl">Submit Counter</button>
+                        <button type="button" onClick={onClose} className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl border border-gray-300">Cancel</button>
+                        <button type="submit" className="flex-1 py-3 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] hover:from-[#40916c] hover:to-[#d8f3dc] text-white font-bold rounded-xl">Submit Counter</button>
                     </div>
                 </form>
             </GlassCard>
@@ -645,9 +645,9 @@ const LoanServicingPortal = () => {
     
     const PaymentHistoryTable = ({ history }) => (
         <div className="overflow-x-auto">
-            <table className="min-w-full bg-white/40 backdrop-blur-md rounded-xl border border-white/40">
+            <table className="min-w-full bg-white/80 backdrop-blur-md rounded-xl border border-gray-200">
                 <thead>
-                    <tr className="text-left text-gray-800 border-b border-white/40">
+                    <tr className="text-left text-gray-800 border-b border-gray-200">
                         <th className="p-4">Date</th>
                         <th className="p-4">Amount Paid</th>
                         <th className="p-4">Principal</th>
@@ -656,7 +656,7 @@ const LoanServicingPortal = () => {
                 </thead>
                 <tbody>
                     {history.map((item, index) => (
-                        <tr key={index} className="border-b border-white/20 last:border-b-0 hover:bg-white/50">
+                        <tr key={index} className="border-b border-gray-200/50 last:border-b-0 hover:bg-gray-100/50">
                             <td className="p-4 text-gray-700">{item.date}</td>
                             <td className="p-4 font-semibold text-green-700">KSh {item.amount.toLocaleString()}</td>
                             <td className="p-4 text-gray-600">KSh {item.principal.toLocaleString()}</td>
@@ -675,16 +675,16 @@ const LoanServicingPortal = () => {
                 Manage your active loan, track repayment history, and initiate payments.
             </p>
 
-            <GlassCard className="p-8">
+            <GlassCard className="p-8 bg-white/50">
                 <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
                     <CheckCircle className="w-6 h-6 text-green-600" /> Active Loan Summary
                 </h3>
                 <div className="grid md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-white/40 rounded-xl">
+                    <div className="p-4 bg-white/80 rounded-xl border border-gray-200">
                         <p className="text-sm text-gray-600">Principal Balance</p>
                         <p className="text-3xl font-extrabold text-red-600">KSh 0</p>
                     </div>
-                    <div className="p-4 bg-white/40 rounded-xl">
+                    <div className="p-4 bg-white/80 rounded-xl border border-gray-200">
                         <p className="text-sm text-gray-600">Next Payment Due</p>
                         <p className="text-2xl font-bold text-gray-800">N/A</p>
                     </div>
@@ -701,7 +701,7 @@ const LoanServicingPortal = () => {
 
             </GlassCard>
 
-            <GlassCard className="p-8">
+            <GlassCard className="p-8 bg-white/50">
                 <h3 className="text-2xl font-bold text-gray-800 mb-6">Make a Payment</h3>
                 <div className="grid md:grid-cols-2 gap-6">
                     <InputField 
@@ -714,14 +714,14 @@ const LoanServicingPortal = () => {
                         onChange={() => {}}
                     />
                     <button 
-                        className="self-end px-6 py-3 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-bold rounded-xl border border-white/40 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                        className="self-end px-6 py-3 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] hover:from-[#40916c] hover:to-[#d8f3dc] text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                     >
                         <CreditCard className="w-5 h-5" /> Initiate Payment (M-Pesa/Bank)
                     </button>
                 </div>
             </GlassCard>
 
-            <GlassCard className="p-8">
+            <GlassCard className="p-8 bg-white/50">
                 <h3 className="text-2xl font-bold text-gray-800 mb-6">Repayment History</h3>
                 <PaymentHistoryTable history={[]} />
             </GlassCard>
@@ -833,9 +833,9 @@ const ProfileAndSettings = () => {
                 Manage your personal data, KYC status, and application details.
             </p>
 
-            <GlassCard className="p-8">
+            <GlassCard className="p-8 bg-white/50">
                 <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                    <User className="w-6 h-6 text-[#6B9071]" /> My Profile & Contact Details
+                    <User className="w-6 h-6 text-[#40916c]" /> My Profile & Contact Details
                 </h3>
                 <div className="grid md:grid-cols-2 gap-6">
                 <InputField icon={User} label="Full Name" field="name" value={editedData.name} onChange={(e) => handleInputChange('name', e.target.value)} disabled={!isEditing} />
@@ -846,7 +846,7 @@ const ProfileAndSettings = () => {
                 
                 {!isEditing ? (
                     <button 
-                        className="mt-8 px-6 py-3 bg-gradient-to-r from-[#b8cdb0] to-[#a8bd9f] hover:from-[#a8bd9f] hover:to-[#99af8d] text-gray-800 font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                        className="mt-8 px-6 py-3 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] hover:from-[#40916c] hover:to-[#d8f3dc] text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
                         onClick={() => setIsEditing(true)}
                     >
                         Edit Profile
@@ -854,13 +854,13 @@ const ProfileAndSettings = () => {
                 ) : (
                     <div className="flex gap-4 mt-8">
                         <button 
-                            className="px-6 py-3 bg-green-600/80 hover:bg-green-700 text-white font-semibold rounded-xl transition-all shadow-md"
+                            className="px-6 py-3 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] hover:from-[#40916c] hover:to-[#d8f3dc] text-white font-bold rounded-xl shadow-lg hover:shadow-xl"
                             onClick={handleSave}
                         >
                             Save Changes
                         </button>
                         <button 
-                            className="px-6 py-3 bg-white/40 backdrop-blur-md hover:bg-white/60 text-gray-800 font-semibold rounded-xl border border-white/40 transition-all"
+                            className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl border border-gray-300 transition-all"
                             onClick={handleCancel}
                         >
                             Cancel
@@ -873,20 +873,20 @@ const ProfileAndSettings = () => {
                 </p>
             </GlassCard>
 
-            <GlassCard className="p-8">
+            <GlassCard className="p-8 bg-white/50">
                 <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                    <FileText className="w-6 h-6 text-[#6B9071]" /> KYC/KYB Documents Status
+                    <FileText className="w-6 h-6 text-[#40916c]" /> KYC/KYB Documents Status
                 </h3>
                 <div className="space-y-4">
-                    <div className="flex justify-between items-center p-4 bg-white/40 rounded-xl">
+                    <div className="flex justify-between items-center p-4 bg-white/80 rounded-xl border border-gray-200">
                         <span className="font-semibold text-gray-700">National ID Copy</span>
                         {getStatusBadge('Verified')}
                     </div>
-                    <div className="flex justify-between items-center p-4 bg-white/40 rounded-xl">
+                    <div className="flex justify-between items-center p-4 bg-white/80 rounded-xl border border-gray-200">
                         <span className="font-semibold text-gray-700">Proof of Address</span>
                         {getStatusBadge('Under Review')}
                     </div>
-                    <div className="flex justify-between items-center p-4 bg-white/40 rounded-xl">
+                    <div className="flex justify-between items-center p-4 bg-white/80 rounded-xl border border-gray-200">
                         <span className="font-semibold text-gray-700">Income Verification</span>
                         {getStatusBadge('Action Required')}
                     </div>
@@ -1143,10 +1143,10 @@ export default function BorrowerDashboard({ setRole }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#d4e4d0] via-[#c8d5c0] to-[#b8cdb0]">
+    <div className="min-h-screen bg-white">
       
       {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/30 border-b border-white/30 shadow-lg">
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-12">
@@ -1156,7 +1156,7 @@ export default function BorrowerDashboard({ setRole }) {
                 <button 
                   key={key}
                   onClick={() => setCurrentPage(key)} 
-                  className={`font-medium transition-colors ${currentPage === key ? 'text-gray-900 font-bold border-b-2 border-gray-800' : 'text-gray-700 hover:text-gray-900'}`}
+                  className={`font-medium transition-colors ${currentPage === key ? 'text-gray-900 font-bold border-b-2 border-[#40916c]' : 'text-gray-700 hover:text-gray-900'}`}
                 >
                   {label}
                 </button>
@@ -1165,7 +1165,7 @@ export default function BorrowerDashboard({ setRole }) {
             </div>
             <button
               onClick={handleLogout}
-              className="px-6 py-2.5 bg-red-500/20 backdrop-blur-md hover:bg-red-500/30 text-red-800 font-semibold rounded-xl border border-red-500/30 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2">
+              className="px-6 py-2.5 bg-red-500/10 backdrop-blur-md hover:bg-red-500/20 text-red-800 font-semibold rounded-xl border border-red-500/20 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2">
               <LogOut className="w-5 h-5" /> Logout
 
             </button>
@@ -1180,16 +1180,16 @@ export default function BorrowerDashboard({ setRole }) {
       {/* Success Modal */}
       {showSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <GlassCard className="p-12 max-w-md mx-4 shadow-2xl animate-scale-in">
+          <GlassCard className="p-12 max-w-md mx-4 shadow-2xl animate-scale-in bg-white/80">
             <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle className="w-12 h-12 text-white" />
               </div>
               <h3 className="text-3xl font-bold text-gray-800 mb-4">Asset Listed Successfully!</h3>
               <p className="text-gray-600 mb-8">Your asset has been submitted for review. You'll receive notifications when investors show interest.</p>
               <button
                 onClick={() => setShowSuccess(false)}
-                className="px-8 py-3 bg-gradient-to-r from-[#c8d5c0] to-[#b8cdb0] hover:from-[#b8cdb0] hover:to-[#a8bd9f] text-gray-800 font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="px-8 py-3 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] hover:from-[#40916c] hover:to-[#d8f3dc] text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
               >
                 Close
               </button>
