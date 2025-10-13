@@ -335,7 +335,7 @@ export default function MyDocumentsPage({ setRole }) {
             const { url, storage_path } = await presignedUrlRes.json();
 
             // 2. Upload to S3
-            const uploadRes = await fetch(url, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
+            const uploadRes = await fetch(url, { method: 'PUT', body: file });
             if (!uploadRes.ok) throw new Error('File upload failed.');
 
             const payload = { storage_path, document_type: documentType };
@@ -366,13 +366,13 @@ export default function MyDocumentsPage({ setRole }) {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#E0F2E0] via-[#C8E6C8] to-[#B0DAB0]">
+        <div className="min-h-screen bg-white">
             <div className="flex min-h-screen">
                 <ModernSidebar userRole="borrower" onLogout={handleLogout} />
 
                 <main className="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-80 lg:mr-0 mr-20 transition-all duration-300">
-                    <GlassCard className="p-6 lg:p-10 w-full min-h-[85vh]">
-                        <header className="flex justify-between items-center pb-4 mb-8 border-b border-[#6B9071]/30">
+                    <div className="p-0 lg:p-4 w-full min-h-[85vh]">
+                        <header className="flex justify-between items-center pb-4 mb-8">
                             <div>
                                 <h1 className="text-4xl font-bold text-[#1a3d2e]">My Documents</h1>
                                 <p className="mt-2 text-lg text-[#4a6850]">View and manage your uploaded documents.</p>
@@ -382,7 +382,7 @@ export default function MyDocumentsPage({ setRole }) {
                                     setUploadError(null);
                                     setShowAddModal(true);
                                 }}
-                                className="px-6 py-3 bg-gradient-to-r from-[#6B9071] to-[#4a6850] text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2">
+                                className="px-6 py-3 bg-gradient-to-r from-[#d8f3dc] to-[#40916c] text-black font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2 hover:scale-105">
                                 <Plus className="w-5 h-5" /> Add Document
                             </button>
                         </header>
@@ -404,7 +404,7 @@ export default function MyDocumentsPage({ setRole }) {
                                 )}
                             </div>
                         )}
-                    </GlassCard>
+                    </div>
                 </main>
             </div>
 

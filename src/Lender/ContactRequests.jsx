@@ -13,23 +13,15 @@ const API_BASE_URL = 'http://127.0.0.1:8000';
 // =========================================================================
 
 const GlassCard = ({ children, className = "", ...props }) => (
-  <div 
-    className={`relative overflow-hidden rounded-3xl bg-white/40 border border-white/60 shadow-xl ${className}`}
-    style={{
-      background: 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.3) 100%)',
-      backdropFilter: 'blur(20px) saturate(180%)',
-    }}
-    {...props}
-  >
-    <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-80"></div>
+  <div className={`relative overflow-hidden rounded-3xl bg-white border border-gray-200 shadow-lg ${className}`} {...props}>
     <div className="relative z-10">{children}</div>
   </div>
 );
 
 const StatusBadge = ({ status }) => {
     const statusConfig = {
-        'PENDING': { icon: RefreshCw, color: 'bg-yellow-100 text-yellow-800 border-yellow-300' },
-        'CONTACTED': { icon: CheckCircle, color: 'bg-green-100 text-green-800 border-green-300' },
+        'PENDING': { icon: RefreshCw, color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+        'CONTACTED': { icon: CheckCircle, color: 'bg-green-100 text-green-800 border-green-200' },
     };
     const config = statusConfig[status] || { icon: Contact, color: 'bg-gray-100 text-gray-800 border-gray-300' };
     const Icon = config.icon;
@@ -42,34 +34,34 @@ const StatusBadge = ({ status }) => {
 };
 
 const ContactRequestCard = ({ request }) => (
-    <GlassCard className="p-6">
+    <GlassCard className="p-6 bg-gray-50/50 hover:bg-white hover:shadow-xl transition-all">
         <div className="flex justify-between items-start mb-4">
-            <h3 className="text-xl font-bold text-[#1a3d2e] flex items-center gap-2">
+            <h3 className="text-xl font-bold text-black flex items-center gap-2">
                 <Briefcase className="w-5 h-5" />
                 Request for: {request.asset_identifier}
             </h3>
             <StatusBadge status={request.status} />
         </div>
         <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-white/30 rounded-xl">
-                <Contact className="w-5 h-5 text-[#4a6850]" />
+            <div className="flex items-center gap-3 p-3 bg-white rounded-xl border">
+                <Contact className="w-5 h-5 text-gray-500" />
                 <div>
-                    <p className="text-sm text-[#4a6850]">Buyer Name</p>
-                    <p className="font-semibold text-[#1a3d2e]">{request.buyer_name}</p>
+                    <p className="text-sm text-gray-500">Buyer Name</p>
+                    <p className="font-semibold text-black">{request.buyer_name}</p>
                 </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-white/30 rounded-xl">
-                <Mail className="w-5 h-5 text-[#4a6850]" />
+            <div className="flex items-center gap-3 p-3 bg-white rounded-xl border">
+                <Mail className="w-5 h-5 text-gray-500" />
                 <div>
-                    <p className="text-sm text-[#4a6850]">Buyer Email</p>
-                    <p className="font-semibold text-[#1a3d2e]">{request.buyer_email}</p>
+                    <p className="text-sm text-gray-500">Buyer Email</p>
+                    <p className="font-semibold text-black">{request.buyer_email}</p>
                 </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-white/30 rounded-xl">
-                <Clock className="w-5 h-5 text-[#4a6850]" />
+            <div className="flex items-center gap-3 p-3 bg-white rounded-xl border">
+                <Clock className="w-5 h-5 text-gray-500" />
                 <div>
-                    <p className="text-sm text-[#4a6850]">Request Date</p>
-                    <p className="font-semibold text-[#1a3d2e]">{new Date(request.created_at).toLocaleString()}</p>
+                    <p className="text-sm text-gray-500">Request Date</p>
+                    <p className="font-semibold text-black">{new Date(request.created_at).toLocaleString()}</p>
                 </div>
             </div>
         </div>

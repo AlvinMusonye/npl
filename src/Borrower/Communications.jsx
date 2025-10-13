@@ -150,12 +150,12 @@ export default function CommunicationsPage({ setRole }) {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#E0F2E0] via-[#C8E6C8] to-[#B0DAB0]">
+        <div className="min-h-screen bg-white">
             <div className="flex min-h-screen">
                 <ModernSidebar userRole="borrower" onLogout={handleLogout} />
 
                 <main className="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-80 lg:mr-0 mr-20 transition-all duration-300">
-                    <GlassCard className="w-full h-[88vh] flex">
+                    <div className="w-full h-[88vh] flex bg-gray-50 rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
                         {/* Conversations List */}
                         <div className="w-1/3 border-r border-white/30 flex flex-col">
                             <div className="p-4 border-b border-white/30">
@@ -218,7 +218,7 @@ export default function CommunicationsPage({ setRole }) {
                                 </div>
                             )}
                         </div>
-                    </GlassCard>
+                    </div>
                 </main>
             </div>
         </div>
