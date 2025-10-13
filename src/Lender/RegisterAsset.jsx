@@ -104,6 +104,7 @@ export default function RegisterAssetPage({ setRole }) {
         details: {},
     });
     const [uploadedImages, setUploadedImages] = useState([]);
+    const [proofOfOwnershipDocs, setProofOfOwnershipDocs] = useState([]);
     const [showSuccess, setShowSuccess] = useState(false);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -134,6 +135,14 @@ export default function RegisterAssetPage({ setRole }) {
         setUploadedImages(prev => [...prev, ...newFiles]);
     };
 
+    const handleOwnershipDocsUpload = (e) => {
+        const newFiles = Array.from(e.target.files).map(file => ({
+            file: file,
+            preview: URL.createObjectURL(file)
+        }));
+        setProofOfOwnershipDocs(prev => [...prev, ...newFiles]);
+    };
+
     const removeImage = (index) => {
         setUploadedImages(prev => prev.filter((_, i) => i !== index));
     };
@@ -148,43 +157,60 @@ export default function RegisterAssetPage({ setRole }) {
             return;
         }
 
+        // Step 1: A helper function to upload a single file and get its URL
+        const uploadFile = async (file, documentType) => {
+            const filePayload = new FormData();
+            filePayload.append('file', file);
+            filePayload.append('document_type', documentType);
+
+            const response = await fetch(`${API_BASE_URL}/api/documents/upload/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+                body: filePayload,
+            });
+
+            if (!response.ok) throw new Error(`Failed to upload ${file.name}`);
+            const result = await response.json();
+            return result.file_url; // Correctly access the file_url from the response
+        };
+
         try {
-            const imagePaths = await Promise.all(
-                uploadedImages.map(async (imageObj) => {
-                    const presignedUrlResponse = await fetch(`${API_BASE_URL}/api/documents/generate-presigned-url/`, {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ file_name: imageObj.file.name, file_type: imageObj.file.type }),
-                    });
-                    if (!presignedUrlResponse.ok) throw new Error('Failed to get presigned URL.');
-                    const { url, storage_path } = await presignedUrlResponse.json();
-
-                    const createRecordResponse = await fetch(`${API_BASE_URL}/api/documents/create-record/`, {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ storage_path: storage_path, document_type: 'ASSET_IMAGE' }),
-                    });
-                    if (!createRecordResponse.ok) throw new Error('Failed to create document record.');
-
-                    return storage_path;
-                })
+            // Step 2: Upload all files and collect their URLs
+            const imageUrls = await Promise.all(
+                uploadedImages.map(img => uploadFile(img.file, 'ASSET_IMAGE'))
+            );
+            const ownershipDocUrls = await Promise.all(
+                proofOfOwnershipDocs.map(doc => uploadFile(doc.file, 'ASSET_OWNERSHIP'))
             );
 
-            const assetPayload = {
-                listing_type: 'REPOSSESSED',
-                ...formData,
-                details: {
-                    ...formData.details,
-                    ...(formData.details.year && { year_of_manufacture: parseInt(formData.details.year, 10) }),
-                },
-                images: imagePaths,
-            };
-            if (assetPayload.details.year) delete assetPayload.details.year;
+        // Step 3: Construct the final JSON payload
+        const details = {
+            ...formData.details,
+            ...(formData.collateral_type === 'VEHICLE' && { registration_number: formData.primary_identifier }),
+            ...(formData.details.year && { year_of_manufacture: parseInt(formData.details.year, 10) }),
+        };
+        if (details.year) delete details.year;
 
+        const finalPayload = {
+            listing_type: 'REPOSSESSED',
+            collateral_type: formData.collateral_type,
+            primary_identifier: formData.primary_identifier,
+            sale_price_kes: formData.sale_price_kes,
+            market_valuation_kes: formData.market_valuation_kes,
+            valuation_date: formData.valuation_date,
+            details: details,
+            images: imageUrls,
+            proof_of_ownership_docs: ownershipDocUrls,
+        };
+
+            // Step 4: Submit the final JSON payload
             const registerResponse = await fetch(`${API_BASE_URL}/api/assets/register/`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify(assetPayload),
+                headers: { 
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(finalPayload),
             });
 
             if (!registerResponse.ok) {
@@ -211,7 +237,7 @@ export default function RegisterAssetPage({ setRole }) {
                         <InputField icon={Car} label="Make" placeholder="e.g., Toyota" value={valueGetter('make')} onChange={(e) => onChangeHandler('make', e)} />
                         <InputField icon={Car} label="Model" placeholder="e.g., Corolla" value={valueGetter('model')} onChange={(e) => onChangeHandler('model', e)} />
                         <InputField icon={Calendar} label="Year" type="number" placeholder="e.g., 2018" value={valueGetter('year')} onChange={(e) => onChangeHandler('year', e)} />
-                        <InputField icon={FileText} label="Registration Number" placeholder="e.g., KAA 123A" value={formData.primary_identifier} onChange={(e) => handleInputChange('primary_identifier', e.target.value)} />
+                        <InputField icon={FileText} label="Registration Number" placeholder="e.g., KAA 123A" value={formData.primary_identifier} onChange={(e) => { handleInputChange('primary_identifier', e.target.value); handleDetailsChange('registration_number', e.target.value); }} />
                         <InputField icon={FileText} label="Chassis Number" placeholder="e.g., JM6KE..." value={valueGetter('chassis_number')} onChange={(e) => onChangeHandler('chassis_number', e)} />
                         <InputField icon={FileText} label="Mileage (km)" type="number" placeholder="e.g., 50000" value={valueGetter('mileage')} onChange={(e) => onChangeHandler('mileage', e)} />
                     </>
@@ -290,7 +316,20 @@ export default function RegisterAssetPage({ setRole }) {
                                     <p className="text-lg font-semibold text-black mb-2">Click to upload files</p>
                                     <p className="text-sm text-gray-500">PNG, JPG, PDF up to 10MB each</p>
                                 </div>
-                                <input type="file" multiple accept="image/*, application/pdf" onChange={handleImageUpload} className="hidden" />
+                                <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
+                            </label>
+                        </div>
+
+                        {/* Proof of Ownership (Optional) */}
+                        <div className="mb-8">
+                            <h3 className="text-xl font-bold text-[#1a3d2e] mb-2">Proof of Ownership (Recommended)</h3>
+                            <p className="text-sm text-[#4a6850] mb-4">Upload documents like a logbook or title deed.</p>
+                            <label className="block cursor-pointer">
+                                <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 bg-gray-50 hover:bg-gray-100 transition-all text-center">
+                                    <Upload className="w-12 h-12 mx-auto mb-3 text-gray-500" />
+                                    <p className="text-md font-semibold text-black mb-1">Click to upload ownership documents</p>
+                                </div>
+                                <input type="file" multiple accept="application/pdf,image/*" onChange={handleOwnershipDocsUpload} className="hidden" />
                             </label>
                         </div>
                         {uploadedImages.length > 0 && (
@@ -304,6 +343,24 @@ export default function RegisterAssetPage({ setRole }) {
                                                 : <img src={imageObj.preview} alt={`Upload ${index + 1}`} className="w-full h-32 object-cover rounded-xl border border-gray-200" />
                                             }
                                             <button onClick={() => removeImage(index)} className="absolute top-2 right-2 p-2 bg-red-600 hover:bg-red-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {proofOfOwnershipDocs.length > 0 && (
+                            <div className="mb-8">
+                                <h3 className="text-lg font-semibold text-black mb-4">Ownership Docs ({proofOfOwnershipDocs.length})</h3>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    {proofOfOwnershipDocs.map((doc, index) => (
+                                        <div key={index} className="relative group">
+                                            {doc.file.type.includes('pdf')
+                                                ? <FileText className="w-full h-32 object-cover rounded-xl border border-gray-200 p-8 text-gray-500 bg-gray-100" />
+                                                : <img src={doc.preview} alt={`Ownership Doc ${index + 1}`} className="w-full h-32 object-cover rounded-xl border border-gray-200" />
+                                            }
+                                            <button onClick={() => setProofOfOwnershipDocs(prev => prev.filter((_, i) => i !== index))} className="absolute top-2 right-2 p-2 bg-red-600 hover:bg-red-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <X className="w-4 h-4" />
                                             </button>
                                         </div>

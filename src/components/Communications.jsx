@@ -1,29 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ModernSidebar from '../components/Sidebar';
-import { Send, MessageSquare, User, Shield, LogOut, Loader2 } from 'lucide-react';
+import { Send, MessageSquare, User, Shield, Loader2 } from 'lucide-react';
 
-// =========================================================================
-// 1. CONSTANTS & CONFIG
-// =========================================================================
 const API_BASE_URL = 'http://127.0.0.1:8000';
-
-// =========================================================================
-// 2. REUSABLE UI COMPONENTS
-// =========================================================================
-
-const GlassCard = ({ children, className = "", ...props }) => (
-  <div className={`relative overflow-hidden rounded-3xl bg-white/40 border border-white/60 shadow-xl ${className}`} {...props}>
-    <div className="relative z-10">{children}</div>
-  </div>
-);
 
 const ConversationItem = ({ conv, onSelect, isActive }) => {
     const { other_party, last_message, unread_count } = conv;
     const Icon = other_party?.role === 'ADMIN' ? Shield : User;
 
     return (
-        <button 
+        <button
             onClick={() => onSelect(conv)}
             className={`w-full text-left p-4 rounded-2xl transition-all duration-200 ${isActive ? 'bg-white shadow-md' : 'hover:bg-gray-100'}`}
         >
@@ -51,11 +38,7 @@ const ChatBubble = ({ message, isOwnMessage }) => (
     </div>
 );
 
-// =========================================================================
-// 3. MAIN CONVERSATIONS PAGE COMPONENT
-// =========================================================================
-
-export default function BuyerConversationsPage({ setRole }) {
+export default function CommunicationsPage({ setRole, userRole }) {
     const [conversations, setConversations] = useState([]);
     const [selectedConv, setSelectedConv] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -73,7 +56,6 @@ export default function BuyerConversationsPage({ setRole }) {
 
     useEffect(scrollToBottom, [messages]);
 
-    // Fetch all conversations
     useEffect(() => {
         const fetchConversations = async () => {
             setLoading(prev => ({ ...prev, convs: true }));
@@ -96,7 +78,7 @@ export default function BuyerConversationsPage({ setRole }) {
                 const params = new URLSearchParams(location.search);
                 const convIdToOpen = params.get('convId');
                 if (convIdToOpen) {
-                    const convToSelect = processedData.find(c => c.id === parseInt(convIdToOpen));
+                    const convToSelect = processedData.find(c => c.id === convIdToOpen);
                     if (convToSelect) setSelectedConv(convToSelect);
                 }
 
@@ -109,7 +91,6 @@ export default function BuyerConversationsPage({ setRole }) {
         fetchConversations();
     }, [currentUser?.id, location.search]);
 
-    // Fetch messages for selected conversation
     useEffect(() => {
         if (!selectedConv) return;
 
@@ -160,7 +141,7 @@ export default function BuyerConversationsPage({ setRole }) {
     return (
         <div className="min-h-screen bg-white">
             <div className="flex min-h-screen">
-                <ModernSidebar userRole="buyer" onLogout={handleLogout} />
+                <ModernSidebar userRole={userRole} onLogout={handleLogout} />
 
                 <main className="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-80 lg:mr-0 mr-20 transition-all duration-300">
                     <div className="w-full h-[88vh] flex bg-white rounded-3xl border border-gray-200 shadow-lg overflow-hidden">
