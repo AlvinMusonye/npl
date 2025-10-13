@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ModernSidebar from '../components/Sidebar';
-import { DollarSign, Percent, Clock, CheckCircle, RefreshCw, XCircle, ArrowLeftRight } from 'lucide-react';
+import { DollarSign, Percent, Clock, CheckCircle, RefreshCw, XCircle, ArrowLeftRight, MessageSquare } from 'lucide-react';
 
 // =========================================================================
 // 1. CONSTANTS & CONFIG
@@ -35,7 +35,7 @@ const OfferStatusBadge = ({ status }) => {
     );
 };
 
-const OfferCard = ({ offer }) => (
+const OfferCard = ({ offer, onViewConversation }) => (
     <GlassCard className="p-6 bg-gray-50/50 hover:bg-white hover:shadow-xl transition-all">
         <div className="flex justify-between items-start mb-4">
             <div>
@@ -59,6 +59,12 @@ const OfferCard = ({ offer }) => (
             </div>
         </div>
         {offer.lender_comment && <p className="text-sm text-gray-700 mt-4 p-3 bg-gray-100 rounded-lg italic">"{offer.lender_comment}"</p>}
+        <div className="mt-4 pt-4 border-t border-gray-200">
+            <button onClick={() => onViewConversation(offer.offer_id)} className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold rounded-xl border border-gray-200 shadow-sm flex items-center justify-center gap-2">
+                <MessageSquare className="w-4 h-4" />
+                View Conversation
+            </button>
+        </div>
     </GlassCard>
 );
 
@@ -100,6 +106,35 @@ export default function MyOffersMade({ setRole }) {
         navigate('/login');
     };
 
+    const handleViewConversation = async (offerId) => {
+        if (!offerId) return;
+    
+        try {
+            const accessToken = localStorage.getItem('accessToken');
+            if (!accessToken) throw new Error('Authentication token not found.');
+    
+            const response = await fetch(`${API_BASE_URL}/api/offers/${offerId}/conversation/`, {
+                method: 'GET',
+                headers: { 
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+            });
+    
+            const data = await response.json();
+            if (!response.ok) {
+                if (response.status === 404) {
+                    alert("No conversation has been started for this offer yet.");
+                    return;
+                }
+                throw new Error(data.detail || 'Failed to fetch conversation.');
+            }
+            
+            navigate(`/financier/communication?convId=${data.id}`);
+        } catch (err) {
+            alert(`Error: ${err.message}`);
+        }
+    };
   return (
     <div className="min-h-screen bg-white">
       <div className="flex min-h-screen">
@@ -117,7 +152,7 @@ export default function MyOffersMade({ setRole }) {
             {!loading && !error && (
               offers.length > 0 ? (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {offers.map(offer => <OfferCard key={offer.offer_id} offer={offer} />)}
+                  {offers.map(offer => <OfferCard key={offer.offer_id} offer={offer} onViewConversation={handleViewConversation} />)}
                 </div>
               ) : (
                 <div className="text-center py-16 bg-gray-50 rounded-3xl border border-gray-200">

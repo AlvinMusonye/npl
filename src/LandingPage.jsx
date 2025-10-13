@@ -7,24 +7,36 @@ import { MdOutlineArrowRight } from 'react-icons/md';
 // This component uses standard React features only.
 export default function NPLinLanding() {
   const [isVisible, setIsVisible] = useState({});
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [isOnline, setIsOnline] = useState(true);
-  const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([
-    { sender: 'bot', text: 'Hello! I am Tunu, your virtual assistant. How can I help you today?' }
-  ]);
-  const [isTyping, setIsTyping] = useState(false);
-
-
-
-  const [isHopping, setIsHopping] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
-  const chatContainerRef = useRef(null);
 
+  // --- Botpress Chatbot Integration ---
+  useEffect(() => {
+    // Create and inject the Botpress scripts
+    const script1 = document.createElement('script');
+    script1.src = 'https://cdn.botpress.cloud/webchat/v3.3/inject.js';
+    document.body.appendChild(script1);
 
-  // --- Utility Hooks & Logic ---
-  // Intersection Observer
+    const script2 = document.createElement('script');
+    script2.src = 'https://files.bpcontent.cloud/2025/10/11/11/20251011110129-N2EX1M7E.js';
+    script2.defer = true;
+    document.body.appendChild(script2);
+
+    // Cleanup function to remove scripts and widget when the component unmounts
+    return () => {
+      if (document.body.contains(script1)) {
+        document.body.removeChild(script1);
+      }
+      if (document.body.contains(script2)) {
+        document.body.removeChild(script2);
+      }
+      const bpContainer = document.getElementById('botpress-webchat-container');
+      if (bpContainer) {
+        bpContainer.remove();
+      }
+    };
+  }, []); // Empty dependency array ensures this runs only once
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -52,54 +64,6 @@ export default function NPLinLanding() {
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
     };
   }, []);
-  // Auto-scroll chat
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  }, [messages, isTyping]);
-
-  // Function to handle sending the message to the chatbot API
- // Function to handle sending the message to the chatbot API
-// Function to handle sending the message to the chatbot API
-const sendMessage = async () => {
-  if (message.trim() === '') return;
-
-  const baseUrl = import.meta.env.VITE_BASE_URL || 'http://127.0.0.1:8000';
-  const apiEndpoint = `${baseUrl}/api/chat/tunu/`;
-
-  // Add the user message to the chat first
-  setMessages(prev => [...prev, { sender: 'user', text: message }]);
-  const userMessage = message; // Save current input before clearing
-  setMessage('');
-  setIsTyping(true);
-
-
-  try {
-    const response = await fetch(apiEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: userMessage }),
-    });
-
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-    const data = await response.json();
-    console.log('Chatbot response:', data);
-
-    // Append chatbot response to messages
-    setMessages(prev => [...prev, { sender: 'bot', text: data.response }]);
-  } catch (error) {
-    console.error('Error sending message:', error);
-    setMessages(prev => [
-      ...prev,
-      { sender: 'bot', text: 'Sorry, something went wrong. Please try again.' },
-    ]);
-  } finally {
-    setIsTyping(false);
-
-  }
-};
 
   const modalData = {
     // ... (modalData content remains the same)
@@ -403,11 +367,11 @@ const sendMessage = async () => {
                 id="hero-text"
                 className={`transition-all duration-1000 ease-in-out ${isVisible['hero-text'] ? 'opacity-100 translate-y-0 scale-100 blur-0' : 'opacity-0 translate-y-10 scale-95 blur-sm'}`}
               >
-                <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold text-black leading-tight mb-6">
-                  The Future of Distressed Assets in Africa:
+                <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-black leading-tight mb-6">
+                  The Future of Distressed Assets:
                   <span className="bg-gradient-to-r from-[#40916c] to-[#1b4332] bg-clip-text text-transparent"> Fast, Fair, and Transparent.</span>
                 </h1>
-                <p className="text-lg md:text-xl text-gray-600 leading-relaxed max-w-2xl">
+                <p className="text-base md:text-lg text-gray-600 leading-relaxed max-w-2xl">
                   NPLin transforms non-performing loans and repossessed assets into liquid capital through a secure, data-driven marketplace, ensuring maximum recovery for lenders and fair resolutions for borrowers.
                 </p>
               </div>
@@ -679,66 +643,6 @@ const sendMessage = async () => {
           </div>
         </div>
       </footer>
-
-      {/* Tunu Chatbot */}
-      <div className="fixed bottom-6 right-6 z-50">
-        {/* Chat Widget */}
-        {isChatOpen && (
-  <div className="fixed bottom-24 right-4 w-[calc(100vw-2rem)] max-w-sm sm:w-80 bg-white rounded-2xl shadow-xl flex flex-col">
-    <div className="p-4 border-b font-bold text-black">NPLin Chatbot</div>
-
-    <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 h-64">
-      {messages.map((msg, index) => (
-        <div
-          key={index}
-          className={`p-2 rounded-xl text-sm ${
-            msg.sender === 'user' ?
-              'bg-gradient-to-br from-[#d8f3dc] to-[#40916c] text-white self-end text-right' :
-              'bg-gray-100 text-black self-start text-left'
-          }`}
-        >
-          {msg.text}
-        </div>
-      ))}
-            {isTyping && (
-        <div className="p-2 rounded-xl text-sm bg-gray-100 text-[#0F2A1D] self-start text-left">
-          <div className="flex items-center space-x-1">
-            <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
-            <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
-            <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.6s' }}></span>
-          </div>
-        </div>
-      )}
-
-    </div>
-
-    <div className="flex border-t p-2">
-      <input
-        type="text"
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        placeholder="Type your message..."
-        className="flex-1 px-2 outline-none text-black bg-transparent"
-      />
-      <button
-        onClick={sendMessage}
-        className="p-2 text-gray-600 hover:text-[#40916c]"
-      >
-        <IoSend />
-      </button>
-    </div>
-  </div>
-)}
-
-        {/* Chat Button */}
-        <button
-          onClick={() => setIsChatOpen(!isChatOpen)}
-          className={`w-16 h-16 rounded-full bg-gradient-to-r from-[#d8f3dc] to-[#40916c] text-white flex items-center justify-center shadow-2xl transition-all duration-300 ease-in-out hover:scale-110 ${isHopping ? 'animate-hop' : ''} `}
-        >
-                  <FaRobot className="w-8 h-8" />
-
-        </button>
-      </div>
 
       {/* Modal is outside of the scrollable content */}
       <Modal 

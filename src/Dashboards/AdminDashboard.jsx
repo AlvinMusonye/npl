@@ -433,7 +433,7 @@ export default function AdminDashboard({ setRole }) {
     };
 
     // Only fetch data if we are on the overview page
-    if (currentPage === 'dashboard') {
+    if (currentPage === 'dashboard' || currentPage === 'overview') {
         fetchDashboardData();
     }
 }, [currentPage, location.pathname]);

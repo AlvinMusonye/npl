@@ -14,7 +14,7 @@ import RegisterAssetPage from './Borrower/RegisterAsset'
 import MyOffersPage from './Borrower/MyOffers'
 import MyDocumentsPage from './Borrower/MyDocuments'
 import MyTransactionsPage from './Borrower/Records'
-import CommunicationsPage from './Borrower/Communications'
+import CommunicationsPage from './components/Communications'
 import UserProfilePage from './Borrower/UserProfilePage'
 import LenderDashboard from './Lender/LenderDashboard'
 import AssetListings from './Lender/AssetListings'
@@ -28,7 +28,6 @@ import TransactionRecordsPageFinancier from './Financier/TransactionRecords';
 import BuyerDashboard from './Buyer/BuyerDashboard';
 import RepossedMarketplace from './Buyer/RepossedMarketplace';
 import TransactionRecordsPageBuyer from './Buyer/TransactionRecords';
-import ConversationsPage from './Buyer/Conversations';
 
 
 
@@ -108,6 +107,14 @@ const App = () => {
               </ProtectedRoute>
           }
         />
+        <Route
+          path="/financier/communication"
+          element={
+            <ProtectedRoute role={role} allowedRole="FINANCIER">
+              <CommunicationsPage setRole={setRole} userRole="financier" />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/borrower"
@@ -161,7 +168,7 @@ const App = () => {
           path="/borrower/communication"
           element={
             <ProtectedRoute role={role} allowedRole="BORROWER">
-              <CommunicationsPage setRole={setRole} />
+              <CommunicationsPage setRole={setRole} userRole="borrower" />
               </ProtectedRoute>
           }
         />
@@ -203,6 +210,14 @@ const App = () => {
           element={
             <ProtectedRoute role={role} allowedRole="LENDER">
               <TransactionRecordsPage setRole={setRole} />
+              </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/lender/communication"
+          element={
+            <ProtectedRoute role={role} allowedRole="LENDER">
+              <CommunicationsPage setRole={setRole} userRole="lender" />
               </ProtectedRoute>
           }
         />
@@ -251,7 +266,7 @@ const App = () => {
           path="/buyer/conversations"
           element={
             <ProtectedRoute role={role} allowedRole="BUYER">
-              <ConversationsPage setRole={setRole} />
+              <CommunicationsPage setRole={setRole} userRole="buyer" />
               </ProtectedRoute>
           }
         />

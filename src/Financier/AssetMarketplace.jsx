@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ModernSidebar from '../components/Sidebar';
-import { Car, Home, Maximize, Store, DollarSign, Percent, Info, X, CheckCircle } from 'lucide-react';
+import { Car, Home, Maximize, Store, DollarSign, Percent, Info, X, CheckCircle, Loader2, Contact } from 'lucide-react';
 
 // =========================================================================
 // 1. CONSTANTS & CONFIG
@@ -12,7 +12,7 @@ const API_BASE_URL = 'http://127.0.0.1:8000';
 // 2. REUSABLE UI COMPONENTS
 // =========================================================================
 
-const GlassCard = ({ children, className = "", ...props }) => (
+const ProductCard = ({ children, className = "", ...props }) => (
   <div className={`relative overflow-hidden rounded-3xl bg-white border border-gray-200 shadow-lg ${className}`} {...props}>
     <div className="relative z-10">{children}</div>
   </div>
@@ -97,22 +97,30 @@ const OfferModal = ({ asset, onClose, onSubmit }) => {
 const AssetCard = ({ asset, onMakeOffer }) => {
     const assetTypeDetails = { VEHICLE: { icon: Car }, PROPERTY: { icon: Home }, LAND: { icon: Maximize } };
     const { icon: Icon } = assetTypeDetails[asset.collateral_type] || { icon: Store };
-    const primaryImage = asset.images && asset.images.length > 0 ? asset.images[0] : 'https://placehold.co/600x400/E0F2E0/4a6850?text=No+Image';
+    const getImageUrl = (path) => {
+        if (!path) return 'https://placehold.co/600x400/E0F2E0/4a6850?text=No+Image';
+        return path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
+    };
+    const imageList = asset.image_urls || asset.images || [];
+    const primaryImage = imageList.length > 0 ? getImageUrl(typeof imageList[0] === 'string' ? imageList[0] : imageList[0].image) : getImageUrl(null);
+
+    const displayAmount = asset.listing_type === 'FOR_SALE' ? asset.sale_price_kes : asset.relief_amount_requested_kes || asset.market_valuation_kes;
+    const amountLabel = asset.listing_type === 'FOR_SALE' ? 'Sale Price' : 'Relief Requested';
 
     return (
-      <GlassCard className="group hover:shadow-xl hover:shadow-[#40916c]/20 transition-all duration-300">
+      <ProductCard className="group hover:shadow-xl hover:shadow-[#40916c]/20 transition-all duration-300 cursor-pointer">
         <div className="relative h-56 overflow-hidden rounded-t-3xl">
           <img src={primaryImage} alt={asset.primary_identifier} className="w-full h-full object-cover" />
         </div>
         <div className="p-6">
           <div className="flex items-center gap-3 mb-3">
             <Icon className="w-5 h-5 text-gray-600" />
-            <h3 className="text-xl font-bold text-black truncate group-hover:text-[#40916c] transition-colors">{asset.primary_identifier || 'Asset'}</h3>
+            <h3 className="text-xl font-bold text-black truncate group-hover:text-[#40916c] transition-colors" title={asset.primary_identifier}>{asset.primary_identifier || 'Asset'}</h3>
           </div>
           <div className="space-y-3 mb-4">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-500">Relief Requested</span>
-              <span className="font-semibold text-lg text-green-700">KSh {Number(asset.relief_amount_requested_kes).toLocaleString()}</span>
+              <span className="text-gray-500">{amountLabel}</span>
+              <span className="font-semibold text-lg text-green-700">KSh {Number(displayAmount).toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-500">Borrower Risk Score</span>
@@ -120,13 +128,108 @@ const AssetCard = ({ asset, onMakeOffer }) => {
             </div>
           </div>
           <div className="pt-4 border-t border-gray-100">
-            <button onClick={() => onMakeOffer(asset)} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-sm transition-all">
+            <button onClick={(e) => { e.stopPropagation(); onMakeOffer(asset); }} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-sm transition-all">
               <DollarSign className="w-5 h-5" /> Make an Offer
             </button>
           </div>
         </div>
-      </GlassCard>
+      </ProductCard>
     );
+};
+
+const AssetDetailModal = ({ asset, onClose, onMakeOffer, isLoading }) => {
+  if (!asset && !isLoading) return null;
+
+  const getImageUrl = (path) => {
+    if (!path) return 'https://placehold.co/600x400/E0F2E0/4a6850?text=No+Image';
+    return path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
+  };
+
+  const details = asset?.details || {};
+  const imageList = (asset?.image_urls || asset?.images || []).map(img => getImageUrl(typeof img === 'string' ? img : img.image)).filter(Boolean);
+  const primaryImage = imageList.length > 0 ? imageList[0] : getImageUrl(null);
+
+  const DetailItem = ({ label, value }) => (
+    <div><p className="text-xs text-gray-500 font-medium mb-1">{label}</p><p className="font-medium text-gray-900 text-sm">{value || 'N/A'}</p></div>
+  );
+
+  const DocumentViewer = ({ documents }) => {
+    if (!documents || documents.length === 0) return null;
+    return (
+      <div className="bg-gray-50 p-6 rounded-lg">
+        <h4 className="font-semibold text-gray-900 mb-4">Supporting Documents</h4>
+        <div className="space-y-2">
+          {documents.map((doc, index) => (
+            <a key={index} href={doc.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 bg-white rounded-md hover:bg-gray-50 border"><FileText className="w-5 h-5 text-gray-500" /> <span className="text-sm font-medium text-gray-700">{doc.document_type}</span></a>
+          ))}
+        </div>
+      </div>
+    );
+  };
+  return (<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}><div className="bg-white rounded-2xl p-8 max-w-4xl w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="w-12 h-12 animate-spin text-gray-900" />
+          </div>
+        ) : asset && (
+          <>
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">{asset.primary_identifier}</h3>
+                <p className="text-sm text-gray-500 mt-1">Asset ID: {asset.collateral_uuid}</p>
+              </div>
+              <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 transition-colors"><X className="w-6 h-6 text-gray-500" /></button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left Column: Images & Actions */}
+              <div className="space-y-6">
+                <div className="aspect-video rounded-lg overflow-hidden bg-gray-100">
+                    <img src={primaryImage} alt={asset.primary_identifier} className="w-full h-full object-cover" />
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                    {imageList.slice(1, 5).map((img, i) => (
+                        <div key={i} className="aspect-square rounded-md overflow-hidden bg-gray-100">
+                            <img src={img} alt="" className="w-full h-full object-cover" />
+                        </div>
+                    ))}
+                </div>
+                <button 
+                    onClick={() => onMakeOffer(asset)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 text-base font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors">
+                    <DollarSign className="w-5 h-5" />
+                    Make an Offer
+                </button>
+              </div>
+
+              {/* Right Column: Details */}
+              <div className="space-y-6">
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <h4 className="font-semibold text-gray-900 mb-4">Financials & Risk</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <DetailItem label="Relief Requested (KES)" value={Number(asset.relief_amount_requested_kes).toLocaleString()} />
+                    <DetailItem label="Market Value (KES)" value={Number(asset.market_valuation_kes).toLocaleString()} />
+                    <DetailItem label="Borrower Risk Score" value={asset.borrower_risk_score || 'N/A'} />
+                    <DetailItem label="Encumbrance" value={asset.encumbrance_status} />
+                  </div>
+                </div>
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <h4 className="font-semibold text-gray-900 mb-4">Collateral Details</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <DetailItem label="Asset Type" value={asset.collateral_type} />
+                    <DetailItem label="Valuation Date" value={asset.valuation_date ? new Date(asset.valuation_date).toLocaleDateString() : 'N/A'} />
+                    {asset.collateral_type === 'LAND' && (
+                        <>
+                            <DetailItem label="Registration District" value={details.registration_district} />
+                            <DetailItem label="Land Size (sqm)" value={details.land_size_sqm ? Number(details.land_size_sqm).toLocaleString() : 'N/A'} />
+                        </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}</div></div>);
 };
 
 // =========================================================================
@@ -138,6 +241,8 @@ export default function AssetMarketplace({ setRole }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedAsset, setSelectedAsset] = useState(null);
+  const [assetForModal, setAssetForModal] = useState(null);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -162,21 +267,46 @@ export default function AssetMarketplace({ setRole }) {
     fetchPublicListings();
   }, []);
 
+  const handleViewDetails = async (assetId) => {
+    if (!assetId) return;
+    setIsDetailLoading(true);
+    setAssetForModal(null);
+    try {
+        const accessToken = localStorage.getItem('accessToken');
+        const response = await fetch(`${API_BASE_URL}/api/assets/public_listings/${assetId}/`, {
+            headers: { 'Authorization': `Bearer ${accessToken}` },
+        });
+        if (!response.ok) throw new Error('Failed to fetch asset details.');
+        const data = await response.json();
+        setAssetForModal(data);
+    } catch (err) {
+        setError(err.message);
+    } finally {
+        setIsDetailLoading(false);
+    }
+  };
+
   const handleOfferSubmit = async (collateralUuid, offerData) => {
     const accessToken = localStorage.getItem('accessToken');
     if (!accessToken) throw new Error('Authentication token not found.');
 
+    const payload = {
+        ...offerData,
+        offer_amount_kes: parseFloat(offerData.offer_amount_kes),
+        proposed_interest_rate: parseFloat(offerData.proposed_interest_rate),
+    };
+
     const response = await fetch(`${API_BASE_URL}/api/assets/${collateralUuid}/offer/`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(offerData),
+        body: JSON.stringify(payload),
     });
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to submit offer.');
-    }
-    alert('Offer submitted successfully!');
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || 'Failed to submit offer.');
+    
+    alert('Offer submitted successfully! A private conversation has been created.');
+    navigate(`/financier/communication?convId=${data.id}`);
   };
 
   const handleLogout = () => {
@@ -188,6 +318,7 @@ export default function AssetMarketplace({ setRole }) {
   return (
     <div className="min-h-screen bg-white">
       <div className="flex min-h-screen">
+
         <ModernSidebar userRole="financier" onLogout={handleLogout} />
         <main className="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-80 lg:mr-0 mr-20 transition-all duration-300">
           <div className="p-0 lg:p-4 w-full min-h-[85vh]">
@@ -203,7 +334,9 @@ export default function AssetMarketplace({ setRole }) {
               assets.length > 0 ? (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {assets.map(asset => (
-                    <AssetCard key={asset.collateral_uuid} asset={asset} onMakeOffer={setSelectedAsset} />
+                    <div key={asset.collateral_uuid} onClick={() => handleViewDetails(asset.collateral_uuid)}>
+                      <AssetCard asset={asset} onMakeOffer={setSelectedAsset} />
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -216,6 +349,14 @@ export default function AssetMarketplace({ setRole }) {
           </div>
         </main>
       </div>
+      {(assetForModal || isDetailLoading) && (
+        <AssetDetailModal
+          asset={assetForModal}
+          onClose={() => setAssetForModal(null)}
+          onMakeOffer={setSelectedAsset}
+          isLoading={isDetailLoading}
+        />
+      )}
       {selectedAsset && (
         <OfferModal 
             asset={selectedAsset}

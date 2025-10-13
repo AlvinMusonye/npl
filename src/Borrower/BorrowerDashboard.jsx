@@ -44,6 +44,7 @@ const NavCard = ({ title, description, Icon, path, onClick }) => (
 
 export default function BorrowerDashboard({ setRole }) {
   const [dashboardData, setDashboardData] = useState(null);
+  const [myAssets, setMyAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -72,6 +73,17 @@ export default function BorrowerDashboard({ setRole }) {
 
         const data = await response.json();
         setDashboardData(data);
+
+        // Also fetch user's assets for the cards
+        const assetsResponse = await fetch(`${API_BASE_URL}/api/assets/my_assets/`, {
+          headers: { 'Authorization': `Bearer ${accessToken}` },
+        });
+        if (!assetsResponse.ok) {
+            const errorData = await assetsResponse.json();
+            throw new Error(errorData.detail || 'Failed to fetch assets.');
+        }
+        const assetsData = await assetsResponse.json();
+        setMyAssets(assetsData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -112,7 +124,7 @@ export default function BorrowerDashboard({ setRole }) {
                 <section>
                     <h2 className="text-2xl font-bold text-[#1a3d2e] mb-6">Quick Actions</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <NavCard title="My Assets" description="View and manage your listed assets." Icon={Briefcase} onClick={() => navigate('/borrower/assets')} />
+                  <NavCard title="My Assets" description={`${myAssets.length} asset(s) listed. View and manage them.`} Icon={Briefcase} onClick={() => navigate('/borrower/assets')} />
                   <NavCard title="My Offers" description="Review and negotiate offers from financiers." Icon={Mail} onClick={() => navigate('/borrower/offers')} />
                   <NavCard title="My Profile" description="Update your personal and contact information." Icon={User} onClick={() => navigate('/profile')} />
                 </div>    
