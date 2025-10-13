@@ -132,9 +132,6 @@ const UserDetailModal = ({ user, onClose, onUpdateStatus }) => {
                 </div>
 
                 <div className="mt-8 pt-6 border-t border-gray-200">
-                    <p className="text-sm text-[#4a6850] mb-4">
-                        API Actions: `POST /api/admin/accounts/{'{user.id}'}/[approve|deactivate]/`
-                    </p>
                     <div className="flex gap-4">
                         {user.status !== 'ACTIVE' && (
                             <button 

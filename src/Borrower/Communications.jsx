@@ -27,34 +27,34 @@ const GlassCard = ({ children, className = "", ...props }) => (
 );
 
 const ConversationItem = ({ conv, onSelect, isActive }) => {
-    const { other_party, last_message, last_message_timestamp, unread_count } = conv;
-    const Icon = other_party.role === 'ADMIN' ? Shield : User;
+    const { other_party, last_message, unread_count } = conv;
+    const Icon = other_party?.role === 'ADMIN' ? Shield : User;
 
     return (
-        <button 
+        <button
             onClick={() => onSelect(conv)}
             className={`w-full text-left p-4 rounded-2xl transition-all duration-200 ${isActive ? 'bg-white/50 shadow-lg' : 'hover:bg-white/30'}`}
         >
             <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                     <Icon className="w-5 h-5 text-[#1a3d2e]" />
-                    <span className="font-bold text-[#1a3d2e]">{other_party.name}</span>
+                    <span className="font-bold text-[#1a3d2e]">{other_party?.name || 'Unknown'}</span>
                 </div>
                 {unread_count > 0 && (
                     <span className="bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">{unread_count}</span>
                 )}
             </div>
-            <p className="text-sm text-[#4a6850] truncate mt-2">{last_message}</p>
-            <p className="text-xs text-[#4a6850]/70 text-right mt-1">{new Date(last_message_timestamp).toLocaleTimeString()}</p>
+            <p className="text-sm text-[#4a6850] truncate mt-2">{last_message?.content || 'No messages yet'}</p>
+            <p className="text-xs text-[#4a6850]/70 text-right mt-1">{last_message?.timestamp ? new Date(last_message.timestamp).toLocaleTimeString() : ''}</p>
         </button>
     );
 };
 
 const ChatBubble = ({ message, isOwnMessage }) => (
     <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
-        <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${isOwnMessage ? 'bg-[#6B9071]/80 text-white' : 'bg-white/60'}`}>
-            <p className="text-sm">{message.text}</p>
-            <p className={`text-xs mt-1 ${isOwnMessage ? 'text-white/70' : 'text-[#4a6850]/70'}`}>{new Date(message.timestamp).toLocaleTimeString()}</p>
+        <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${isOwnMessage ? 'bg-[#6B9071]/80 text-white' : 'bg-white/60 text-black'}`}>
+            <p className="text-sm">{message.content}</p>
+            <p className={`text-xs mt-1 ${isOwnMessage ? 'text-white/70' : 'text-black/70'}`}>{message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : ''}</p>
         </div>
     </div>
 );
@@ -71,6 +71,7 @@ export default function CommunicationsPage({ setRole }) {
     const [loading, setLoading] = useState({ convs: true, messages: false });
     const [error, setError] = useState(null);
     const navigate = useNavigate();
+    const currentUser = JSON.parse(localStorage.getItem('user'));
     const messagesEndRef = useRef(null);
 
     const scrollToBottom = () => {
@@ -85,13 +86,21 @@ export default function CommunicationsPage({ setRole }) {
             setLoading(prev => ({ ...prev, convs: true }));
             try {
                 const accessToken = localStorage.getItem('accessToken');
-                if (!accessToken) throw new Error('Authentication token not found.');
-                const response = await fetch(`${API_BASE_URL}/api/chat/conversations/`, {
+                if (!accessToken || !currentUser) throw new Error('Authentication token not found.');
+                const response = await fetch(`${API_BASE_URL}/api/conversations/`, {
                     headers: { 'Authorization': `Bearer ${accessToken}` },
                 });
                 if (!response.ok) throw new Error('Failed to fetch conversations.');
                 const data = await response.json();
-                setConversations(data);
+                
+                // Process data to create `other_party`
+                const processedData = data.map(conv => {
+                    const other_party = conv.participants.find(p => p.id !== currentUser.id);
+                    return { ...conv, other_party: { name: `${other_party?.first_name} ${other_party?.last_name}`, role: other_party?.role } };
+                });
+
+                setConversations(processedData);
+
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -109,11 +118,11 @@ export default function CommunicationsPage({ setRole }) {
             setLoading(prev => ({ ...prev, messages: true }));
             try {
                 const accessToken = localStorage.getItem('accessToken');
-                const response = await fetch(`${API_BASE_URL}/api/chat/conversations/${selectedConv.id}/messages/`, {
+                const response = await fetch(`${API_BASE_URL}/api/conversations/${selectedConv.id}/`, {
                     headers: { 'Authorization': `Bearer ${accessToken}` },
                 });
                 if (!response.ok) throw new Error('Failed to fetch messages.');
-                const data = await response.json();
+                const data = (await response.json()).messages;
                 setMessages(data);
             } catch (err) {
                 setError(err.message);
@@ -129,10 +138,10 @@ export default function CommunicationsPage({ setRole }) {
         
         try {
             const accessToken = localStorage.getItem('accessToken');
-            const response = await fetch(`${API_BASE_URL}/api/chat/conversations/${selectedConv.id}/messages/`, {
+            const response = await fetch(`${API_BASE_URL}/api/conversations/${selectedConv.id}/send-message/`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: newMessage }),
+                body: JSON.stringify({ content: newMessage }),
             });
             if (!response.ok) throw new Error('Failed to send message.');
             const sentMessage = await response.json();
@@ -189,9 +198,9 @@ export default function CommunicationsPage({ setRole }) {
                                         </div>
                                     </div>
                                     <div className="flex-1 p-4 overflow-y-auto space-y-4">
-                                        {loading.messages ? <div className="flex justify-center items-center h-full"><Loader2 className="w-8 h-8 animate-spin text-[#4a6850]" /></div> :
+                                        {loading.messages ? <div className="flex justify-center items-center h-full"><Loader2 className="w-8 h-8 animate-spin text-[#4a6850]" /></div> : messages &&
                                             messages.map(msg => (
-                                                <ChatBubble key={msg.id} message={msg} isOwnMessage={msg.sender.role === 'BORROWER'} />
+                                                <ChatBubble key={msg.id} message={msg} isOwnMessage={msg.sender?.id === currentUser.id} />
                                             ))
                                         }
                                         <div ref={messagesEndRef} />

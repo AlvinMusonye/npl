@@ -80,7 +80,7 @@ const CounterOfferModal = ({ offer, onClose, onSubmit }) => {
     );
 };
 
-const OfferCard = ({ offer, onAccept, onDecline, onCounter }) => {
+const OfferCard = ({ offer, onAccept, onDecline, onCounter, onViewConversation }) => {
     const statusConfig = {
         'PENDING': { color: 'text-yellow-600' },
         'COUNTERED': { color: 'text-blue-600' },
@@ -113,6 +113,9 @@ const OfferCard = ({ offer, onAccept, onDecline, onCounter }) => {
 
             {offer.status === 'PENDING' || offer.status === 'COUNTERED' ? (
                 <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col sm:flex-row gap-3">
+                    <button onClick={() => onViewConversation(offer.offer_id)} className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold rounded-xl border border-gray-200 shadow-sm flex items-center justify-center gap-2">
+                        <MessageSquare className="w-4 h-4" /> Chat
+                    </button>
                     <button onClick={() => onAccept(offer.offer_id)} className="flex-1 px-4 py-2 bg-green-100 hover:bg-green-200 text-green-800 font-bold rounded-xl border border-green-200 shadow-sm flex items-center justify-center gap-2">
                         <Check className="w-4 h-4" /> Accept
                     </button>
@@ -182,15 +185,17 @@ export default function MyOffersPage({ setRole }) {
                 ...(payload && { body: JSON.stringify(payload) })
             });
 
+            const data = await response.json();
             if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(errData.detail || errData.status || `Failed to ${action} offer.`);
+                throw new Error(data.detail || data.status || `Failed to ${action} offer.`);
             }
             
             alert(`Offer action '${action}' was successful!`);
             fetchOffers(); // Re-fetch offers to get the latest state
+            return data; // Return the response data which should be the conversation
         } catch (err) {
             alert(`Error: ${err.message}`);
+            return null;
         }
     };
 
@@ -203,14 +208,48 @@ export default function MyOffersPage({ setRole }) {
     };
 
     const handleCounterOfferSubmit = async (offerId, counterData) => {
-        await handleOfferAction(offerId, 'counter', counterData);
+        const updatedConversation = await handleOfferAction(offerId, 'counter', counterData);
         setShowCounterModal(false);
+        if (updatedConversation) {
+            // Navigate to the conversation after submitting a counter offer
+            navigate(`/borrower/communication?convId=${updatedConversation.id}`);
+        }
     };
 
     const handleLogout = () => {
         localStorage.clear();
         setRole(null);
         navigate('/login');
+    };
+
+    const handleViewConversation = async (offerId) => {
+        if (!offerId) return;
+    
+        try {
+            const accessToken = localStorage.getItem('accessToken');
+            if (!accessToken) throw new Error('Authentication token not found.');
+    
+            const response = await fetch(`${API_BASE_URL}/api/offers/${offerId}/conversation/`, {
+                method: 'GET',
+                headers: { 
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+            });
+    
+            const data = await response.json();
+            if (!response.ok) {
+                if (response.status === 404) {
+                    alert("No conversation has been started for this offer yet.");
+                    return;
+                }
+                throw new Error(data.detail || 'Failed to fetch conversation.');
+            }
+            
+            navigate(`/borrower/communication?convId=${data.id}`);
+        } catch (err) {
+            alert(`Error: ${err.message}`);
+        }
     };
 
     return (
@@ -238,6 +277,7 @@ export default function MyOffersPage({ setRole }) {
                                             onAccept={handleAcceptOffer}
                                             onDecline={handleDeclineOffer}
                                             onCounter={handleOpenCounterModal}
+                                            onViewConversation={handleViewConversation}
                                         />
                                     ))}
                                 </div>

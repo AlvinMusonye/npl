@@ -326,6 +326,7 @@ export default function MyDocumentsPage({ setRole }) {
 
         try {
             // 1. Get presigned URL
+            if (showAddModal && selectedDocInfo?.asset && !assetId) throw new Error('Please select an asset for this document type.');
             const presignedUrlRes = await fetch(`${API_BASE_URL}/api/documents/generate-presigned-url/`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
