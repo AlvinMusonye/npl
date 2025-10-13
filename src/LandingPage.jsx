@@ -140,7 +140,7 @@ export default function NPLinLanding() {
         "95% accuracy in risk prediction",
         "Automated decision-making processes",
         "Real-time insights and recommendations",
-        "Reduced manual analysis time by 80%"
+        "Reduced manual analysis  mtime by 80%"
       ]
     },
     realTimeData: {
