@@ -12,24 +12,24 @@ export default function NPLinLanding() {
 
   // --- Botpress Chatbot Integration ---
   useEffect(() => {
-    // Create and inject the Botpress scripts
-    const script1 = document.createElement('script');
-    script1.src = 'https://cdn.botpress.cloud/webchat/v3.3/inject.js';
-    document.body.appendChild(script1);
+    const injectScript = document.createElement('script');
+    injectScript.src = 'https://cdn.botpress.cloud/webchat/v3.3/inject.js';
+    injectScript.async = true;
+    document.body.appendChild(injectScript);
 
-    const script2 = document.createElement('script');
-    script2.src = 'https://files.bpcontent.cloud/2025/10/11/11/20251011110129-N2EX1M7E.js';
-    script2.defer = true;
-    document.body.appendChild(script2);
+    injectScript.onload = () => {
+      const configScript = document.createElement('script');
+      configScript.src = 'https://files.bpcontent.cloud/2025/10/11/11/20251011110129-N2EX1M7E.js';
+      configScript.defer = true;
+      document.body.appendChild(configScript);
 
-    // Cleanup function to remove scripts and widget when the component unmounts
+      // The config script doesn't need a cleanup reference as it depends on the inject script.
+      // When the inject script and its created elements are removed, the config script's effects are nullified.
+    };
+
     return () => {
-      if (document.body.contains(script1)) {
-        document.body.removeChild(script1);
-      }
-      if (document.body.contains(script2)) {
-        document.body.removeChild(script2);
-      }
+      // Cleanup on component unmount
+      document.querySelectorAll('script[src*="botpress"]').forEach(el => el.remove());
       const bpContainer = document.getElementById('botpress-webchat-container');
       if (bpContainer) {
         bpContainer.remove();
@@ -140,7 +140,7 @@ export default function NPLinLanding() {
         "95% accuracy in risk prediction",
         "Automated decision-making processes",
         "Real-time insights and recommendations",
-        "Reduced manual analysis time by 80%"
+        "Reduced manual analysis  mtime by 80%"
       ]
     },
     realTimeData: {
