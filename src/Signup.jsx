@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
+
 
 
 // === CONSTANTS ===
@@ -8,6 +10,25 @@ const API_REGISTER_ENDPOINT = `${API_BASE_URL}/api/accounts/register/`;
 
 // Placeholder image URL for the background
 const BACKGROUND_IMAGE_URL = '/loginimage.jpeg'; 
+
+// Role enum values from the backend
+const BACKEND_ROLES = {
+  BORROWER: "BORROWER",
+  LENDER: "LENDER",
+  FINANCIER: "FINANCIER",
+  RECOVERY_PARTNER: "RECOVERY_PARTNER",
+  ADMIN: "ADMIN",
+};
+
+// Map backend role values to specific frontend dashboard paths
+const DASHBOARD_PATHS = {
+  [BACKEND_ROLES.ADMIN]: "/admin",
+  [BACKEND_ROLES.BORROWER]: "/borrower",
+  [BACKEND_ROLES.LENDER]: "/lender",
+  [BACKEND_ROLES.FINANCIER]: "/financier",
+  [BACKEND_ROLES.RECOVERY_PARTNER]: "/recovery",
+  "DEFAULT": "/dashboard" // Fallback path
+};
 
 // === Glass Card Component (UNCHANGED) ===
 const GlassCard = ({ children, className = "", ...props }) => (
@@ -149,9 +170,10 @@ const countryCodes = [
 ];
 
 // === Signup Page Component ===
-export default function SignupPage() {
+export default function SignupPage({ setRole }) {
 
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -186,6 +208,57 @@ export default function SignupPage() {
       ...formData,
       [name]: type === 'checkbox' ? checked : value,
     });
+  };
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const idToken = credentialResponse.credential;
+    console.log("Received Google ID Token on Signup");
+    setError('');
+    setIsLoading(true);
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/accounts/google-login/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_token: idToken }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.detail || 'Google authentication with backend failed.');
+        }
+
+        // Case 1: Existing user - Login was successful, backend returns tokens
+        if (data.tokens) {
+            console.log("Existing user found via Google, logging in...");
+            
+            const determinedRole = data.user.role.toUpperCase();
+            const redirectPath = DASHBOARD_PATHS[determinedRole] || DASHBOARD_PATHS.DEFAULT;
+
+            // Store tokens and user data
+            localStorage.setItem('accessToken', data.tokens.access);
+            localStorage.setItem('refreshToken', data.tokens.refresh);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('userRole', determinedRole);
+
+            // Update state and redirect
+            setRole(determinedRole);
+            setIsSuccess(true);
+            
+            navigate(redirectPath);
+        } 
+        // Case 2: New user - Needs to complete registration
+        else if (data.status === 'new_user') {
+            console.log("New user, redirecting to complete registration...");
+            navigate('/complete-registration', { state: { googleData: data } });
+        } else {
+            throw new Error('Unexpected response from backend during Google Sign-In.');
+        }
+    } catch (err) {
+        setError(err.message || 'An error occurred during Google sign-in.');
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   const handleRoleChange = (e) => {
@@ -478,6 +551,23 @@ export default function SignupPage() {
                   ) : 'Create Account'}
                 </button>
               </form>
+              <div className="relative flex py-5 items-center">
+                <div className="flex-grow border-t border-white/40"></div>
+                <span className="flex-shrink mx-4 text-sm text-[#375534]">Or sign up with</span>
+                <div className="flex-grow border-t border-white/40"></div>
+              </div>
+
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => {
+                    console.log('Google Login Failed');
+                    setError('Google signup failed. Please try again.');
+                  }}
+                  useOneTap
+                  theme="outline"
+                />
+              </div>
 
               <div className="mt-8 text-center">
                 <p className="text-[#375534] text-sm">

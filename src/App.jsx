@@ -46,7 +46,9 @@ const App = () => {
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login setRole={setRole} />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/signup" element={<Signup setRole={setRole} />} />
+
+
 
         {/* Redirect from generic /dashboard to role-specific dashboard */}
         <Route
